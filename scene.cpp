@@ -62,22 +62,36 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   sideLayout->setAlignment(Qt::AlignTop);
 
                   auto infoBut = new QPushButton(QString("About %1").arg(algoName),widget);
-                  auto startStopBut = new QPushButton("Run",widget);
+                  auto statusBut = new QPushButton("Run",widget);
                   auto resetBut = new QPushButton("Reset",widget);
                   auto exitBut = new QPushButton("Exit",widget);
 
                   sideLayout->addWidget(infoBut);
-                  sideLayout->addWidget(startStopBut);
+                  sideLayout->addWidget(statusBut);
                   sideLayout->addWidget(resetBut);
                   sideLayout->addWidget(exitBut);
                   sideLayout->insertSpacing(3,100);
+
+                  {        // state machine for buttons
+                           auto machine = new QStateMachine(widget);
+                           auto statusStart = new QState(machine);
+                           auto statusEnd = new QState(machine);
+
+                           machine->setInitialState(statusStart);
+                           statusStart->assignProperty(statusBut,"text","Run");
+                           statusStart->assignProperty(statusBut,"styleSheet","styleSheet");
+                           statusEnd->assignProperty(statusBut,"text","Stop");
+                           // whenever staus button (RUN/STOP) is pressed it changes the text respectively
+                           statusStart->addTransition(statusBut,&QPushButton::clicked,statusEnd);
+                           statusEnd->addTransition(statusBut,&QPushButton::clicked,statusStart);
+                           machine->start();
+                  }
 
                   connect(infoBut,&QPushButton::clicked,[widget,infoText]{
                            QMessageBox::information(widget,"Information",infoText);
                   });
 
-                  connect(startStopBut,&QPushButton::clicked,[]{
-
+                  connect(statusBut,&QPushButton::clicked,[]{
                   });
 
                   connect(resetBut,&QPushButton::clicked,[]{
