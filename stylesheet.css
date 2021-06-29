@@ -1,0 +1,20 @@
+*{
+         font-family:Arial, Helvetica, sans-serif;
+}
+
+QPushButton{
+         text-align:center;
+         font-size: 20px;
+         min-width: 80px;
+         min-height: 40px;
+}
+
+QTabBar::tab{
+         height: 50px; 
+         width: 100px; 
+         font-size:20px;
+}
+
+QLineEdit{
+         font-size:15px;
+}

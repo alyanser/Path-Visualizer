@@ -8,4 +8,8 @@ SOURCES += \
 HEADERS += \
          scene.hpp
 
+
 TARGET = qtGraphAlgos
+
+RESOURCES += \
+        resources.qrc

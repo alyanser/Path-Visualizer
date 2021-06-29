@@ -7,6 +7,7 @@ class QTabWidget;
 class QSize;
 
 class GraphicsScene : public QGraphicsScene{
+Q_OBJECT
 
 public:
          GraphicsScene(const QSize & size);
@@ -17,7 +18,10 @@ private:
 
          ///
          void populateBar();
-         void populateWidget(QWidget * widget,const QString & algoName);
+         void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
+signals:
+         void close();
+
 };
 
 #endif
