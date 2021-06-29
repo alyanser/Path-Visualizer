@@ -15,6 +15,10 @@ QTabBar::tab{
          font-size:20px;
 }
 
+QMessageBox{
+         font-size:18px;
+}
+
 QLineEdit{
          font-size:15px;
 }

@@ -23,6 +23,7 @@
 #include "scene.hpp"
 #include "PushButton.hpp"
 #include "node.hpp"
+#include "defines.hpp"
 
 GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          setSceneRect(0,0,size.width(),size.height());
@@ -31,6 +32,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerS
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
          populateBar();
+
          populateGridScene();
 }
 
@@ -43,17 +45,15 @@ void GraphicsScene::populateBar(){
          {        
                   auto bfsWidget = new QWidget(bar);
                   const QString algoName = "BFS";
-                  const QString info = "This is BFS";
                   bar->addTab(bfsWidget,algoName);
-                  populateWidget(bfsWidget,algoName,info);
+                  populateWidget(bfsWidget,algoName,bfsInfo /*inside defines header*/ ); 
          }
 
          {
                   auto dfsWidget = new QWidget(bar);
                   const QString algoName = "DFS";
-                  const QString info = "This is DFS";
                   bar->addTab(dfsWidget,algoName);
-                  populateWidget(dfsWidget,algoName,info);
+                  populateWidget(dfsWidget,algoName,dfsInfo /*inside defines header*/ );
          }
 }
 // sets up the widget used by tabwidget
@@ -74,7 +74,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   auto statusBut = new PushButton("Run",widget);
                   auto resetBut = new PushButton("Reset",widget);
                   auto exitBut = new PushButton("Exit",widget);
-
+         
                   sideLayout->addWidget(infoBut);
                   sideLayout->addWidget(statusBut);
                   sideLayout->addWidget(resetBut);
@@ -95,8 +95,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
                            auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
                            auto colorAnimation = new QPropertyAnimation(statusBut,"bgColor",widget);
-                           colorAnimation->setDuration(2500);
 
+                           colorAnimation->setDuration(2500);
                            startToEnd->addAnimation(colorAnimation);
                            endToStart->addAnimation(colorAnimation);
                            startToEnd->setTargetState(statusEnd);
@@ -105,17 +105,18 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            statusStart->addTransition(startToEnd);
                            statusEnd->addTransition(endToStart);
                            machine->start();
+
+                       
                   }
 
-                  connect(infoBut,&QPushButton::clicked,[widget,infoText]{
-                           QMessageBox::information(widget,"Information",infoText);
+                  connect(infoBut,&QPushButton::clicked,[algoName,infoText]{
+                           QMessageBox::information(nullptr,algoName,infoText);
                   });
 
                   connect(statusBut,&QPushButton::clicked,[]{
                   });
 
                   connect(resetBut,&QPushButton::clicked,[]{
-
                   });
 
                   connect(exitBut,&QPushButton::clicked,[widget,this]{
@@ -138,10 +139,9 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 }
 
 void GraphicsScene::populateGridScene(){
+         return;
          auto holder = new QGraphicsWidget();
          innerLayout = new QGraphicsGridLayout(holder);
          holder->setLayout(innerLayout);
          innerScene->addItem(holder);
-
-         innerLayout->addItem(new Node(),0,0);
 }
