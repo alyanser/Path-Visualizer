@@ -1,4 +1,6 @@
 #include <QTabWidget>
+#include <QEventTransition>
+#include <QPropertyAnimation>
 #include <QGraphicsEffect>
 #include <QMessageBox>
 #include <QLineEdit>
@@ -7,7 +9,6 @@
 #include <QHBoxLayout>
 #include <QGraphicsView>
 #include <QGridLayout>
-#include <QPushButton>
 #include <QGraphicsGridLayout>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsWidget>
@@ -17,6 +18,7 @@
 #include <QStateMachine>
 #include <QState>
 #include "scene.hpp"
+#include "PushButton.hpp"
 
 GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), gridScene(new QGraphicsScene()){
          setSceneRect(0,0,size.width(),size.height());
@@ -61,10 +63,10 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   mainLayout->addLayout(sideLayout,0,1);
                   sideLayout->setAlignment(Qt::AlignTop);
 
-                  auto infoBut = new QPushButton(QString("About %1").arg(algoName),widget);
-                  auto statusBut = new QPushButton("Run",widget);
-                  auto resetBut = new QPushButton("Reset",widget);
-                  auto exitBut = new QPushButton("Exit",widget);
+                  auto infoBut = new PushButton(QString("About %1").arg(algoName),widget);
+                  auto statusBut = new PushButton("Run",widget);
+                  auto resetBut = new PushButton("Reset",widget);
+                  auto exitBut = new PushButton("Exit",widget);
 
                   sideLayout->addWidget(infoBut);
                   sideLayout->addWidget(statusBut);
@@ -79,11 +81,23 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                            machine->setInitialState(statusStart);
                            statusStart->assignProperty(statusBut,"text","Run");
-                           statusStart->assignProperty(statusBut,"styleSheet","styleSheet");
+                           statusStart->assignProperty(statusBut,"bgColor",QColor(Qt::green));
                            statusEnd->assignProperty(statusBut,"text","Stop");
+                           statusEnd->assignProperty(statusBut,"bgColor",QColor(Qt::red));
+
+                           auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
+                           auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
+                           auto colorAnimation = new QPropertyAnimation(statusBut,"bgColor",widget);
+                           colorAnimation->setDuration(2500);
+
+                           startToEnd->addAnimation(colorAnimation);
+                           endToStart->addAnimation(colorAnimation);
+                           startToEnd->setTargetState(statusEnd);
+                           endToStart->setTargetState(statusStart);
+
+                           statusStart->addTransition(startToEnd);
+                           statusEnd->addTransition(endToStart);
                            // whenever staus button (RUN/STOP) is pressed it changes the text respectively
-                           statusStart->addTransition(statusBut,&QPushButton::clicked,statusEnd);
-                           statusEnd->addTransition(statusBut,&QPushButton::clicked,statusStart);
                            machine->start();
                   }
 

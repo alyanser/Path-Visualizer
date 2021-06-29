@@ -6,7 +6,8 @@ SOURCES += \
          scene.cpp
 
 HEADERS += \
-         scene.hpp
+         scene.hpp \
+         PushButton.hpp
 
 
 TARGET = qtGraphAlgos

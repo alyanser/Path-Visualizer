@@ -7,8 +7,7 @@ class QTabWidget;
 class QSize;
 
 class GraphicsScene : public QGraphicsScene{
-Q_OBJECT
-
+         Q_OBJECT
 public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
