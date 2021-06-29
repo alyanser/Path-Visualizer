@@ -7,13 +7,13 @@
 int main(int argc, char ** argv){
 	QApplication app(argc, argv);
 
-         {
+         {        // set overall stylesheet     
                   QFile file(":/styles/stylesheet.css");
                   file.open(QFile::ReadOnly);
                   app.setStyleSheet(file.readAll());
                   file.close();
          }
-
+         // window size
          auto mainRect = QApplication::primaryScreen()->availableSize();
 
          GraphicsScene scene(mainRect);
@@ -23,9 +23,8 @@ int main(int argc, char ** argv){
 
          view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         // view.setGeometry(0,0,mainRect.width(),mainRect.height());
          view.setFixedSize(mainRect);
-
          view.show();
+         
 	return app.exec();
 }

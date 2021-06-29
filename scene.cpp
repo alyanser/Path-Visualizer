@@ -25,15 +25,18 @@ GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), gridSc
 
          addWidget(bar);
          bar->setFixedWidth(size.width());
-         bar->setFixedHeight(size.height()-25);  //! fix it
+         bar->setFixedHeight(size.height()-25); //? fix
          populateBar();
+         populateGridScene();
 }
 
-GraphicsScene::~GraphicsScene(){}
+GraphicsScene::~GraphicsScene(){
 
+}
+// sets up top bar
 void GraphicsScene::populateBar(){
 
-         {
+         {        
                   auto bfsWidget = new QWidget(bar);
                   const QString algoName = "BFS";
                   const QString info = "This is BFS";
@@ -49,17 +52,17 @@ void GraphicsScene::populateBar(){
                   populateWidget(dfsWidget,algoName,info);
          }
 }
-
+// sets up the widget used by tabwidget
 void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,const QString & infoText){
          auto mainLayout = new QGridLayout(widget);
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->setSpacing(10);
 
-         auto view = new QGraphicsView(gridScene,widget);
+         auto view = new QGraphicsView(gridScene,widget); // different view but same scene
          mainLayout->addWidget(view,0,0);
 
          {        // right side bar
-                  auto sideLayout = new QVBoxLayout(); //! memory check
+                  auto sideLayout = new QVBoxLayout();
                   mainLayout->addLayout(sideLayout,0,1);
                   sideLayout->setAlignment(Qt::AlignTop);
 
@@ -97,7 +100,6 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                            statusStart->addTransition(startToEnd);
                            statusEnd->addTransition(endToStart);
-                           // whenever staus button (RUN/STOP) is pressed it changes the text respectively
                            machine->start();
                   }
 
@@ -120,14 +122,18 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
          }
 
-         {        // bottom bar : displays the current algorithm status
-                  auto bottomLayout = new QHBoxLayout(); //! memory
+         {        // bottom bar : displays the current algorithm status will be used by grid scene
+                  auto bottomLayout = new QHBoxLayout(); 
                   mainLayout->addLayout(bottomLayout,1,0);
                   bottomLayout->setAlignment(Qt::AlignLeft);
 
-                  auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
+                  infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
                   infoLine->setReadOnly(true);
                   bottomLayout->addWidget(infoLine);
          }
+}
+
+void GraphicsScene::populateGridScene(){
+
 }
 
