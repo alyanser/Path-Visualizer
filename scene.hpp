@@ -6,6 +6,7 @@
 class QTabWidget;
 class QSize;
 class QLineEdit;
+class QGraphicsGridLayout;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -14,8 +15,9 @@ public:
          ~GraphicsScene();
 private:
          QTabWidget * bar;
-         QGraphicsScene * gridScene;
          QLineEdit * infoLine;
+         QGraphicsScene * innerScene;
+         QGraphicsGridLayout * innerLayout;
 
          ///
          void populateBar();

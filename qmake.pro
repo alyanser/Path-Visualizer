@@ -3,11 +3,13 @@ CONFIG += c++17
 
 SOURCES += \
          main.cpp \
-         scene.cpp
+         scene.cpp \ 
+         node.cpp
 
 HEADERS += \
          scene.hpp \
-         PushButton.hpp
+         PushButton.hpp \
+         node.hpp
 
 
 TARGET = qtGraphAlgos

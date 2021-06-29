@@ -1,4 +1,7 @@
 #include <QTabWidget>
+#include <QToolButton>
+#include <QGraphicsLineItem>
+#include <QGraphicsLayoutItem>
 #include <QEventTransition>
 #include <QPropertyAnimation>
 #include <QGraphicsEffect>
@@ -19,8 +22,9 @@
 #include <QState>
 #include "scene.hpp"
 #include "PushButton.hpp"
+#include "node.hpp"
 
-GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), gridScene(new QGraphicsScene()){
+GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          setSceneRect(0,0,size.width(),size.height());
 
          addWidget(bar);
@@ -31,7 +35,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), gridSc
 }
 
 GraphicsScene::~GraphicsScene(){
-
+         delete bar;
 }
 // sets up top bar
 void GraphicsScene::populateBar(){
@@ -58,7 +62,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->setSpacing(10);
 
-         auto view = new QGraphicsView(gridScene,widget); // different view but same scene
+         auto view = new QGraphicsView(innerScene,widget); // different view but same scene
          mainLayout->addWidget(view,0,0);
 
          {        // right side bar
@@ -134,6 +138,10 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 }
 
 void GraphicsScene::populateGridScene(){
+         auto holder = new QGraphicsWidget();
+         innerLayout = new QGraphicsGridLayout(holder);
+         holder->setLayout(innerLayout);
+         innerScene->addItem(holder);
 
+         innerLayout->addItem(new Node(),0,0);
 }
-
