@@ -51,4 +51,5 @@ bool Node::sceneEvent(QEvent * event){
 void Node::setType(const State & newType){
          type = newType;
          update();
+         scene()->update();
 }

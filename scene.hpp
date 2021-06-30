@@ -33,8 +33,10 @@ private:
          // implementations
          void bfs();
          void dfs();
+         void dijistra();
 signals:
-         void close();
+         void close(); // quits qapplication
+         void ended(); // emitted after an algorithm ends
 };
 
 #endif

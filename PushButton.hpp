@@ -9,7 +9,7 @@ class PushButton : public QPushButton{
          Q_PROPERTY(QColor bgColor WRITE setColor READ color)
          QColor bgColor;
 public:
-         PushButton(const QString & text,QWidget * parent) : QPushButton(text,parent){}
+         PushButton(const QString & text,QWidget * parent = nullptr) : QPushButton(text,parent){}
 
          void setColor(const QColor & toCol){
                   bgColor = toCol;
