@@ -63,9 +63,9 @@ void GraphicsScene::populateBar(){
                   populateWidget(dfsWidget,algoName,dfsInfo /*inside defines header*/ );
          }
 
-         {        // dijistra
+         {        // dijkstra
                   auto dijWidget = new QWidget(bar);
-                  const QString algoName = "Dijistra";
+                  const QString algoName = "dijkstra";
                   bar->addTab(dijWidget,algoName);
                   populateWidget(dijWidget,algoName,dijInfo /*inside defines header*/ );
          }
@@ -134,7 +134,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            switch(bar->currentIndex()){
                                     case 0 : bfs();break;
                                     case 1 : dfs();break;
-                                    case 2 : dijistra();break;
+                                    case 2 : dijkstra();break;
                                     default : assert(false);
                            }
                   });
@@ -205,6 +205,7 @@ void GraphicsScene::populateGridScene(){
          targetNode = getNodeAt(endCord.first,endCord.second);
          sourceNode->setType(Node::Source);
          targetNode->setType(Node::Target);
+         innerScene->setFocus();
 }
 
 // resets the inner grid
@@ -226,6 +227,7 @@ void GraphicsScene::reset(){
 
 /// implementations gets called when statusBut is clicked ///
 
+// follows the parent pointer in node class and marks the visited node to show apth
 void GraphicsScene::getPath() const{
          Node * currentNode = targetNode;
 
@@ -284,8 +286,6 @@ void GraphicsScene::dfs() const{
          auto infoLine = getStatusBar(1);
          std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
 
-         auto [startX,startY] = sourceNode->getCord();
-
          bool targetFound = false; // whether the endCord is reached or not
 
          std::function<void(Node*,int)> dfsHelper = [&](Node * currentNode,int currentDistance){
@@ -326,16 +326,15 @@ void GraphicsScene::dfs() const{
                   getPath();
          }
 }
-
-void GraphicsScene::dijistra() const{
+// tab index : 2
+void GraphicsScene::dijkstra() const{
          auto infoLine = getStatusBar(2);
          std::vector<std::vector<int>> distance(rowCnt,std::vector<int>(colCnt,INT_MAX));
 
          std::priority_queue<std::pair<int,Node*>,std::vector<std::pair<int,Node*>>,std::greater<>> pq;
 
          auto [startX,startY] = sourceNode->getCord();
-         auto [endX,endY] = targetNode->getCord();
-
+         
          distance[startX][startY] = 0;
          pq.push({0,sourceNode});
 

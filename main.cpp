@@ -4,6 +4,8 @@
 #include <QFile>
 #include "scene.hpp"
 
+#include "node.hpp"
+
 int main(int argc, char ** argv){
 	QApplication app(argc, argv);
 

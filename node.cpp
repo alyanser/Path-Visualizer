@@ -6,6 +6,8 @@
 
 Node::Node(int row,int col,QGraphicsPixmapItem * parent) : QGraphicsPixmapItem(parent), type(Inactive), gridX(row), gridY(col){
          pathParent = nullptr;
+         // setFlags(ItemIsSelectable | ItemIsFocusable);
+         setAcceptHoverEvents(true);
          setGraphicsItem(this);
 }
 
@@ -48,14 +50,9 @@ void Node::setGeometry(const QRectF & geometry){
          setPos(geometry.topLeft());
 }
 
-bool Node::sceneEvent(QEvent * event){
-         return false;
-}
-
 void Node::setType(const State & newType){
          type = newType;
          update();
-         scene()->update();
 }
 
 void Node::setPathParent(Node * newParent){

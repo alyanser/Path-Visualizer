@@ -36,7 +36,7 @@ private:
          // implementations
          void bfs() const;
          void dfs() const ;
-         void dijistra() const;
+         void dijkstra() const;
 signals:
          void close() const; // quits qapplication
          void reached() const; // emitted after an algorithm ends
