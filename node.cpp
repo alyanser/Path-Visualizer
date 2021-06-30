@@ -1,12 +1,11 @@
 #include <QGraphicsScene>
 #include <QPainter>
 #include <QGraphicsView>
-#include <QGraphicsSceneHoverEvent>
 #include "node.hpp"
 
-Node::Node(int row,int col,QGraphicsPixmapItem * parent) : QGraphicsPixmapItem(parent), type(Inactive), gridX(row), gridY(col){
+Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsItem(parent), type(Inactive), gridX(row), gridY(col){
          pathParent = nullptr;
-         // setFlags(ItemIsSelectable | ItemIsFocusable);
+         setFlags(ItemIsSelectable | ItemIsFocusable);
          setAcceptHoverEvents(true);
          setGraphicsItem(this);
 }
@@ -65,4 +64,8 @@ std::pair<int,int> Node::getCord() const{
 
 Node * Node::getPathParent() const{
          return pathParent;
+}
+void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
+         qInfo() << event;
+         QGraphicsItem::mousePressEvent(event);
 }

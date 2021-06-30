@@ -21,6 +21,7 @@
 #include <QStateMachine>
 #include <QState>
 #include <queue>
+#include <QTimer>
 #include "scene.hpp"
 #include "PushButton.hpp"
 #include "node.hpp"

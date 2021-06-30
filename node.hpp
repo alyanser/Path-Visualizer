@@ -1,16 +1,16 @@
 #ifndef NODE_HPP
 #define NODE_HPP
 
-#include <QGraphicsPixmapItem>
+#include <QGraphicsItem>
 #include <QGraphicsLayoutItem>
 #include <QObject>
 
-class Node : public QObject,public QGraphicsPixmapItem,public QGraphicsLayoutItem{
+class Node : public QObject,public QGraphicsItem,public QGraphicsLayoutItem{
          Q_OBJECT
 public:
          enum State{Source,Target,Active,Inactive,Visited,Block,Inpath};
          ///
-         Node(int row,int col,QGraphicsPixmapItem * parent = nullptr);
+         Node(int row,int col,QGraphicsItem * parent = nullptr);
          ~Node() = default;
 
          void setType(const State & newType);
@@ -25,6 +25,7 @@ protected:
          QRectF boundingRect() const override;
          void paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget) override;
          //events
+         void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
 private:
          State type;
          int gridX,gridY; // cordinate in gridSceneLayout
