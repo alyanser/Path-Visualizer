@@ -3,12 +3,16 @@
 
 #include <QGraphicsPixmapItem>
 #include <QGraphicsLayoutItem>
+#include <QObject>
 
-class Node : public QGraphicsPixmapItem,public QGraphicsLayoutItem{
-
+class Node : public QObject,public QGraphicsPixmapItem,public QGraphicsLayoutItem{
+         Q_OBJECT
 public:
          Node(QGraphicsPixmapItem * parent = nullptr);
          ~Node() = default;
+
+         enum State{Starter,Ender,Active,Inactive};
+         void setType(const State & newType);
 protected:
          // layoutitem
          void setGeometry(const QRectF & geometry) override;
@@ -19,9 +23,7 @@ protected:
 
          bool sceneEvent(QEvent * event) override;
 private:
-
+         State type;
 };
-
-// Q_DECLARE_INTERFACE(Node,"NodefGrid")
 
 #endif

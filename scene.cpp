@@ -141,10 +141,11 @@ void GraphicsScene::populateGridScene(){
          innerLayout = new QGraphicsGridLayout(holder);
          holder->setLayout(innerLayout);
          innerScene->addItem(holder);
-
          innerLayout->setSpacing(25);
 
          const int rowCnt = 12,colCnt = 25;
+         const std::pair<int,int> startCord = {0,0};
+         const std::pair<int,int> endCord = {rowCnt-1,colCnt-1};
          
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
@@ -152,5 +153,9 @@ void GraphicsScene::populateGridScene(){
                            innerLayout->addItem(node,row,col);
                   }
          }
+         auto starter = static_cast<Node*>(innerLayout->itemAt(startCord.first,startCord.second));
+         auto ender = static_cast<Node*>(innerLayout->itemAt(endCord.first,endCord.second));
+         starter->setType(Node::Starter);
+         ender->setType(Node::Ender);
 }
 
