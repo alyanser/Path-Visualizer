@@ -32,7 +32,6 @@ GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerS
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
          populateBar();
-
          populateGridScene();
 }
 
@@ -105,8 +104,6 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            statusStart->addTransition(startToEnd);
                            statusEnd->addTransition(endToStart);
                            machine->start();
-
-                       
                   }
 
                   connect(infoBut,&QPushButton::clicked,[algoName,infoText]{
@@ -119,8 +116,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   connect(resetBut,&QPushButton::clicked,[]{
                   });
 
-                  connect(exitBut,&QPushButton::clicked,[widget,this]{
-                           auto choice = QMessageBox::question(widget,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
+                  connect(exitBut,&QPushButton::clicked,[this]{
+                           auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
                            if(choice == QMessageBox::Yes){
                                     emit close();
                            }
@@ -133,15 +130,27 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   bottomLayout->setAlignment(Qt::AlignLeft);
 
                   infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
+                  infoLine->setAlignment(Qt::AlignCenter);
                   infoLine->setReadOnly(true);
                   bottomLayout->addWidget(infoLine);
          }
 }
 
 void GraphicsScene::populateGridScene(){
-         return;
          auto holder = new QGraphicsWidget();
          innerLayout = new QGraphicsGridLayout(holder);
          holder->setLayout(innerLayout);
          innerScene->addItem(holder);
+
+         innerLayout->setSpacing(25);
+
+         const int rowCnt = 12,colCnt = 25;
+         
+         for(int row = 0;row < rowCnt;row++){
+                  for(int col = 0;col < colCnt;col++){
+                           auto node = new Node(); // scene destructs
+                           innerLayout->addItem(node,row,col);
+                  }
+         }
 }
+
