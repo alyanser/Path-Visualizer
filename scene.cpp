@@ -31,9 +31,8 @@ const int rowCnt = 12,colCnt = 25;
 int xCord[] {-1,1,0,0};
 int yCord[] {0,0,1,-1};
 
-using triplet = std::tuple<int,int,int>;
-
 GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
+         sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
 
          addWidget(bar);
@@ -41,7 +40,6 @@ GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerS
          bar->setFixedHeight(size.height()-25); //? fix
          populateBar();
          populateGridScene();
-
 }
 
 GraphicsScene::~GraphicsScene(){
@@ -111,15 +109,16 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                            auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
                            auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
-                           auto endedTransition = new QSignalTransition(this,&GraphicsScene::ended,statusEnd);
+                           auto endedTransition = new QSignalTransition(this,&GraphicsScene::reached,statusEnd);
                            auto colorAnimation = new QPropertyAnimation(statusBut,"bgColor",widget);
 
-                           colorAnimation->setDuration(1500);
+                           colorAnimation->setDuration(1000);
                            startToEnd->addAnimation(colorAnimation);
                            endToStart->addAnimation(colorAnimation);
                            startToEnd->setTargetState(statusEnd);
                            endToStart->setTargetState(statusStart);
                            endedTransition->setTargetState(statusStart);
+                           endedTransition->addAnimation(colorAnimation);
 
                            statusStart->addTransition(startToEnd);
                            statusEnd->addTransition(endToStart);
@@ -131,7 +130,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
 
                   connect(statusBut,&QPushButton::clicked,[this]{
-                           // 0 bfs 1 dfs 2 dij
+                           reset(); // resets teh grid
                            switch(bar->currentIndex()){
                                     case 0 : bfs();break;
                                     case 1 : dfs();break;
@@ -142,6 +141,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                   connect(resetBut,&QPushButton::clicked,[this]{
                            reset();
+                           emit reached();
                   });
 
                   connect(exitBut,&QPushButton::clicked,[this]{
@@ -190,18 +190,21 @@ void GraphicsScene::populateGridScene(){
          holder->setLayout(innerLayout);
          innerScene->addItem(holder);
          innerLayout->setSpacing(25);
-
-         startCord = {0,0};
-         endCord = {rowCnt-1,colCnt-1};
          
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
-                           auto node = new Node(); // scene destructs
+                           auto node = new Node(row,col); // scene destructs
                            innerLayout->addItem(node,row,col);
                   }
          }
-         getNodeAt(startCord.first,startCord.second)->setType(Node::Starter);
-         getNodeAt(endCord.first,endCord.second)->setType(Node::Ender);
+
+         startCord = {0,0};
+         endCord = {rowCnt-1,colCnt-1};
+
+         sourceNode = getNodeAt(startCord.first,startCord.second);
+         targetNode = getNodeAt(endCord.first,endCord.second);
+         sourceNode->setType(Node::Source);
+         targetNode->setType(Node::Target);
 }
 
 // resets the inner grid
@@ -209,43 +212,56 @@ void GraphicsScene::reset(){
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
                            auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                           node->setPathParent(nullptr);
                            node->setType(Node::Inactive);
                   }
          }
-         getNodeAt(startCord.first,startCord.second)->setType(Node::Starter);
-         getNodeAt(endCord.first,endCord.second)->setType(Node::Ender);
+         sourceNode->setType(Node::Source);
+         targetNode->setType(Node::Target);
+
+         auto curTabIndex = bar->currentIndex();
+         auto lineInfo = getStatusBar(curTabIndex);
+         lineInfo->setText("Click on run button on sidebar to display algorithm status");
 }
 
 /// implementations gets called when statusBut is clicked ///
 
+void GraphicsScene::getPath() const{
+         Node * currentNode = targetNode;
+
+         while(currentNode){
+                  currentNode->setType(Node::Inpath);
+                  currentNode = currentNode->getPathParent();
+         }
+}
+
 // tab index : 0
-void GraphicsScene::bfs(){
-         std::queue<triplet> queue; // {x,y,distance}
+void GraphicsScene::bfs() const{
+         auto infoLine = getStatusBar(0);
+         std::queue<std::pair<Node*,int>> queue; // {node,distance}
          std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
 
-         auto infoLine = getStatusBar(0);
-         auto [startX,startY] = startCord;
-         auto [endX,endY] = endCord;
-
-         queue.push({startX,startY,0});
+         auto [startX,startY] = sourceNode->getCord();
          visited[startX][startY] = true;
-
-         Node * previousNode = nullptr;
+         
+         queue.push({sourceNode,0});
 
          while(!queue.empty()){
-                  auto [currentRow,currentCol,currentDistance] = queue.front();
+                  auto [currentNode,currentDistance] = queue.front();
                   queue.pop();
 
-                  if(previousNode){
-                           previousNode->setType(Node::Visited);
-                  }
-                  auto currentNode = getNodeAt(currentRow,currentCol);
-                  previousNode = currentNode;
+                  auto [currentRow,currentCol] = currentNode->getCord();
                   currentNode->setType(Node::Active);
+
+                  auto nodeParent = currentNode->getPathParent();
+                  if(nodeParent){
+                           nodeParent->setType(Node::Visited);
+                  }
+
                   infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
-                  if(currentRow == endX && currentCol == endY){
-                           emit ended();
+                  if(currentNode == targetNode){
+                           getPath();
                            return;
                   }
 
@@ -253,82 +269,96 @@ void GraphicsScene::bfs(){
                            int toRow = currentRow + xCord[direction];
                            int toCol = currentCol + yCord[direction];
 
-                           if(validCordinate(toRow,toCol)){
-                                    if(!visited[toRow][toCol]){
-                                             visited[toRow][toCol] = true;
-                                             queue.push({toRow,toCol,currentDistance+1});
-                                    }
+                           if(validCordinate(toRow,toCol) && !visited[toRow][toCol]){
+                                    visited[toRow][toCol] = true;
+                                    auto togoNode = getNodeAt(toRow,toCol);
+                                    togoNode->setPathParent(currentNode);
+                                    queue.push({togoNode,currentDistance+1});
                            }
                   }
          }
-         emit ended();
 }
 
 // tab index : 1
-void GraphicsScene::dfs(){
+void GraphicsScene::dfs() const{
          auto infoLine = getStatusBar(1);
          std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
 
-         auto [startX,startY] = startCord;
-         auto [endX,endY] = endCord;
+         auto [startX,startY] = sourceNode->getCord();
 
-         bool reached = false; // whether the endCord is reached or not
+         bool targetFound = false; // whether the endCord is reached or not
 
-         std::function<void(int,int,int)> dfsHelper = [&,endX = endX,endY = endY](int curX,int curY,int curDistance){
-                  if(reached || !validCordinate(curX,curY)) return;
-                  else if(visited[curX][curY]) return;
+         std::function<void(Node*,int)> dfsHelper = [&](Node * currentNode,int currentDistance){
+                  auto [curX,curY] = currentNode->getCord();
+                  if(targetFound) return;
 
-                  auto currentNode = getNodeAt(curX,curY);
+                  visited[curX][curY] = true;
+                  
                   currentNode->setType(Node::Active);
-                  infoLine->setText(QString("Current Distance: %1").arg(curDistance));
+                  infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
-                  if(curX == endX && curY == endY){
-                           reached = true;
-                           emit ended();
+                  auto pathParent = currentNode->getPathParent();
+                  if(pathParent){
+                           pathParent->setType(Node::Visited);
+                  }
+
+                  if(currentNode == targetNode){
+                           targetFound = true;
                            return;
                   }
 
                   visited[curX][curY] = true;
 
                   for(int direction = 0;direction < 4;direction++){
-                           currentNode->setType(Node::Visited);
                            int toRow = curX + xCord[direction];
                            int toCol = curY + yCord[direction];
-                           dfsHelper(toRow,toCol,curDistance+1);
+                           if(!validCordinate(toRow,toCol) || visited[toRow][toCol]) continue;
+
+                           auto togoNode = getNodeAt(toRow,toCol);
+                           togoNode->setPathParent(currentNode);
+                           dfsHelper(togoNode,currentDistance+1);
                   }
          };
 
-         dfsHelper(startX,startY,0);
-         emit ended(); 
+         dfsHelper(sourceNode,0);
+
+         if(targetFound){
+                  getPath();
+         }
 }
 
-void GraphicsScene::dijistra(){
+void GraphicsScene::dijistra() const{
          auto infoLine = getStatusBar(2);
          std::vector<std::vector<int>> distance(rowCnt,std::vector<int>(colCnt,INT_MAX));
-         std::priority_queue<triplet> pq; // {distance,x,y}
-         
-         auto [startX,startY] = startCord;
-         auto [endX,endY] = endCord;
+
+         std::priority_queue<std::pair<int,Node*>,std::vector<std::pair<int,Node*>>,std::greater<>> pq;
+
+         auto [startX,startY] = sourceNode->getCord();
+         auto [endX,endY] = targetNode->getCord();
 
          distance[startX][startY] = 0;
-         pq.push({0,startX,startY}); 
-
-         Node * previousNode = nullptr;
+         pq.push({0,sourceNode});
 
          while(!pq.empty()){
-                  auto [curDistance,curX,curY] = pq.top();
+                  auto [currentDistance,currentNode] = pq.top();
                   pq.pop();
 
-                  if(previousNode){
-                           previousNode->setType(Node::Visited);
-                  }
-                  auto currentNode = getNodeAt(curX,curY);
-                  previousNode = currentNode;
-                  currentNode->setType(Node::Active);
-                  infoLine->setText(QString("Current Distance: %1").arg(curDistance));
+                  auto [curX,curY] = currentNode->getCord();
 
-                  if(curX == endX && curY == endY){
-                           emit ended();
+                  if(distance[curX][curY] != currentDistance) continue;
+
+                  auto nodeParent = currentNode->getPathParent();
+                  
+                  if(nodeParent){
+                           nodeParent->setType(Node::Visited);
+                  }
+
+                  currentNode->setType(Node::Active);
+                  infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
+
+                  if(currentNode == targetNode){
+                           getPath();
+                           reached();
                            return;
                   }
 
@@ -338,12 +368,15 @@ void GraphicsScene::dijistra(){
 
                            if(validCordinate(toRow,toCol)){
                                     int & destDistance = distance[toRow][toCol]; 
-                                    if(curDistance + 1 < destDistance){
-                                             destDistance = curDistance + 1;
-                                             pq.push({destDistance,toRow,toCol});
+                                    const int newDistance = currentDistance + 1;
+
+                                    if(newDistance < destDistance){
+                                             destDistance = newDistance;
+                                             auto togoNode = getNodeAt(toRow,toCol);
+                                             togoNode->setPathParent(currentNode);
+                                             pq.push({newDistance,togoNode});
                                     }
                            }
                   }
          }
-         emit ended();
 }
