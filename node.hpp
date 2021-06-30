@@ -11,7 +11,8 @@ public:
          Node(QGraphicsPixmapItem * parent = nullptr);
          ~Node() = default;
 
-         enum State{Starter,Ender,Active,Inactive};
+         enum State{Starter,Ender,Active,Inactive,Visited,Block};
+
          void setType(const State & newType);
 protected:
          // layoutitem

@@ -1,5 +1,6 @@
 #include <QGraphicsScene>
 #include <QPainter>
+#include <QGraphicsView>
 #include <QGraphicsSceneHoverEvent>
 #include "node.hpp"
 
@@ -23,6 +24,8 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
                   case Ender : brush.setColor(Qt::red);break;
                   case Active : brush.setColor(Qt::white);break;
                   case Inactive : brush.setColor(Qt::blue);break;
+                  case Visited : brush.setColor(Qt::yellow);break;
+                  case Block : brush.setColor(Qt::gray);break;
                   default : assert(false);
          }
          painter->setBrush(brush);
@@ -47,4 +50,5 @@ bool Node::sceneEvent(QEvent * event){
 
 void Node::setType(const State & newType){
          type = newType;
+         update();
 }

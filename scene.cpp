@@ -1,4 +1,6 @@
 #include <QTabWidget>
+#include <tuple>
+#include <queue>
 #include <QToolButton>
 #include <QGraphicsLineItem>
 #include <QGraphicsLayoutItem>
@@ -25,6 +27,11 @@
 #include "node.hpp"
 #include "defines.hpp"
 
+// for inner scene
+const int rowCnt = 12,colCnt = 25; 
+int xCord[] {-1,1,0,0};
+int yCord[] {0,0,1,-1};
+
 GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          setSceneRect(0,0,size.width(),size.height());
 
@@ -33,11 +40,13 @@ GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerS
          bar->setFixedHeight(size.height()-25); //? fix
          populateBar();
          populateGridScene();
+
 }
 
 GraphicsScene::~GraphicsScene(){
          delete bar;
 }
+
 // sets up top bar
 void GraphicsScene::populateBar(){
 
@@ -55,6 +64,7 @@ void GraphicsScene::populateBar(){
                   populateWidget(dfsWidget,algoName,dfsInfo /*inside defines header*/ );
          }
 }
+
 // sets up the widget used by tabwidget
 void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,const QString & infoText){
          auto mainLayout = new QGridLayout(widget);
@@ -110,10 +120,17 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            QMessageBox::information(nullptr,algoName,infoText);
                   });
 
-                  connect(statusBut,&QPushButton::clicked,[]{
+                  connect(statusBut,&QPushButton::clicked,[this]{
+                           // 0 bfs 1 dfs 2 dij
+                           switch(bar->currentIndex()){
+                                    case 0 : bfs();break;
+                                    case 1 : dfs();break;
+                                    default : assert(false);
+                           }
                   });
 
-                  connect(resetBut,&QPushButton::clicked,[]{
+                  connect(resetBut,&QPushButton::clicked,[this]{
+                           reset();
                   });
 
                   connect(exitBut,&QPushButton::clicked,[this]{
@@ -125,17 +142,37 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          }
 
          {        // bottom bar : displays the current algorithm status will be used by grid scene
-                  auto bottomLayout = new QHBoxLayout(); 
-                  mainLayout->addLayout(bottomLayout,1,0);
-                  bottomLayout->setAlignment(Qt::AlignLeft);
-
-                  infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
+                  auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
                   infoLine->setAlignment(Qt::AlignCenter);
                   infoLine->setReadOnly(true);
+
+                  auto bottomLayout = new QHBoxLayout(); 
+                  bottomLayout->setAlignment(Qt::AlignLeft);
                   bottomLayout->addWidget(infoLine);
+                  mainLayout->addLayout(bottomLayout,1,0);
          }
 }
 
+// returns the node ref present inside the grid
+Node * GraphicsScene::getNodeAt(const int & row,const int & col) const{
+         return static_cast<Node*>(innerLayout->itemAt(row,col));
+}
+
+// returns true of {row,col} is a valid cordinate for grid
+bool GraphicsScene::validCordinate(const int & row,const int & col) const{
+         return row >= 0 && row < rowCnt && col >= 0 && col < colCnt;
+}
+
+// returns the bottom lineEdit which displays the current algorithm state
+//? improve later
+QLineEdit * GraphicsScene::getStatusBar(const int & tabIndex) const{
+         assert(tabIndex < bar->count());
+         auto widget = bar->widget(tabIndex);
+         auto absLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
+         return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(absLayout)->itemAt(0)->widget());
+}
+
+// sets up the inner grid scene
 void GraphicsScene::populateGridScene(){
          auto holder = new QGraphicsWidget();
          innerLayout = new QGraphicsGridLayout(holder);
@@ -143,9 +180,8 @@ void GraphicsScene::populateGridScene(){
          innerScene->addItem(holder);
          innerLayout->setSpacing(25);
 
-         const int rowCnt = 12,colCnt = 25;
-         const std::pair<int,int> startCord = {0,0};
-         const std::pair<int,int> endCord = {rowCnt-1,colCnt-1};
+         startCord = {0,0};
+         endCord = {rowCnt-1,colCnt-1};
          
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
@@ -153,9 +189,92 @@ void GraphicsScene::populateGridScene(){
                            innerLayout->addItem(node,row,col);
                   }
          }
-         auto starter = static_cast<Node*>(innerLayout->itemAt(startCord.first,startCord.second));
-         auto ender = static_cast<Node*>(innerLayout->itemAt(endCord.first,endCord.second));
-         starter->setType(Node::Starter);
-         ender->setType(Node::Ender);
+         getNodeAt(startCord.first,startCord.second)->setType(Node::Starter);
+         getNodeAt(endCord.first,endCord.second)->setType(Node::Ender);
 }
 
+// resets the inner grid
+void GraphicsScene::reset(){
+         for(int row = 0;row < rowCnt;row++){
+                  for(int col = 0;col < colCnt;col++){
+                           auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                           node->setType(Node::Inactive);
+                  }
+         }
+         getNodeAt(startCord.first,startCord.second)->setType(Node::Starter);
+         getNodeAt(endCord.first,endCord.second)->setType(Node::Ender);
+}
+
+/// implementations gets called when statusBut is clicked ///
+
+// tab index : 0
+void GraphicsScene::bfs(){
+         std::queue<std::tuple<int,int,int>> queue; // {x,y,distance}
+         std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
+
+         auto infoLine = getStatusBar(0);
+         auto [startX,startY] = startCord;
+         auto [endX,endY] = endCord;
+
+         queue.push({startX,startY,0});
+         visited[startX][startY] = true;
+
+         while(!queue.empty()){
+                  auto [currentRow,currentCol,currentDistance] = queue.front();
+                  getNodeAt(currentRow,currentCol)->setType(Node::Active);
+                  infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
+                  queue.pop();
+
+                  if(currentRow == endX && currentCol == endY){
+                           return;
+                  }
+
+                  for(int direction = 0;direction < 4;direction++){
+                           int toRow = currentRow + xCord[direction];
+                           int toCol = currentCol + yCord[direction];
+
+                           if(validCordinate(toRow,toCol)){
+                                    if(!visited[toRow][toCol]){
+                                             visited[toRow][toCol] = true;
+                                             queue.push({toRow,toCol,currentDistance+1});
+                                    }
+                           }
+                  }
+         }
+         // here when there are blocks all around. not possible for now
+         assert(false);
+}
+
+// tab index : 1
+void GraphicsScene::dfs(){
+         auto infoLine = getStatusBar(1);
+         std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
+
+         auto [startX,startY] = startCord;
+         auto [endX,endY] = endCord;
+
+         bool reached = false; // whether the endCord is reached or not
+
+         std::function<void(int,int,int)> dfsHelper = [&,endX = endX,endY = endY](int curX,int curY,int curDist){
+                  if(reached || !validCordinate(curX,curY)) return;
+                  else if(visited[curX][curY]) return;
+
+                  infoLine->setText(QString("Current Distance: %1").arg(curDist));
+
+                  if(curX == endX && curY == endY){
+                           reached = true;
+                           qInfo() << curDist;
+                           return;
+                  }
+
+                  visited[curX][curY] = true;
+
+                  for(int direction = 0;direction < 4;direction++){
+                           int toRow = curX + xCord[direction];
+                           int toCol = curY + yCord[direction];
+                           dfsHelper(toRow,toCol,curDist+1);
+                  }
+         };
+
+         dfsHelper(startX,startY,0);
+}
