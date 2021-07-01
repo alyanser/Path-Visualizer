@@ -13,6 +13,10 @@ Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), ty
          setGraphicsItem(this);
 }
 
+void Node::setRunningState(const bool & newState){
+         on = newState;
+}
+
 QRectF Node::boundingRect() const{
          return QRectF(0,0,24,23);
 }
@@ -119,7 +123,9 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
-         // qInfo() << event;
+         if(on){ // there is an algorithm currently in running state
+                  return;
+         }
          auto dragger = new QDrag(this);
          auto mimeData = new QMimeData();
          dragger->setMimeData(mimeData);

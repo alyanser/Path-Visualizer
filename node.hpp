@@ -31,11 +31,15 @@ protected:
          void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
          State type; // type of node
+         inline static bool on = false; // determines if any algorthm is running - connected with Graphicscene
          int gridX,gridY; // cordinate in gridSceneLayout
          Node * pathParent; // parent for paths
 signals:
          void sourceSet();
          void targetSet();
+public slots:
+         static void setRunningState(const bool & newState);
+
 };
 
 #endif

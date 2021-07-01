@@ -32,9 +32,10 @@ const int rowCnt = 12,colCnt = 25;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
-GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
+GraphicsScene::GraphicsScene(const QSize & size) : speed(1000), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
+         on = false;
          addWidget(bar);
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
@@ -107,6 +108,9 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            statusStart->assignProperty(statusBut,"text","Run");
                            statusEnd->assignProperty(statusBut,"text","Stop");
 
+                           statusStart->assignProperty(this,"on",false);
+                           statusEnd->assignProperty(this,"on",true);
+
                            auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
                            auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
                            auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
@@ -130,7 +134,6 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
 
                   connect(statusBut,&QPushButton::clicked,[this]{
-                           //TODO animation
                            cleanup();
                            switch(bar->currentIndex()){
                                     case 0 : bfs();break;
@@ -139,6 +142,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                                     default : assert(false);
                            }
                   });
+
+                  connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 
                   connect(resetBut,&QPushButton::clicked,[this]{
                            for(int row = 0;row < rowCnt;row++){
@@ -175,6 +180,15 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 }
 
 /// utility ///
+
+void GraphicsScene::setRunning(const bool & newState){
+         on = newState;
+         emit runningStatusChanged(on);
+}
+
+bool GraphicsScene::isRunning() const{
+         return on;
+}
 
 // returns a new node and connects signals to update when source and target is changed
 Node * GraphicsScene::getNewNode(const int & row,const int & col){
@@ -284,7 +298,6 @@ void GraphicsScene::bfs() const{
 
          auto [startX,startY] = sourceNode->getCord();
          visited[startX][startY] = true;
-         
          queue.push({sourceNode,0});
 
          while(!queue.empty()){

@@ -12,10 +12,13 @@ class QHBoxLayout;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
+         Q_PROPERTY(bool on WRITE setRunning READ isRunning);
 public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
 private:
+         const uint32_t speed; // determines the speed at which algorithm will execute
+         bool on; // determines if any algorithm is running
          Node * sourceNode;
          Node * targetNode;
          std::pair<int,int> startCord;// default sourceNode position
@@ -28,6 +31,8 @@ private:
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
          void populateGridScene();
          // utility
+         void setRunning(const bool & newState);
+         bool isRunning() const;
          void cleanup();
          void updateSrcTarNodes();
          void getPath() const;
@@ -37,13 +42,14 @@ private:
          QLineEdit * getStatusBar(const int & tabIndex) const;
          bool isBlock(Node * currentNode) const;
          bool isSpecial(Node * currentNode) const;
-         // implementations
+         // algorithm implementations
          void bfs() const;
          void dfs() const ;
          void dijkstra() const;
 signals:
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends
+         void runningStatusChanged(const bool & newState);
 };
 
 #endif
