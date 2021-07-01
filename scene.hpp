@@ -32,6 +32,7 @@ private:
          void updateSrcTarNodes();
          void getPath() const;
          bool validCordinate(const int & row,const int & col) const;
+         Node * getNewNode(const int & row,const int & col);
          Node * getNodeAt(const int & row,const int & col) const;
          QLineEdit * getStatusBar(const int & tabIndex) const;
          bool isBlock(Node * currentNode) const;

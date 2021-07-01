@@ -174,6 +174,23 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          }
 }
 
+/// utility ///
+
+// returns a new node and connects signals to update when source and target is changed
+Node * GraphicsScene::getNewNode(const int & row,const int & col){
+         auto node = new Node(row,col);
+
+         connect(node,&Node::sourceSet,[&sourceNode = sourceNode,node]{
+                  sourceNode = node;
+         });
+
+         connect(node,&Node::targetSet,[&targetNode = targetNode,node]{
+                  targetNode = node;
+         });
+
+         return node;
+}
+
 // returns the node ref present inside the grid
 Node * GraphicsScene::getNodeAt(const int & row,const int & col) const{
          return static_cast<Node*>(innerLayout->itemAt(row,col));
@@ -220,7 +237,7 @@ void GraphicsScene::populateGridScene(){
          
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
-                           auto node = new Node(row,col); // scene destructs
+                           auto node = getNewNode(row,col);
                            innerLayout->addItem(node,row,col);
                   }
          }

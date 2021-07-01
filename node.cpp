@@ -8,7 +8,6 @@
 
 Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), type(Inactive), gridX(row), gridY(col){
          pathParent = nullptr;
-         setFlags(ItemIsFocusable);
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
          setGraphicsItem(this);
@@ -55,6 +54,17 @@ void Node::setGeometry(const QRectF & geometry){
 
 void Node::setType(const State & newType){
          type = newType;
+         bool dropValue = true;
+
+         if(type == Source){
+                  dropValue = false;
+                  emit sourceSet();
+         }else if(type == Target){
+                  dropValue = false;
+                  emit targetSet();
+         }
+
+         setAcceptDrops(dropValue);
          update();
 }
 
@@ -78,16 +88,34 @@ void Node::dragEnterEvent(QGraphicsSceneDragDropEvent * event){
          auto mimeData = event->mimeData();
 
          if(mimeData->hasText()){
-                  assert(mimeData->text() == "inverter");
+                  const QString & text = mimeData->text();
 
-                  switch(type){
-                           case Source | Target : break;
-                           case Block : setType(Inactive);break;
-                           default : setType(Block);
+                  if(text == "inverter"){
+                           switch(type){
+                                    case Source | Target : break;
+                                    case Block : setType(Inactive);event->accept();break;
+                                    default : setType(Block);event->accept();
+                           }
                   }
-         }else{
-
          }
+         QGraphicsObject::dragEnterEvent(event);
+}
+
+void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
+         auto mimeData = event->mimeData();
+         if(mimeData->hasText()){
+                  const QString & indicator = mimeData->text();
+
+                  if(indicator == "fromSource"){
+                           setType(Source);
+                           event->accept();
+                  }else if(indicator == "fromTarget"){
+                           setType(Target);
+                           event->accept();
+
+                  }
+         }
+         QGraphicsItem::dropEvent(event);
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
@@ -97,10 +125,20 @@ void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
          dragger->setMimeData(mimeData);
          
          switch(type){
-                  case Source | Target : {
-                           return;
+                  case Source : {
+                           mimeData->setText("fromSource");
+                           if(dragger->exec()){
+                                    setType(Inactive);
+                           }
+                           break;
                   }
-
+                  case Target : {
+                           mimeData->setText("fromTarget");
+                           if(dragger->exec()){
+                                    setType(Inactive);
+                           }
+                           break;
+                  }
                   default  : {
                            mimeData->setText("inverter");
                            dragger->exec();

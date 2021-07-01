@@ -28,10 +28,14 @@ protected:
          //events
          void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
          void dragEnterEvent(QGraphicsSceneDragDropEvent * event) override;
+         void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
          State type; // type of node
          int gridX,gridY; // cordinate in gridSceneLayout
          Node * pathParent; // parent for paths
+signals:
+         void sourceSet();
+         void targetSet();
 };
 
 #endif
