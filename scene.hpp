@@ -22,15 +22,15 @@ public:
 private:
          uint32_t timerDelay; // determines the timer after which timer will shoot
          bool on; // determines if any algorithm is running
-         QTimer * bfsTimer,* dfsTimer,* dijTimer;
-         Node * sourceNode;
-         Node * targetNode;
+         QTimer * bfsTimer,* dfsTimer,* dijTimer; // to control the delay between each step
+         Node * sourceNode; 
+         Node * targetNode; 
          std::pair<int,int> startCord;// default sourceNode position
          std::pair<int,int> endCord; // default targetNode position
-         QTabWidget * bar;
+         QTabWidget * bar; // represents all algorithm tab by tab
          QGraphicsScene * innerScene; // grid
          QGraphicsGridLayout * innerLayout; // layout of grid
-         std::unique_ptr<std::queue<std::pair<Node*,int>>> queue;
+         std::unique_ptr<std::queue<std::pair<Node*,int>>> queue; 
          std::unique_ptr<std::stack<std::pair<Node*,int>>> stack;
          std::unique_ptr<std::vector<std::vector<bool>>> visited;
          std::unique_ptr<std::vector<std::vector<int>>> distance;
@@ -62,9 +62,9 @@ private:
 signals:
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends
-         void runningStatusChanged(const bool & newState);
+         void runningStatusChanged(const bool & newState); // connected with Node class 
 public slots:
-         void setSpeed(const uint32_t & newSpeed);
+         void setDelay(const uint32_t & newDelay);
 };
 
 #endif

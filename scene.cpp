@@ -80,7 +80,7 @@ void GraphicsScene::populateBar(){
 
          {        // dijkstra
                   auto dijWidget = new QWidget(bar);
-                  const QString algoName = "dijkstra";
+                  const QString algoName = "Dijkstra";
                   bar->addTab(dijWidget,algoName);
                   populateWidget(dijWidget,algoName,dijInfo /*inside defines header*/ );
          }
@@ -239,7 +239,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   slider->setValue(925);
                   slider->setTracking(true);
 
-                  connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setSpeed);
+                  connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
          
                   auto bottomLayout = new QHBoxLayout(); 
                   bottomLayout->setAlignment(Qt::AlignCenter);
@@ -265,7 +265,7 @@ bool GraphicsScene::isRunning() const{
 }
 
 // sets the speed at which an algorithm will be proecssed - linked with timers
-void GraphicsScene::setSpeed(const uint32_t & newDelay){
+void GraphicsScene::setDelay(const uint32_t & newDelay){
          // slide bar has more value when it is set on the fuller side convert before
          timerDelay = std::abs(1000ll - newDelay);
          setTimersIntervals(timerDelay);
@@ -398,8 +398,8 @@ void GraphicsScene::bfs(const bool & newStart) const{
                   (*visited)[startX][startY] = true;
          }
 
-         connect(bfsTimer,&QTimer::timeout,[this,infoLine = infoLine]{ 
-                  if(queue->empty()){
+         auto implementation = [this,infoLine = infoLine]{
+                   if(queue->empty()){
                            bfsTimer->stop();
                            infoLine->setText("Could not reach destination.");
                            emit resetButtons();
@@ -442,7 +442,9 @@ void GraphicsScene::bfs(const bool & newStart) const{
                                     queue->push({togoNode,currentDistance+1});
                            }
                   }
-         });
+         };
+
+         connect(bfsTimer,&QTimer::timeout,this,implementation,Qt::UniqueConnection);
 }
 
 // tab index : 1
@@ -456,7 +458,7 @@ void GraphicsScene::dfs(const bool & newStart) const{
                   (*visited)[startX][startY] = true;
          }
 
-         connect(dfsTimer,&QTimer::timeout,[this,infoLine = infoLine]{
+         auto implementation = [this,infoLine = infoLine]{
 
                   if(stack->empty()){
                            dfsTimer->stop();
@@ -502,7 +504,9 @@ void GraphicsScene::dfs(const bool & newStart) const{
                                     stack->push({togoNode,currentDistance+1});
                            }
                   }
-         });
+         };
+
+         connect(dfsTimer,&QTimer::timeout,this,implementation,Qt::UniqueConnection);
 }
 
 // tab index : 2
@@ -515,9 +519,8 @@ void GraphicsScene::dijkstra(const bool & newStart) const{
                   auto [startX,startY] = sourceNode->getCord();
                   (*distance)[startX][startY] = 0;
          }
-
-         connect(dijTimer,&QTimer::timeout,[this,infoLine = infoLine]{
-
+         
+         auto implementation = [this,infoLine = infoLine]{
                   if(pq->empty()){
                            dijTimer->stop();
                            infoLine->setText("Could not reach destination.");
@@ -570,6 +573,8 @@ void GraphicsScene::dijkstra(const bool & newStart) const{
                                     }
                            }
                   }
-         });
+         };
+
+         connect(dijTimer,&QTimer::timeout,this,implementation,Qt::UniqueConnection);
 }
 
