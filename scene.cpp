@@ -16,12 +16,14 @@
 #include <QGraphicsGridLayout>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsWidget>
+#include <memory>
 #include <QGraphicsProxyWidget>
 #include <QWidget>
 #include <QList>
 #include <QStateMachine>
 #include <QState>
 #include <queue>
+#include <stack>
 #include <QTimer>
 #include "scene.hpp"
 #include "PushButton.hpp"
@@ -34,15 +36,21 @@ const uint32_t defaultSpeed = 250;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
+
 GraphicsScene::GraphicsScene(const QSize & size) : speed(defaultSpeed), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
          on = false;
-         timer = new QTimer(bar);
-         timer->setInterval(speed);
+         bfsTimer = new QTimer(bar);
+         dfsTimer = new QTimer(bar);
+         dijTimer = new QTimer(bar);
+         
          addWidget(bar);
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
+
+         setDataStructures();
+         memsetDs(); 
          populateBar();
          populateGridScene();
 }
@@ -74,6 +82,24 @@ void GraphicsScene::populateBar(){
                   bar->addTab(dijWidget,algoName);
                   populateWidget(dijWidget,algoName,dijInfo /*inside defines header*/ );
          }
+}
+
+//! self deletion
+void GraphicsScene::setDataStructures(){
+         queue = std::make_unique<std::queue<std::pair<Node*,int>>>(); // {currentnode,distance}
+         stack = std::make_unique<std::stack<std::pair<Node*,int>>>();
+         visited = std::make_unique<std::vector<std::vector<bool>>>();
+         distance = std::make_unique<std::vector<std::vector<int>>>();
+         using nodePair = std::pair<int,Node*>;
+         pq = std::make_unique<std::priority_queue<nodePair,std::vector<nodePair>,std::greater<>>>();
+}
+
+void GraphicsScene::memsetDs(){
+         while(!queue->empty()) queue->pop();
+         while(!stack->empty()) stack->pop();
+         while(!pq->empty()) pq->pop();
+         distance->resize(rowCnt,std::vector<int>(colCnt,INT_MAX));
+         visited->resize(rowCnt,std::vector<bool>(colCnt,false));
 }
 
 // sets up the widget used by tabwidget
@@ -304,18 +330,21 @@ void GraphicsScene::getPath() const{
 
 // tab index : 0
 void GraphicsScene::bfs() const{
+
+         bfsTimer->start();
+
          auto infoLine = getStatusBar(0);
-         std::queue<std::pair<Node*,int>> queue; // {node,distance}
-         std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
-
          auto [startX,startY] = sourceNode->getCord();
-         visited[startX][startY] = true;
-         queue.push({sourceNode,0});
+         (*visited)[startX][startY] = true;
+         queue->push({sourceNode,0});
 
-         while(!queue.empty()){
-                  auto [currentNode,currentDistance] = queue.front();
-                  queue.pop();
-
+         connect(bfsTimer,&QTimer::timeout,[this,infoLine = infoLine](){ 
+                  if(queue->empty()){
+                           bfsTimer->stop();
+                           return;
+                  }
+                  auto [currentNode,currentDistance] = queue->front();
+                  queue->pop();
                   auto [currentRow,currentCol] = currentNode->getCord();
 
                   if(!isSpecial(currentNode)){
@@ -331,6 +360,7 @@ void GraphicsScene::bfs() const{
                   infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
+                           bfsTimer->stop();
                            getPath();
                            emit resetButtons();
                            return;
@@ -343,90 +373,89 @@ void GraphicsScene::bfs() const{
                            if(validCordinate(toRow,toCol)){
                                     auto togoNode = getNodeAt(toRow,toCol);
 
-                                    if(isBlock(togoNode) || visited[toRow][toCol]) continue;
+                                    if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
                                     
-                                    visited[toRow][toCol] = true;
+                                    (*visited)[toRow][toCol] = true;
                                     togoNode->setPathParent(currentNode);
-                                    queue.push({togoNode,currentDistance+1});
+                                    queue->push({togoNode,currentDistance+1});
                            }
                   }
-         }
-         emit resetButtons();
+         });
 }
 
 // tab index : 1
 void GraphicsScene::dfs() const{
          auto infoLine = getStatusBar(1);
-         std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
+         stack->push({sourceNode,0});
+         dfsTimer->start();
 
-         bool targetFound = false; 
+         connect(dfsTimer,&QTimer::timeout,[&]{
 
-         std::function<void(Node*,int)> dfsHelper = [&](Node * currentNode,int currentDistance){
-                  auto [curX,curY] = currentNode->getCord();
-                  if(targetFound) return;
+                  if(stack->empty()){
+                           dfsTimer->stop();
+                           return;
+                  }
 
-                  visited[curX][curY] = true;
+                  auto [currentNode,currentDistance] = stack->top();
+                  stack->pop();
 
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
                   }
 
-                  infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
-
-                  auto pathParent = currentNode->getPathParent();
-                  if(pathParent && !isSpecial(pathParent)){
-                           pathParent->setType(Node::Visited);
-                  }
-
                   if(currentNode == targetNode){
-                           targetFound = true;
+                           dfsTimer->stop();
+                           getPath();
                            return;
                   }
 
-                  visited[curX][curY] = true;
+                  auto [currentRow,currentCol] = currentNode->getCord();
+                  auto nodeParent = currentNode->getPathParent();
+
+                  if(nodeParent && !isSpecial(nodeParent)){
+                           nodeParent->setType(Node::Visited);
+                  }
 
                   for(int direction = 0;direction < 4;direction++){
-                           int toRow = curX + xCord[direction];
-                           int toCol = curY + yCord[direction];
+                           int toRow = currentRow + xCord[direction];
+                           int toCol = currentCol + yCord[direction];
 
-                           if(!validCordinate(toRow,toCol) || visited[toRow][toCol]) continue;
+                           if(validCordinate(toRow,toCol)){
+                                    auto togoNode = getNodeAt(toRow,toCol);
 
-                           auto togoNode = getNodeAt(toRow,toCol);
-                           if(isBlock(togoNode)) continue;
-                           
-                           togoNode->setPathParent(currentNode);
-                           dfsHelper(togoNode,currentDistance+1);
+                                    if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
+                                    
+                                    (*visited)[toRow][toCol] = true;
+                                    togoNode->setPathParent(currentNode);
+                                    stack->push({togoNode,currentDistance+1});
+                           }
                   }
-         };
-
-         dfsHelper(sourceNode,0);
-
-         if(targetFound){
-                  getPath();
-         }
-         emit resetButtons();
+         });
 }
 
 // tab index : 2
 void GraphicsScene::dijkstra() const{
+         dijTimer->start();
          auto infoLine = getStatusBar(2);
-         std::vector<std::vector<int>> distance(rowCnt,std::vector<int>(colCnt,INT_MAX));
-
-         std::priority_queue<std::pair<int,Node*>,std::vector<std::pair<int,Node*>>,std::greater<>> pq;
 
          auto [startX,startY] = sourceNode->getCord();
-         
-         distance[startX][startY] = 0;
-         pq.push({0,sourceNode});
 
-         while(!pq.empty()){
-                  auto [currentDistance,currentNode] = pq.top();
-                  pq.pop();
+         (*distance)[startX][startY] = 0;
+         pq->push({0,sourceNode});
+
+         connect(dijTimer,&QTimer::timeout,[this,infoLine = infoLine]{
+
+                  if(pq->empty()){
+                           dijTimer->stop();
+                           return;
+                  }
+
+                  auto [currentDistance,currentNode] = pq->top();
+                  pq->pop();
 
                   auto [curX,curY] = currentNode->getCord();
 
-                  if(distance[curX][curY] != currentDistance) continue;
-
+                  if((*distance)[curX][curY] != currentDistance) return;
 
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
@@ -441,6 +470,7 @@ void GraphicsScene::dijkstra() const{
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
+                           dijTimer->stop();
                            getPath();
                            resetButtons();
                            return;
@@ -454,17 +484,16 @@ void GraphicsScene::dijkstra() const{
                                     auto togoNode = getNodeAt(toRow,toCol);
                                     if(isBlock(togoNode)) continue;
 
-                                    int & destDistance = distance[toRow][toCol]; 
+                                    int & destDistance = (*distance)[toRow][toCol]; 
                                     const int newDistance = currentDistance + 1;
 
                                     if(newDistance < destDistance){
                                              destDistance = newDistance;
                                              togoNode->setPathParent(currentNode);
-                                             pq.push({newDistance,togoNode});
+                                             pq->push({newDistance,togoNode});
                                     }
                            }
                   }
-         }
-         emit resetButtons();
+         });
 }
 

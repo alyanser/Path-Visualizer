@@ -10,6 +10,7 @@ class QGraphicsGridLayout;
 class Node;
 class QHBoxLayout;
 class QTimer;
+#include <utility>
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -18,9 +19,9 @@ public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
 private:
-         const uint32_t speed; // determines the speed at which algorithm will execute
+         uint32_t speed; // determines the speed at which algorithm will execute
          bool on; // determines if any algorithm is running
-         QTimer * timer;
+         QTimer * bfsTimer,* dfsTimer,* dijTimer;
          Node * sourceNode;
          Node * targetNode;
          std::pair<int,int> startCord;// default sourceNode position
@@ -28,11 +29,17 @@ private:
          QTabWidget * bar;
          QGraphicsScene * innerScene; // grid
          QGraphicsGridLayout * innerLayout; // layout of grid
+         std::unique_ptr<std::queue<std::pair<Node*,int>>> queue;
+         std::unique_ptr<std::stack<std::pair<Node*,int>>> stack;
+         std::unique_ptr<std::vector<std::vector<bool>>> visited;
+         std::unique_ptr<std::vector<std::vector<int>>> distance;
+         std::unique_ptr<std::priority_queue<std::pair<int,Node*>,std::vector<std::pair<int,Node*>>,std::greater<>>> pq;
          /// designs
          void populateBar();
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
          void populateGridScene();
          // utility
+         void setDataStructures();
          void setRunning(const bool & newState);
          bool isRunning() const;
          void cleanup();
@@ -44,6 +51,7 @@ private:
          QLineEdit * getStatusBar(const int & tabIndex) const;
          bool isBlock(Node * currentNode) const;
          bool isSpecial(Node * currentNode) const;
+         void memsetDs();
          // algorithm implementations
          void bfs() const;
          void dfs() const ;
