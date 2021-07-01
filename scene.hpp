@@ -35,13 +35,14 @@ private:
          Node * getNodeAt(const int & row,const int & col) const;
          QLineEdit * getStatusBar(const int & tabIndex) const;
          bool isBlock(Node * currentNode) const;
+         bool isSpecial(Node * currentNode) const;
          // implementations
          void bfs() const;
          void dfs() const ;
          void dijkstra() const;
 signals:
          void close() const; // connected with qapplication - to quit
-         void reached() const; // connected with buttons to reset state after process ends
+         void resetButtons() const; // connected with buttons to reset state after process ends
 };
 
 #endif

@@ -1,10 +1,12 @@
 #ifndef NODE_HPP
 #define NODE_HPP
 
-#include <QGraphicsItem>
 #include <QGraphicsLayoutItem>
+#include <QGraphicsObject>
 
-class Node : public QGraphicsItem,public QGraphicsLayoutItem{
+class Node : public QGraphicsObject,public QGraphicsLayoutItem{
+         Q_OBJECT
+         Q_PROPERTY(State type WRITE setType READ getType)
 public:
          enum State{Source,Target,Active,Inactive,Visited,Block,Inpath};
          ///
@@ -25,6 +27,7 @@ protected:
          void paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget) override;
          //events
          void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
+         void dragEnterEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
          State type; // type of node
          int gridX,gridY; // cordinate in gridSceneLayout

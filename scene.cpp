@@ -109,7 +109,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                            auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
                            auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
-                           auto endedTransition = new QSignalTransition(this,&GraphicsScene::reached,statusEnd);
+                           auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
                            auto colorAnimation = new QPropertyAnimation(statusBut,"bgColor",widget);
 
                            colorAnimation->setDuration(1000);
@@ -144,13 +144,11 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            for(int row = 0;row < rowCnt;row++){
                                     for(int col = 0;col < colCnt;col++){
                                              auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                                             if(isSpecial(node)) continue;
                                              node->setPathParent(nullptr);
                                              node->setType(Node::Inactive);
                                     }
                            }
-                           sourceNode->setType(Node::Source);
-                           targetNode->setType(Node::Target);
-
                            auto curTabIndex = bar->currentIndex();
                            auto lineInfo = getStatusBar(curTabIndex);
                            lineInfo->setText("Click on run button on sidebar to display algorithm status");
@@ -193,6 +191,11 @@ QLineEdit * GraphicsScene::getStatusBar(const int & tabIndex) const{
          auto widget = bar->widget(tabIndex);
          auto absLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
          return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(absLayout)->itemAt(0)->widget());
+}
+
+// returns true if current node is either sourceNode or targetNode - more status in update
+bool GraphicsScene::isSpecial(Node * currentNode) const{
+         return currentNode == sourceNode || currentNode == targetNode;
 }
 
 // sets the type - used in cleanup && reset button
@@ -249,7 +252,9 @@ void GraphicsScene::cleanup(){
 void GraphicsScene::getPath() const{
          Node * currentNode = targetNode;
          while(currentNode){
-                  currentNode->setType(Node::Inpath);
+                  if(!isSpecial(currentNode)){
+                           currentNode->setType(Node::Inpath);
+                  }
                   currentNode = currentNode->getPathParent();
          }
 }
@@ -270,10 +275,14 @@ void GraphicsScene::bfs() const{
                   queue.pop();
 
                   auto [currentRow,currentCol] = currentNode->getCord();
-                  currentNode->setType(Node::Active);
+
+                  if(!isSpecial(currentNode)){
+                           currentNode->setType(Node::Active);
+                  }
 
                   auto nodeParent = currentNode->getPathParent();
-                  if(nodeParent){
+
+                  if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::Visited);
                   }
 
@@ -281,6 +290,7 @@ void GraphicsScene::bfs() const{
 
                   if(currentNode == targetNode){
                            getPath();
+                           emit resetButtons();
                            return;
                   }
 
@@ -299,6 +309,7 @@ void GraphicsScene::bfs() const{
                            }
                   }
          }
+         emit resetButtons();
 }
 
 // tab index : 1
@@ -314,11 +325,14 @@ void GraphicsScene::dfs() const{
 
                   visited[curX][curY] = true;
 
-                  currentNode->setType(Node::Active);
+                  if(!isSpecial(currentNode)){
+                           currentNode->setType(Node::Active);
+                  }
+
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
                   auto pathParent = currentNode->getPathParent();
-                  if(pathParent){
+                  if(pathParent && !isSpecial(pathParent)){
                            pathParent->setType(Node::Visited);
                   }
 
@@ -348,6 +362,7 @@ void GraphicsScene::dfs() const{
          if(targetFound){
                   getPath();
          }
+         emit resetButtons();
 }
 
 // tab index : 2
@@ -370,21 +385,22 @@ void GraphicsScene::dijkstra() const{
 
                   if(distance[curX][curY] != currentDistance) continue;
 
-                  auto nodeParent = currentNode->getPathParent();
-                  
-                  if(nodeParent){
-                           assert(nodeParent->getType() != Node::Block);
-                           nodeParent->setType(Node::Visited);
+
+                  if(!isSpecial(currentNode)){
+                           currentNode->setType(Node::Active);
                   }
 
-                  assert(currentNode->getType() != Node::Block);
-                  currentNode->setType(Node::Active);
+                  auto nodeParent = currentNode->getPathParent();
+                  
+                  if(nodeParent && !isSpecial(nodeParent)){
+                           nodeParent->setType(Node::Visited);
+                  }
 
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
                            getPath();
-                           reached();
+                           resetButtons();
                            return;
                   }
 
@@ -407,5 +423,6 @@ void GraphicsScene::dijkstra() const{
                            }
                   }
          }
+         emit resetButtons();
 }
 
