@@ -1,4 +1,5 @@
 #include <QTabWidget>
+#include <QSlider>
 #include <QSignalTransition>
 #include <QGraphicsLineItem>
 #include <QGraphicsLayoutItem>
@@ -29,13 +30,16 @@
 
 // for inner scene
 const int rowCnt = 12,colCnt = 25; 
+const uint32_t defaultSpeed = 250;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
-GraphicsScene::GraphicsScene(const QSize & size) : speed(1000), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
+GraphicsScene::GraphicsScene(const QSize & size) : speed(defaultSpeed), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
          on = false;
+         timer = new QTimer(bar);
+         timer->setInterval(speed);
          addWidget(bar);
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
@@ -168,13 +172,21 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          }
 
          {        // bottom bar : displays the current algorithm status will be used by grid scene
-                  auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
+                  auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",widget);
                   infoLine->setAlignment(Qt::AlignCenter); // text align
                   infoLine->setReadOnly(true);
+                  
+                  auto slider = new QSlider(Qt::Horizontal,widget);
+                  slider->setMaximum(1000);
+                  slider->setMinimum(50);
+                  slider->setValue(defaultSpeed);
 
                   auto bottomLayout = new QHBoxLayout(); 
-                  bottomLayout->setAlignment(Qt::AlignLeft);
+                  bottomLayout->setAlignment(Qt::AlignCenter);
                   bottomLayout->addWidget(infoLine);
+                  bottomLayout->addSpacing(40);
+                  bottomLayout->addWidget(new QLabel("Speed: "));
+                  bottomLayout->addWidget(slider);
                   mainLayout->addLayout(bottomLayout,1,0);
          }
 }

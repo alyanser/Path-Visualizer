@@ -9,6 +9,7 @@ class QLineEdit;
 class QGraphicsGridLayout;
 class Node;
 class QHBoxLayout;
+class QTimer;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -19,6 +20,7 @@ public:
 private:
          const uint32_t speed; // determines the speed at which algorithm will execute
          bool on; // determines if any algorithm is running
+         QTimer * timer;
          Node * sourceNode;
          Node * targetNode;
          std::pair<int,int> startCord;// default sourceNode position
