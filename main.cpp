@@ -19,7 +19,8 @@ int main(int argc, char ** argv){
 
          GraphicsScene scene(mainRect);
          QGraphicsView view(&scene);
-
+         view.setWindowTitle("Basic Graph Algorithm Visualizer");
+         
          QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);
 
          view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

@@ -20,7 +20,7 @@ public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
 private:
-         uint32_t speed; // determines the speed at which algorithm will execute
+         uint32_t timerDelay; // determines the timer after which timer will shoot
          bool on; // determines if any algorithm is running
          QTimer * bfsTimer,* dfsTimer,* dijTimer;
          Node * sourceNode;
@@ -52,6 +52,7 @@ private:
          QLineEdit * getStatusBar(const int & tabIndex) const;
          bool isBlock(Node * currentNode) const;
          bool isSpecial(Node * currentNode) const;
+         void setTimersIntervals(const uint32_t & newSpeed) const;
          void memsetDs();
          void stopTimers() const;
          // algorithm implementations
@@ -62,6 +63,8 @@ signals:
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends
          void runningStatusChanged(const bool & newState);
+public slots:
+         void setSpeed(const uint32_t & newSpeed);
 };
 
 #endif

@@ -33,11 +33,11 @@
 
 // for inner scene
 const int rowCnt = 12,colCnt = 25; 
-const uint32_t defaultSpeed = 75;
+const uint32_t defDelay = 75;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
-GraphicsScene::GraphicsScene(const QSize & size) : speed(defaultSpeed), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
+GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
          on = false;
@@ -45,10 +45,8 @@ GraphicsScene::GraphicsScene(const QSize & size) : speed(defaultSpeed), bar(new 
          dfsTimer = new QTimer(bar);
          dijTimer = new QTimer(bar);
 
-         bfsTimer->setInterval(speed);
-         dfsTimer->setInterval(speed);
-         dijTimer->setInterval(speed);
-         
+         setTimersIntervals(timerDelay);
+
          addWidget(bar);
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
@@ -164,8 +162,16 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            machine->start();
                   }
 
+                  // when an information button is pressed
                   connect(infoBut,&QPushButton::clicked,[algoName,infoText]{
+                           // setting widget gives weird layout - TODO fix later
                            QMessageBox::information(nullptr,algoName,infoText);
+                  });
+
+                  // when an algorithm finishes
+                  connect(this,&GraphicsScene::resetButtons,[this,statusBut]{
+                           statusBut->setText("Run");
+                           memsetDs();
                   });
 
                   connect(statusBut,&QPushButton::clicked,[this,statusBut]{
@@ -195,6 +201,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                   connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 
+                  // different from resetbuttons signal as that doesn't reset whole grid
                   connect(resetBut,&QPushButton::clicked,[this,statusBut]{
                            statusBut->setText("Run");
                            stopTimers();
@@ -228,10 +235,12 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   infoLine->setReadOnly(true);
                   
                   auto slider = new QSlider(Qt::Horizontal,widget);
-                  slider->setMaximum(1000);
-                  slider->setMinimum(50);
-                  slider->setValue(defaultSpeed);
+                  slider->setRange(0,1000);
+                  slider->setValue(925);
+                  slider->setTracking(true);
 
+                  connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setSpeed);
+         
                   auto bottomLayout = new QHBoxLayout(); 
                   bottomLayout->setAlignment(Qt::AlignCenter);
                   bottomLayout->addWidget(infoLine);
@@ -244,13 +253,29 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
 /// utility ///
 
+// sets the inner grid state
 void GraphicsScene::setRunning(const bool & newState){
          on = newState;
-         emit runningStatusChanged(on);
+         emit runningStatusChanged(on); // so node class may disable drag events
 }
 
+// whether any algorithm is currently in process
 bool GraphicsScene::isRunning() const{
          return on;
+}
+
+// sets the speed at which an algorithm will be proecssed - linked with timers
+void GraphicsScene::setSpeed(const uint32_t & newDelay){
+         // slide bar has more value when it is set on the fuller side convert before
+         timerDelay = std::abs(1000ll - newDelay);
+         setTimersIntervals(timerDelay);
+}
+
+// sets intervals - linked with slide bar
+void GraphicsScene::setTimersIntervals(const uint32_t & newDelay) const{
+         dfsTimer->setInterval(newDelay);
+         bfsTimer->setInterval(newDelay);
+         dijTimer->setInterval(newDelay);
 }
 
 // stops all timers - removes pending shots if any
@@ -494,9 +519,9 @@ void GraphicsScene::dijkstra(const bool & newStart) const{
          connect(dijTimer,&QTimer::timeout,[this,infoLine = infoLine]{
 
                   if(pq->empty()){
-                           qInfo() << "hello there";
-                           QMessageBox::warning(nullptr,"No path","Could not reach destination.");
                            dijTimer->stop();
+                           infoLine->setText("Could not reach destination.");
+                           emit resetButtons();
                            return;
                   }
 
