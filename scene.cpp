@@ -385,9 +385,14 @@ void GraphicsScene::bfs() const{
 
 // tab index : 1
 void GraphicsScene::dfs() const{
+         dfsTimer->start();
          auto infoLine = getStatusBar(1);
          stack->push({sourceNode,0});
-         dfsTimer->start();
+
+         {
+                  auto [startX,startY] = sourceNode->getCord();
+                  (*visited)[startX][startY] = true;
+         }
 
          connect(dfsTimer,&QTimer::timeout,[&]{
 
