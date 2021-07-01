@@ -2,6 +2,8 @@
 #define SCENE_HPP
 
 #include <QGraphicsScene>
+#include <queue>
+#include <stack>  
 
 class QTabWidget;
 class QSize;
@@ -10,7 +12,6 @@ class QGraphicsGridLayout;
 class Node;
 class QHBoxLayout;
 class QTimer;
-#include <utility>
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -52,10 +53,11 @@ private:
          bool isBlock(Node * currentNode) const;
          bool isSpecial(Node * currentNode) const;
          void memsetDs();
+         void stopTimers() const;
          // algorithm implementations
-         void bfs() const;
-         void dfs() const ;
-         void dijkstra() const;
+         void bfs(const bool & newStart) const;
+         void dfs(const bool & newStart) const ;
+         void dijkstra(const bool & newStart) const;
 signals:
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends

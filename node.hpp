@@ -43,25 +43,3 @@ public slots:
 };
 
 #endif
-
-
-//     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
-//     virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent *event);
-//     virtual void dropEvent(QGraphicsSceneDragDropEvent *event);
-
-//  virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
-//     virtual void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
-//     virtual void focusInEvent(QFocusEvent *event);
-//     virtual void focusOutEvent(QFocusEvent *event);
-//     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-//     virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-//     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
-//     virtual void keyPressEvent(QKeyEvent *event);
-//     virtual void keyReleaseEvent(QKeyEvent *event);
-
-//     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-//     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-//     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
-//     virtual void wheelEvent(QGraphicsSceneWheelEvent *event);
-//     virtual void inputMethodEvent(QInputMethodEvent *event);
-//     virtual QVariant inputMethodQuery(Qt::InputMethodQuery query) const;

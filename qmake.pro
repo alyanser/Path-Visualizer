@@ -1,9 +1,7 @@
 QT += core gui widgets statemachine
+
 CONFIG += \
          c++17 \
-         precompile_header
-
-PRECOMPILED_HEADER = ~/Qt/precompiler.hpp
 
 SOURCES += \
          main.cpp \

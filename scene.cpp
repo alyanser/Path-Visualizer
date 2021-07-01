@@ -25,6 +25,7 @@
 #include <queue>
 #include <stack>
 #include <QTimer>
+#include <iostream>
 #include "scene.hpp"
 #include "PushButton.hpp"
 #include "node.hpp"
@@ -32,10 +33,9 @@
 
 // for inner scene
 const int rowCnt = 12,colCnt = 25; 
-const uint32_t defaultSpeed = 250;
+const uint32_t defaultSpeed = 75;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
-
 
 GraphicsScene::GraphicsScene(const QSize & size) : speed(defaultSpeed), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          sourceNode = targetNode = nullptr;
@@ -44,6 +44,10 @@ GraphicsScene::GraphicsScene(const QSize & size) : speed(defaultSpeed), bar(new 
          bfsTimer = new QTimer(bar);
          dfsTimer = new QTimer(bar);
          dijTimer = new QTimer(bar);
+
+         bfsTimer->setInterval(speed);
+         dfsTimer->setInterval(speed);
+         dijTimer->setInterval(speed);
          
          addWidget(bar);
          bar->setFixedWidth(size.width());
@@ -86,20 +90,23 @@ void GraphicsScene::populateBar(){
 
 //! self deletion
 void GraphicsScene::setDataStructures(){
-         queue = std::make_unique<std::queue<std::pair<Node*,int>>>(); // {currentnode,distance}
-         stack = std::make_unique<std::stack<std::pair<Node*,int>>>();
-         visited = std::make_unique<std::vector<std::vector<bool>>>();
-         distance = std::make_unique<std::vector<std::vector<int>>>();
+         using std::make_unique;
+         using std::vector;
+
+         queue = make_unique<std::queue<std::pair<Node*,int>>>(); // {node,dist}
+         stack = make_unique<std::stack<std::pair<Node*,int>>>(); // {node,dist}
+         visited = make_unique<vector<vector<bool>>>(); 
+         distance = make_unique<vector<vector<int>>>();
          using nodePair = std::pair<int,Node*>;
-         pq = std::make_unique<std::priority_queue<nodePair,std::vector<nodePair>,std::greater<>>>();
+         pq = make_unique<std::priority_queue<nodePair,vector<nodePair>,std::greater<>>>(); // {dist,node}
 }
 
 void GraphicsScene::memsetDs(){
          while(!queue->empty()) queue->pop();
          while(!stack->empty()) stack->pop();
          while(!pq->empty()) pq->pop();
-         distance->resize(rowCnt,std::vector<int>(colCnt,INT_MAX));
-         visited->resize(rowCnt,std::vector<bool>(colCnt,false));
+         distance->assign(rowCnt,std::vector<int>(colCnt,INT_MAX));
+         visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
 
 // sets up the widget used by tabwidget
@@ -135,8 +142,6 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            machine->setInitialState(statusStart);
                            statusStart->assignProperty(statusBut,"bgColor",QColor(Qt::green));
                            statusEnd->assignProperty(statusBut,"bgColor",QColor(Qt::red));
-                           statusStart->assignProperty(statusBut,"text","Run");
-                           statusEnd->assignProperty(statusBut,"text","Stop");
 
                            statusStart->assignProperty(this,"on",false);
                            statusEnd->assignProperty(this,"on",true);
@@ -163,27 +168,47 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            QMessageBox::information(nullptr,algoName,infoText);
                   });
 
-                  connect(statusBut,&QPushButton::clicked,[this]{
-                           cleanup();
+                  connect(statusBut,&QPushButton::clicked,[this,statusBut]{
+                           const QString & currentText = statusBut->text();
+                           bool newStart = false;
+
+                           if(currentText == "Stop"){
+                                    statusBut->setText("Continue");
+                                    stopTimers();
+                                    return;
+                           }else if(currentText == "Run"){ // remove any previous items
+                                    statusBut->setText("Stop");
+                                    cleanup();
+                                    newStart = true;
+                           }else{
+                                    statusBut->setText("Stop");
+                           }
+
                            switch(bar->currentIndex()){
-                                    case 0 : bfs();break;
-                                    case 1 : dfs();break;
-                                    case 2 : dijkstra();break;
+                                    case 0 : bfs(newStart);break;
+                                    case 1 : dfs(newStart);break;
+                                    case 2 : dijkstra(newStart);break;
                                     default : assert(false);
                            }
+
                   });
 
                   connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 
-                  connect(resetBut,&QPushButton::clicked,[this]{
+                  connect(resetBut,&QPushButton::clicked,[this,statusBut]{
+                           statusBut->setText("Run");
+                           stopTimers();
+                           emit resetButtons();
+                           memsetDs(); // remove any pending items in data structures
                            for(int row = 0;row < rowCnt;row++){
                                     for(int col = 0;col < colCnt;col++){
                                              auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
-                                             if(isSpecial(node)) continue;
+                                             if(isSpecial(node)) continue; // do not remove source or target node
                                              node->setPathParent(nullptr);
                                              node->setType(Node::Inactive);
                                     }
                            }
+                           // reset bottom status bar text
                            auto curTabIndex = bar->currentIndex();
                            auto lineInfo = getStatusBar(curTabIndex);
                            lineInfo->setText("Click on run button on sidebar to display algorithm status");
@@ -226,6 +251,13 @@ void GraphicsScene::setRunning(const bool & newState){
 
 bool GraphicsScene::isRunning() const{
          return on;
+}
+
+// stops all timers - removes pending shots if any
+void GraphicsScene::stopTimers() const{
+         dfsTimer->stop();
+         bfsTimer->stop();
+         dijTimer->stop();
 }
 
 // returns a new node and connects signals to update when source and target is changed
@@ -329,18 +361,23 @@ void GraphicsScene::getPath() const{
 }
 
 // tab index : 0
-void GraphicsScene::bfs() const{
+void GraphicsScene::bfs(const bool & newStart) const{
 
          bfsTimer->start();
 
          auto infoLine = getStatusBar(0);
-         auto [startX,startY] = sourceNode->getCord();
-         (*visited)[startX][startY] = true;
-         queue->push({sourceNode,0});
 
-         connect(bfsTimer,&QTimer::timeout,[this,infoLine = infoLine](){ 
+         if(newStart){
+                  queue->push({sourceNode,0});
+                  auto [startX,startY] = sourceNode->getCord();
+                  (*visited)[startX][startY] = true;
+         }
+
+         connect(bfsTimer,&QTimer::timeout,[this,infoLine = infoLine]{ 
                   if(queue->empty()){
                            bfsTimer->stop();
+                           infoLine->setText("Could not reach destination.");
+                           emit resetButtons();
                            return;
                   }
                   auto [currentNode,currentDistance] = queue->front();
@@ -384,25 +421,29 @@ void GraphicsScene::bfs() const{
 }
 
 // tab index : 1
-void GraphicsScene::dfs() const{
+void GraphicsScene::dfs(const bool & newStart) const{
          dfsTimer->start();
          auto infoLine = getStatusBar(1);
-         stack->push({sourceNode,0});
 
-         {
+         if(newStart){
+                  stack->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
                   (*visited)[startX][startY] = true;
          }
 
-         connect(dfsTimer,&QTimer::timeout,[&]{
+         connect(dfsTimer,&QTimer::timeout,[this,infoLine = infoLine]{
 
                   if(stack->empty()){
                            dfsTimer->stop();
+                           infoLine->setText("Could not reach destination.");
+                           emit resetButtons();
                            return;
                   }
 
                   auto [currentNode,currentDistance] = stack->top();
                   stack->pop();
+
+                  infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
@@ -411,6 +452,7 @@ void GraphicsScene::dfs() const{
                   if(currentNode == targetNode){
                            dfsTimer->stop();
                            getPath();
+                           emit resetButtons();
                            return;
                   }
 
@@ -439,18 +481,21 @@ void GraphicsScene::dfs() const{
 }
 
 // tab index : 2
-void GraphicsScene::dijkstra() const{
+void GraphicsScene::dijkstra(const bool & newStart) const{
          dijTimer->start();
          auto infoLine = getStatusBar(2);
-
-         auto [startX,startY] = sourceNode->getCord();
-
-         (*distance)[startX][startY] = 0;
-         pq->push({0,sourceNode});
+         
+         if(newStart){
+                  pq->push({0,sourceNode});
+                  auto [startX,startY] = sourceNode->getCord();
+                  (*distance)[startX][startY] = 0;
+         }
 
          connect(dijTimer,&QTimer::timeout,[this,infoLine = infoLine]{
 
                   if(pq->empty()){
+                           qInfo() << "hello there";
+                           QMessageBox::warning(nullptr,"No path","Could not reach destination.");
                            dijTimer->stop();
                            return;
                   }
@@ -477,7 +522,7 @@ void GraphicsScene::dijkstra() const{
                   if(currentNode == targetNode){
                            dijTimer->stop();
                            getPath();
-                           resetButtons();
+                           emit resetButtons();
                            return;
                   }
 
@@ -487,6 +532,7 @@ void GraphicsScene::dijkstra() const{
 
                            if(validCordinate(toRow,toCol)){
                                     auto togoNode = getNodeAt(toRow,toCol);
+
                                     if(isBlock(togoNode)) continue;
 
                                     int & destDistance = (*distance)[toRow][toCol]; 
