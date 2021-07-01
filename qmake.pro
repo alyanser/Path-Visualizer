@@ -1,5 +1,9 @@
 QT += core gui widgets statemachine
-CONFIG += c++17
+CONFIG += \
+         c++17 \
+         precompile_header
+
+PRECOMPILED_HEADER = ~/Qt/precompiler.hpp
 
 SOURCES += \
          main.cpp \
@@ -9,8 +13,6 @@ SOURCES += \
 HEADERS += \
          scene.hpp \
          PushButton.hpp \
-         node.hpp
-
 
 TARGET = qtGraphAlgos
 

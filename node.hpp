@@ -3,33 +3,30 @@
 
 #include <QGraphicsItem>
 #include <QGraphicsLayoutItem>
-#include <QObject>
 
-class Node : public QObject,public QGraphicsItem,public QGraphicsLayoutItem{
-         Q_OBJECT
+class Node : public QGraphicsItem,public QGraphicsLayoutItem{
 public:
          enum State{Source,Target,Active,Inactive,Visited,Block,Inpath};
-         ///
+         // condes
          Node(int row,int col,QGraphicsItem * parent = nullptr);
          ~Node() = default;
-
+         // utility
          void setType(const State & newType);
          void setPathParent(Node * newParent);
          Node * getPathParent() const;
          std::pair<int,int> getCord() const;
 protected:
-         // layoutitem
+         // overrides qgraphicslayout methods
          void setGeometry(const QRectF & geometry) override;
          QSizeF sizeHint(Qt::SizeHint which, const QSizeF & constraint = QSizeF()) const override;
-         // graphicsitem
+         // overrides qgprahicsitem methods
          QRectF boundingRect() const override;
          void paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget) override;
          //events
-         void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
 private:
-         State type;
+         State type; // kind of node
          int gridX,gridY; // cordinate in gridSceneLayout
-         Node * pathParent; // for paths
+         Node * pathParent; // parent for paths
 };
 
 #endif

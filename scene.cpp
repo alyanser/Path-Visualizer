@@ -29,13 +29,12 @@
 
 // for inner scene
 const int rowCnt = 12,colCnt = 25; 
-int xCord[] {-1,1,0,0};
-int yCord[] {0,0,1,-1};
+const int xCord[] {-1,1,0,0};
+const int yCord[] {0,0,1,-1};
 
 GraphicsScene::GraphicsScene(const QSize & size) : bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
-
          addWidget(bar);
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
@@ -131,7 +130,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
 
                   connect(statusBut,&QPushButton::clicked,[this]{
-                           reset(); // resets teh grid
+                           //TODO animation
+                           reset(); // resets grid
                            switch(bar->currentIndex()){
                                     case 0 : bfs();break;
                                     case 1 : dfs();break;
@@ -155,7 +155,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
          {        // bottom bar : displays the current algorithm status will be used by grid scene
                   auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status");
-                  infoLine->setAlignment(Qt::AlignCenter);
+                  infoLine->setAlignment(Qt::AlignCenter); // text align
                   infoLine->setReadOnly(true);
 
                   auto bottomLayout = new QHBoxLayout(); 
@@ -226,12 +226,11 @@ void GraphicsScene::reset(){
          lineInfo->setText("Click on run button on sidebar to display algorithm status");
 }
 
-/// implementations gets called when statusBut is clicked ///
+/// implementations - gets called when statusBut is clicked ///
 
-// follows the parent pointer in node class and marks the visited node to show apth
+// follows the parent pointer in node class and marks the visited node to show path
 void GraphicsScene::getPath() const{
          Node * currentNode = targetNode;
-
          while(currentNode){
                   currentNode->setType(Node::Inpath);
                   currentNode = currentNode->getPathParent();
@@ -287,7 +286,7 @@ void GraphicsScene::dfs() const{
          auto infoLine = getStatusBar(1);
          std::vector<std::vector<bool>> visited(rowCnt,std::vector<bool>(colCnt));
 
-         bool targetFound = false; // whether the endCord is reached or not
+         bool targetFound = false; 
 
          std::function<void(Node*,int)> dfsHelper = [&](Node * currentNode,int currentDistance){
                   auto [curX,curY] = currentNode->getCord();
@@ -313,6 +312,7 @@ void GraphicsScene::dfs() const{
                   for(int direction = 0;direction < 4;direction++){
                            int toRow = curX + xCord[direction];
                            int toCol = curY + yCord[direction];
+
                            if(!validCordinate(toRow,toCol) || visited[toRow][toCol]) continue;
 
                            auto togoNode = getNodeAt(toRow,toCol);
@@ -327,6 +327,7 @@ void GraphicsScene::dfs() const{
                   getPath();
          }
 }
+
 // tab index : 2
 void GraphicsScene::dijkstra() const{
          auto infoLine = getStatusBar(2);
@@ -380,3 +381,4 @@ void GraphicsScene::dijkstra() const{
                   }
          }
 }
+

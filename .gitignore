@@ -54,3 +54,4 @@ compile_commands.json
 # custom
 qtGraphAlgos
 .vscode
+*.gch
