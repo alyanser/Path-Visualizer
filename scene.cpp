@@ -33,7 +33,7 @@
 
 // for inner scene
 const int rowCnt = 12,colCnt = 25; 
-const uint32_t defDelay = 75;
+const uint32_t defDelay = 25;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
@@ -41,6 +41,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new
          sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
          on = false;
+
          bfsTimer = new QTimer(bar);
          dfsTimer = new QTimer(bar);
          dijTimer = new QTimer(bar);
@@ -86,7 +87,6 @@ void GraphicsScene::populateBar(){
          }
 }
 
-//! self deletion
 void GraphicsScene::setDataStructures(){
          using std::make_unique;
          using std::vector;
@@ -169,12 +169,12 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
 
                   // when an algorithm finishes
-                  connect(this,&GraphicsScene::resetButtons,[this,statusBut]{
+                  connect(this,&GraphicsScene::resetButtons,statusBut,[this,statusBut]{
                            statusBut->setText("Run");
                            memsetDs();
                   });
 
-                  connect(statusBut,&QPushButton::clicked,[this,statusBut]{
+                  connect(statusBut,&QPushButton::clicked,statusBut,[this,statusBut]{
                            const QString & currentText = statusBut->text();
                            bool newStart = false;
 
@@ -202,7 +202,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 
                   // different from resetbuttons signal as that doesn't reset whole grid
-                  connect(resetBut,&QPushButton::clicked,[this,statusBut]{
+                  connect(resetBut,&QPushButton::clicked,statusBut,[this,statusBut]{
                            statusBut->setText("Run");
                            stopTimers();
                            emit resetButtons();
@@ -221,7 +221,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            lineInfo->setText("Click on run button on sidebar to display algorithm status");
                   });
 
-                  connect(exitBut,&QPushButton::clicked,[this]{
+                  connect(exitBut,&QPushButton::clicked,this,[this]{
                            auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
                            if(choice == QMessageBox::Yes){
                                     emit close();
