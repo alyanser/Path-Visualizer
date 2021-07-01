@@ -65,3 +65,27 @@ std::pair<int,int> Node::getCord() const{
 Node * Node::getPathParent() const{
          return pathParent;
 }
+
+Node::State Node::getType() const{
+         return type;
+}
+
+void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
+         // qInfo() << event;
+         
+         switch(type){
+                  case Source : {
+
+                  }
+                  case Target : {
+
+                  }
+
+                  case Inactive : {
+                           setType(Block);
+                  }
+
+                  default : {}
+         }
+         QGraphicsItem::mousePressEvent(event);
+}

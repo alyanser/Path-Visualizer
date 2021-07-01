@@ -131,7 +131,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
                   connect(statusBut,&QPushButton::clicked,[this]{
                            //TODO animation
-                           reset(); // resets grid
+                           cleanup();
                            switch(bar->currentIndex()){
                                     case 0 : bfs();break;
                                     case 1 : dfs();break;
@@ -141,8 +141,19 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
 
                   connect(resetBut,&QPushButton::clicked,[this]{
-                           reset();
-                           emit reached();
+                           for(int row = 0;row < rowCnt;row++){
+                                    for(int col = 0;col < colCnt;col++){
+                                             auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                                             node->setPathParent(nullptr);
+                                             node->setType(Node::Inactive);
+                                    }
+                           }
+                           sourceNode->setType(Node::Source);
+                           targetNode->setType(Node::Target);
+
+                           auto curTabIndex = bar->currentIndex();
+                           auto lineInfo = getStatusBar(curTabIndex);
+                           lineInfo->setText("Click on run button on sidebar to display algorithm status");
                   });
 
                   connect(exitBut,&QPushButton::clicked,[this]{
@@ -184,6 +195,18 @@ QLineEdit * GraphicsScene::getStatusBar(const int & tabIndex) const{
          return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(absLayout)->itemAt(0)->widget());
 }
 
+// sets the type - used in cleanup && reset button
+void GraphicsScene::updateSrcTarNodes(){
+         assert(sourceNode && targetNode);
+         sourceNode->setType(Node::Source);
+         targetNode->setType(Node::Target);
+}
+
+// checks whether the algorithm can proceed through the current node
+bool GraphicsScene::isBlock(Node * currentNode) const{
+         return currentNode->getType() == Node::Block;
+}
+
 // sets up the inner grid scene
 void GraphicsScene::populateGridScene(){
          auto holder = new QGraphicsWidget();
@@ -204,26 +227,20 @@ void GraphicsScene::populateGridScene(){
 
          sourceNode = getNodeAt(startCord.first,startCord.second);
          targetNode = getNodeAt(endCord.first,endCord.second);
-         sourceNode->setType(Node::Source);
-         targetNode->setType(Node::Target);
+         updateSrcTarNodes();
          innerScene->setFocus();
 }
 
-// resets the inner grid
-void GraphicsScene::reset(){
+// clears everything except the user specified blocks
+void GraphicsScene::cleanup(){
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
                            auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
-                           node->setPathParent(nullptr);
+                           if(isBlock(node)) continue;
                            node->setType(Node::Inactive);
                   }
          }
-         sourceNode->setType(Node::Source);
-         targetNode->setType(Node::Target);
-
-         auto curTabIndex = bar->currentIndex();
-         auto lineInfo = getStatusBar(curTabIndex);
-         lineInfo->setText("Click on run button on sidebar to display algorithm status");
+         updateSrcTarNodes();
 }
 
 /// implementations - gets called when statusBut is clicked ///
@@ -271,9 +288,12 @@ void GraphicsScene::bfs() const{
                            int toRow = currentRow + xCord[direction];
                            int toCol = currentCol + yCord[direction];
 
-                           if(validCordinate(toRow,toCol) && !visited[toRow][toCol]){
-                                    visited[toRow][toCol] = true;
+                           if(validCordinate(toRow,toCol)){
                                     auto togoNode = getNodeAt(toRow,toCol);
+
+                                    if(isBlock(togoNode) || visited[toRow][toCol]) continue;
+                                    
+                                    visited[toRow][toCol] = true;
                                     togoNode->setPathParent(currentNode);
                                     queue.push({togoNode,currentDistance+1});
                            }
@@ -293,7 +313,7 @@ void GraphicsScene::dfs() const{
                   if(targetFound) return;
 
                   visited[curX][curY] = true;
-                  
+
                   currentNode->setType(Node::Active);
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
@@ -316,6 +336,8 @@ void GraphicsScene::dfs() const{
                            if(!validCordinate(toRow,toCol) || visited[toRow][toCol]) continue;
 
                            auto togoNode = getNodeAt(toRow,toCol);
+                           if(isBlock(togoNode)) continue;
+                           
                            togoNode->setPathParent(currentNode);
                            dfsHelper(togoNode,currentDistance+1);
                   }
@@ -351,10 +373,13 @@ void GraphicsScene::dijkstra() const{
                   auto nodeParent = currentNode->getPathParent();
                   
                   if(nodeParent){
+                           assert(nodeParent->getType() != Node::Block);
                            nodeParent->setType(Node::Visited);
                   }
 
+                  assert(currentNode->getType() != Node::Block);
                   currentNode->setType(Node::Active);
+
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
@@ -368,12 +393,14 @@ void GraphicsScene::dijkstra() const{
                            int toCol = curY + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
+                                    auto togoNode = getNodeAt(toRow,toCol);
+                                    if(isBlock(togoNode)) continue;
+
                                     int & destDistance = distance[toRow][toCol]; 
                                     const int newDistance = currentDistance + 1;
 
                                     if(newDistance < destDistance){
                                              destDistance = newDistance;
-                                             auto togoNode = getNodeAt(toRow,toCol);
                                              togoNode->setPathParent(currentNode);
                                              pq.push({newDistance,togoNode});
                                     }
