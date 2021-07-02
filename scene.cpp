@@ -38,13 +38,13 @@ const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
 GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
-         sourceNode = targetNode = nullptr;
          setSceneRect(0,0,size.width(),size.height());
-         on = false;
 
+         // bar is set as parent - auto deletion of timers
          bfsTimer = new QTimer(bar);
          dfsTimer = new QTimer(bar);
-         dijTimer = new QTimer(bar);
+         dijkstraTimer = new QTimer(bar);
+         pathTimer = new QTimer(bar);
 
          setTimersIntervals(timerDelay);
 
@@ -52,10 +52,16 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new
          bar->setFixedWidth(size.width());
          bar->setFixedHeight(size.height()-25); //? fix
 
-         setDataStructures();
+         allocDataStructures();
          memsetDs(); 
          populateBar();
          populateGridScene();
+
+         // connects the timers' timeout signals with lambdas inside these functions
+         bfsConnect();
+         dfsConnect();
+         dijkstraConnect();
+         pathConnect();
 }
 
 GraphicsScene::~GraphicsScene(){
@@ -87,7 +93,7 @@ void GraphicsScene::populateBar(){
          }
 }
 
-void GraphicsScene::setDataStructures(){
+void GraphicsScene::allocDataStructures(){
          using std::make_unique;
          using std::vector;
 
@@ -168,7 +174,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            QMessageBox::information(nullptr,algoName,infoText);
                   });
 
-                  // when an algorithm finishes
+                  // emitted when an algorithm finishes 
                   connect(this,&GraphicsScene::resetButtons,statusBut,[this,statusBut]{
                            statusBut->setText("Run");
                            memsetDs();
@@ -191,9 +197,9 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            }
 
                            switch(bar->currentIndex()){
-                                    case 0 : bfs(newStart);break;
-                                    case 1 : dfs(newStart);break;
-                                    case 2 : dijkstra(newStart);break;
+                                    case 0 : bfsStart(newStart);break;
+                                    case 1 : dfsStart(newStart);break;
+                                    case 2 : dijkstraStart(newStart);break;
                                     default : assert(false);
                            }
 
@@ -229,7 +235,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
          }
 
-         {        // bottom bar : displays the current algorithm status will be used by grid scene
+         {        // @bottom bar : displays the current algorithm status will be used by grid scene
                   auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",widget);
                   infoLine->setAlignment(Qt::AlignCenter); // text align
                   infoLine->setReadOnly(true);
@@ -255,13 +261,13 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
 // sets the inner grid state
 void GraphicsScene::setRunning(const bool & newState){
-         on = newState;
-         emit runningStatusChanged(on); // so node class may disable drag events
+         runningState = newState;
+         emit runningStatusChanged(runningState); // so node class may disable drag events
 }
 
 // whether any algorithm is currently in process
 bool GraphicsScene::isRunning() const{
-         return on;
+         return runningState;
 }
 
 // sets the speed at which an algorithm will be proecssed - linked with timers
@@ -275,14 +281,16 @@ void GraphicsScene::setDelay(const uint32_t & newDelay){
 void GraphicsScene::setTimersIntervals(const uint32_t & newDelay) const{
          dfsTimer->setInterval(newDelay);
          bfsTimer->setInterval(newDelay);
-         dijTimer->setInterval(newDelay);
+         dijkstraTimer->setInterval(newDelay);
+         pathTimer->setInterval(newDelay);
 }
 
 // stops all timers - removes pending shots if any
 void GraphicsScene::stopTimers() const{
          dfsTimer->stop();
          bfsTimer->stop();
-         dijTimer->stop();
+         dijkstraTimer->stop();
+         pathTimer->stop();
 }
 
 // returns a new node and connects signals to update when source and target is changed
@@ -296,7 +304,6 @@ Node * GraphicsScene::getNewNode(const int & row,const int & col){
          connect(node,&Node::targetSet,[&targetNode = targetNode,node]{
                   targetNode = node;
          });
-
          return node;
 }
 
@@ -311,7 +318,6 @@ bool GraphicsScene::validCordinate(const int & row,const int & col) const{
 }
 
 // returns the bottom lineEdit which displays the current algorithm state
-//? improve later
 QLineEdit * GraphicsScene::getStatusBar(const int & tabIndex) const{
          assert(tabIndex < bar->count());
          auto widget = bar->widget(tabIndex);
@@ -356,7 +362,7 @@ void GraphicsScene::populateGridScene(){
 
          sourceNode = getNodeAt(startCord.first,startCord.second);
          targetNode = getNodeAt(endCord.first,endCord.second);
-         updateSrcTarNodes();
+         updateSrcTarNodes(); 
          innerScene->setFocus();
 }
 
@@ -375,31 +381,70 @@ void GraphicsScene::cleanup(){
 /// implementations - gets called when statusBut is clicked ///
 
 // follows the parent pointer in node class and marks the visited node to show path
-void GraphicsScene::getPath() const{
-         Node * currentNode = targetNode;
-         while(currentNode){
-                  if(!isSpecial(currentNode)){
+void GraphicsScene::pathConnect() const{
+         auto moveUp = [this,currentNode = targetNode,counter = 0]() mutable {
+                  if(!counter++){ // called for the first time - TODO find better way
+                           currentNode = targetNode;
+                  }
+                  if(!currentNode){
+                           counter = 0; // reset counter for the next start
+                           pathTimer->stop();
+                           return;
+                  }else if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Inpath);
                   }
                   currentNode = currentNode->getPathParent();
-         }
+         };
+         connect(pathTimer,&QTimer::timeout,targetNode,moveUp,Qt::UniqueConnection);
 }
 
-// tab index : 0
-void GraphicsScene::bfs(const bool & newStart) const{
+/// starters ///
 
-         bfsTimer->start();
+// called when an algorithm succeeds
+void GraphicsScene::getPath() const{
+         pathTimer->start();
+}
 
-         auto infoLine = getStatusBar(0);
-
-         if(newStart){
+// called when start is pressed on bfs Tab
+void GraphicsScene::bfsStart(const bool & newStart) const{
+         if(newStart){ 
                   queue->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
                   (*visited)[startX][startY] = true;
          }
+         bfsTimer->start();
+}
+
+// called when start is pressed on dfs tab
+void GraphicsScene::dfsStart(const bool & newStart) const{
+         if(newStart){
+                  stack->push({sourceNode,0});
+                  auto [startX,startY] = sourceNode->getCord();
+                  (*visited)[startX][startY] = true;
+         }
+         dfsTimer->start();
+}
+
+// called when start is pressed on dijistraTab
+void GraphicsScene::dijkstraStart(const bool & newStart) const{
+         if(newStart){ 
+                  pq->push({0,sourceNode});
+                  auto [startX,startY] = sourceNode->getCord();
+                  (*distance)[startX][startY] = 0;
+         }
+         dijkstraTimer->start();
+}
+
+/// connections - only called once to set connections with respective timers ///
+//TODO move out of functions and connect directly
+
+// tab index : 0
+// connects bfstimer with the 'implementation' lambda
+void GraphicsScene::bfsConnect() const{
+         auto infoLine = getStatusBar(0);
 
          auto implementation = [this,infoLine = infoLine]{
-                   if(queue->empty()){
+                  if(queue->empty()){
                            bfsTimer->stop();
                            infoLine->setText("Could not reach destination.");
                            emit resetButtons();
@@ -443,21 +488,15 @@ void GraphicsScene::bfs(const bool & newStart) const{
                            }
                   }
          };
-
-         connect(bfsTimer,&QTimer::timeout,this,implementation,Qt::UniqueConnection);
+         // calls std::move on implemenation - connected just once
+         connect(bfsTimer,&QTimer::timeout,implementation);
 }
 
 // tab index : 1
-void GraphicsScene::dfs(const bool & newStart) const{
-         dfsTimer->start();
+// connects dfsTimer with the 'implementation' lambda
+void GraphicsScene::dfsConnect() const{
          auto infoLine = getStatusBar(1);
-
-         if(newStart){
-                  stack->push({sourceNode,0});
-                  auto [startX,startY] = sourceNode->getCord();
-                  (*visited)[startX][startY] = true;
-         }
-
+         
          auto implementation = [this,infoLine = infoLine]{
 
                   if(stack->empty()){
@@ -505,24 +544,18 @@ void GraphicsScene::dfs(const bool & newStart) const{
                            }
                   }
          };
-
-         connect(dfsTimer,&QTimer::timeout,this,implementation,Qt::UniqueConnection);
+         // calls std::move on implementation - connected just once
+         connect(dfsTimer,&QTimer::timeout,implementation);
 }
 
 // tab index : 2
-void GraphicsScene::dijkstra(const bool & newStart) const{
-         dijTimer->start();
+// connects dijistraTimer with 'implementation' lambda
+void GraphicsScene::dijkstraConnect() const{
          auto infoLine = getStatusBar(2);
-         
-         if(newStart){
-                  pq->push({0,sourceNode});
-                  auto [startX,startY] = sourceNode->getCord();
-                  (*distance)[startX][startY] = 0;
-         }
-         
+
          auto implementation = [this,infoLine = infoLine]{
                   if(pq->empty()){
-                           dijTimer->stop();
+                           dijkstraTimer->stop();
                            infoLine->setText("Could not reach destination.");
                            emit resetButtons();
                            return;
@@ -548,7 +581,7 @@ void GraphicsScene::dijkstra(const bool & newStart) const{
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
-                           dijTimer->stop();
+                           dijkstraTimer->stop();
                            getPath();
                            emit resetButtons();
                            return;
@@ -574,7 +607,6 @@ void GraphicsScene::dijkstra(const bool & newStart) const{
                            }
                   }
          };
-
-         connect(dijTimer,&QTimer::timeout,this,implementation,Qt::UniqueConnection);
+         // cals std::move on implementation - connected just once
+         connect(dijkstraTimer,&QTimer::timeout,implementation);         
 }
-

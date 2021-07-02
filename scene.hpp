@@ -2,8 +2,8 @@
 #define SCENE_HPP
 
 #include <QGraphicsScene>
+#include <stack>
 #include <queue>
-#include <stack>  
 
 class QTabWidget;
 class QSize;
@@ -20,32 +20,31 @@ public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
 private:
+         bool runningState = false; // 0 : off - 1 : on
+         Node * sourceNode = nullptr; 
+         Node * targetNode = nullptr; 
          uint32_t timerDelay; // determines the timer after which timer will shoot
-         bool on; // determines if any algorithm is running
-         QTimer * bfsTimer,* dfsTimer,* dijTimer; // to control the delay between each step
-         Node * sourceNode; 
-         Node * targetNode; 
-         std::pair<int,int> startCord;// default sourceNode position
-         std::pair<int,int> endCord; // default targetNode position
          QTabWidget * bar; // represents all algorithm tab by tab
          QGraphicsScene * innerScene; // grid
+         QTimer * bfsTimer,* dfsTimer,* dijkstraTimer,* pathTimer;// to control the delay between each step
+         std::pair<int,int> startCord;// default sourceNode position
+         std::pair<int,int> endCord; // default targetNode position
          QGraphicsGridLayout * innerLayout; // layout of grid
          std::unique_ptr<std::queue<std::pair<Node*,int>>> queue; 
          std::unique_ptr<std::stack<std::pair<Node*,int>>> stack;
-         std::unique_ptr<std::vector<std::vector<bool>>> visited;
+         std::unique_ptr<std::vector<std::vector<bool>>> visited; 
          std::unique_ptr<std::vector<std::vector<int>>> distance;
          std::unique_ptr<std::priority_queue<std::pair<int,Node*>,std::vector<std::pair<int,Node*>>,std::greater<>>> pq;
-         /// designs
+         /// visual designs
          void populateBar();
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
-         void populateGridScene();
+         void populateGridScene(); 
          // utility
-         void setDataStructures();
-         void setRunning(const bool & newState);
-         bool isRunning() const;
-         void cleanup();
-         void updateSrcTarNodes();
-         void getPath() const;
+         void allocDataStructures();
+         void setRunning(const bool & newState); 
+         bool isRunning() const; 
+         void cleanup(); 
+         void updateSrcTarNodes(); // srcTar := source Target
          bool validCordinate(const int & row,const int & col) const;
          Node * getNewNode(const int & row,const int & col);
          Node * getNodeAt(const int & row,const int & col) const;
@@ -55,10 +54,16 @@ private:
          void setTimersIntervals(const uint32_t & newSpeed) const;
          void memsetDs();
          void stopTimers() const;
-         // algorithm implementations
-         void bfs(const bool & newStart) const;
-         void dfs(const bool & newStart) const ;
-         void dijkstra(const bool & newStart) const;
+         void pathConnect() const; 
+         void getPath() const; 
+         // algorithms implemented in lambda inside these methods
+         void bfsConnect() const;
+         void dfsConnect() const ;
+         void dijkstraConnect() const;
+         // newStart := whether to start an algorithm from beginning (true) or continue (false)
+         void bfsStart(const bool & newStart) const;
+         void dfsStart(const bool & newStart) const;
+         void dijkstraStart(const bool & newStart) const;
 signals:
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends

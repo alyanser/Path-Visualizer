@@ -30,10 +30,10 @@ protected:
          void dragEnterEvent(QGraphicsSceneDragDropEvent * event) override;
          void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
-         State type; // type of node
-         inline static bool on = false; // determines if any algorthm is running - connected with Graphicscene
+         State type = Node::Inactive; // type of node
          int gridX,gridY; // cordinate in gridSceneLayout
-         Node * pathParent; // parent for paths
+         Node * pathParent = nullptr; // parent for paths
+         inline static bool on = false; // determines if any algorthm is running - connected with Graphicscene
 signals:
          void sourceSet();
          void targetSet();

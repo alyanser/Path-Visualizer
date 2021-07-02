@@ -1,4 +1,5 @@
 #include <QGraphicsScene>
+#include <QLabel>
 #include <QDrag>
 #include <QMimeData>
 #include <QGraphicsSceneDragDropEvent>
@@ -6,8 +7,7 @@
 #include <QPainter>
 #include "node.hpp"
 
-Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), type(Inactive), gridX(row), gridY(col){
-         pathParent = nullptr;
+Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), gridX(row), gridY(col){
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
          setGraphicsItem(this);
@@ -25,22 +25,21 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
          Q_UNUSED(option);
          Q_UNUSED(widget);
 
-         QBrush brush;
-         brush.setStyle(Qt::SolidPattern);
+         QPixmap pix;
+         QBrush brush(Qt::red);
 
          switch(type){
-                  case Source : brush.setColor(Qt::green);break;
-                  case Target : brush.setColor(Qt::black);break;
-                  case Active : brush.setColor(Qt::white);break;
-                  case Inactive : brush.setColor(Qt::blue);break;
-                  case Visited : brush.setColor(Qt::yellow);break;
-                  case Block : brush.setColor(Qt::gray);break;
-                  case Inpath : brush.setColor(Qt::red);break;
+                  case Source : pix.load(":/pixmaps/icons/source.ico");break;
+                  case Target : pix.load(":/pixmaps/icons/target.ico");break;
+                  case Active : pix.load(":/pixmaps/icons/active.ico");break;
+                  case Inactive : pix.load(":/pixmaps/icons/inactive.ico");break;
+                  case Visited : pix.load(":/pixmaps/icons/inactive.ico");break;
+                  case Block : pix.load(":/pixmaps/icons/block.ico");break;
+                  case Inpath : painter->setBrush(brush);painter->drawEllipse(0,0,24,23);break;
                   default : assert(false);
          }
-         painter->setBrush(brush);
          painter->setRenderHint(QPainter::Antialiasing);
-         painter->drawEllipse(0,0,24,23);
+         painter->drawPixmap(0,0,24,23,pix);
 }
 
 QSizeF Node::sizeHint(Qt::SizeHint which, const QSizeF & constraint) const{

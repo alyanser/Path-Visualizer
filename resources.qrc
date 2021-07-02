@@ -2,4 +2,11 @@
     <qresource prefix="/styles">
         <file>stylesheet.css</file>
     </qresource>
+    <qresource prefix="/pixmaps">
+        <file>icons/block.ico</file>
+        <file>icons/active.ico</file>
+        <file>icons/source.ico</file>
+        <file>icons/target.ico</file>
+        <file>icons/inactive.ico</file>
+    </qresource>
 </RCC>
