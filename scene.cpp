@@ -57,7 +57,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new
          populateBar();
          populateGridScene();
 
-         // connects the timers' timeout signals with lambdas inside these functions
+         // connects the timers' timeout signal with lambdas inside these methods
          bfsConnect();
          dfsConnect();
          dijkstraConnect();
@@ -89,7 +89,7 @@ void GraphicsScene::populateBar(){
                   auto dijWidget = new QWidget(bar);
                   const QString algoName = "Dijkstra";
                   bar->addTab(dijWidget,algoName);
-                  populateWidget(dijWidget,algoName,dijInfo /*inside defines header*/ );
+                  populateWidget(dijWidget,algoName,dijkstraInfo /*inside defines header*/ );
          }
 }
 
@@ -97,12 +97,12 @@ void GraphicsScene::allocDataStructures(){
          using std::make_unique;
          using std::vector;
 
-         queue = make_unique<std::queue<std::pair<Node*,int>>>(); // {node,dist}
-         stack = make_unique<std::stack<std::pair<Node*,int>>>(); // {node,dist}
+         queue = make_unique<std::queue<std::pair<Node*,int>>>(); // {:distance}
+         stack = make_unique<std::stack<std::pair<Node*,int>>>(); // {:distance}
          visited = make_unique<vector<vector<bool>>>(); 
          distance = make_unique<vector<vector<int>>>();
          using nodePair = std::pair<int,Node*>;
-         pq = make_unique<std::priority_queue<nodePair,vector<nodePair>,std::greater<>>>(); // {dist,node}
+         pq = make_unique<std::priority_queue<nodePair,vector<nodePair>,std::greater<>>>(); // {distance:}
 }
 
 void GraphicsScene::memsetDs(){
@@ -113,13 +113,12 @@ void GraphicsScene::memsetDs(){
          visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
 
-// sets up the widget used by tabwidget
 void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,const QString & infoText){
          auto mainLayout = new QGridLayout(widget);
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->setSpacing(10);
 
-         auto view = new QGraphicsView(innerScene,widget); // different view but same scene
+         auto view = new QGraphicsView(innerScene,widget); 
          mainLayout->addWidget(view,0,0);
 
          {        // right side bar
@@ -168,9 +167,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            machine->start();
                   }
 
-                  // when an information button is pressed
                   connect(infoBut,&QPushButton::clicked,[algoName,infoText]{
-                           // setting widget gives weird layout - TODO fix later
+                           //! setting widget gives weird layout - TODO fix later
                            QMessageBox::information(nullptr,algoName,infoText);
                   });
 
@@ -188,9 +186,9 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                                     statusBut->setText("Continue");
                                     stopTimers();
                                     return;
-                           }else if(currentText == "Run"){ // remove any previous items
+                           }else if(currentText == "Run"){ 
+                                    cleanup(); // remove any previous items
                                     statusBut->setText("Stop");
-                                    cleanup();
                                     newStart = true;
                            }else{
                                     statusBut->setText("Stop");
@@ -212,16 +210,15 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            statusBut->setText("Run");
                            stopTimers();
                            emit resetButtons();
-                           memsetDs(); // remove any pending items in data structures
+                           memsetDs();
                            for(int row = 0;row < rowCnt;row++){
                                     for(int col = 0;col < colCnt;col++){
                                              auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
-                                             if(isSpecial(node)) continue; // do not remove source or target node
+                                             if(isSpecial(node)) continue; 
                                              node->setPathParent(nullptr);
                                              node->setType(Node::Inactive);
                                     }
                            }
-                           // reset bottom status bar text
                            auto curTabIndex = bar->currentIndex();
                            auto lineInfo = getStatusBar(curTabIndex);
                            lineInfo->setText("Click on run button on sidebar to display algorithm status");
@@ -235,7 +232,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                   });
          }
 
-         {        // @bottom bar : displays the current algorithm status will be used by grid scene
+         {        // bottom bar 
                   auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",widget);
                   infoLine->setAlignment(Qt::AlignCenter); // text align
                   infoLine->setReadOnly(true);
@@ -259,21 +256,20 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
 /// utility ///
 
-// sets the inner grid state
 void GraphicsScene::setRunning(const bool & newState){
          runningState = newState;
-         emit runningStatusChanged(runningState); // so node class may disable drag events
+         emit runningStatusChanged(runningState); // connected with node class
 }
 
-// whether any algorithm is currently in process
+// algorithm state
 bool GraphicsScene::isRunning() const{
          return runningState;
 }
 
-// sets the speed at which an algorithm will be proecssed - linked with timers
+// linked with timers
 void GraphicsScene::setDelay(const uint32_t & newDelay){
          // slide bar has more value when it is set on the fuller side convert before
-         timerDelay = std::abs(1000ll - newDelay);
+         timerDelay = std::abs(1000ll - newDelay); // ll to avoid unsigned 
          setTimersIntervals(timerDelay);
 }
 

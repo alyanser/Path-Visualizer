@@ -8,13 +8,13 @@
 int main(int argc, char ** argv){
 	QApplication app(argc, argv);
 
-         {        // set overall stylesheet     
+         {       
                   QFile file(":/styles/stylesheet.css");
                   file.open(QFile::ReadOnly);
                   app.setStyleSheet(file.readAll());
                   file.close();
          }
-         // window size
+     
          auto mainRect = QApplication::primaryScreen()->availableSize();
 
          GraphicsScene scene(mainRect);

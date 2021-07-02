@@ -14,7 +14,7 @@ Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), gr
 }
 
 void Node::setRunningState(const bool & newState){
-         on = newState;
+         algoRunning = newState;
 }
 
 QRectF Node::boundingRect() const{
@@ -122,7 +122,7 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
-         if(on){ // there is an algorithm currently in running state
+         if(algoRunning){ 
                   return;
          }
          auto dragger = new QDrag(this);

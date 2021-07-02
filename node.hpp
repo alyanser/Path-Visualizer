@@ -25,15 +25,15 @@ protected:
          // overrides qgprahicsitem methods
          QRectF boundingRect() const override;
          void paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget) override;
-         //events
+         // events
          void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
          void dragEnterEvent(QGraphicsSceneDragDropEvent * event) override;
          void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
-         State type = Node::Inactive; // type of node
-         int gridX,gridY; // cordinate in gridSceneLayout
-         Node * pathParent = nullptr; // parent for paths
-         inline static bool on = false; // determines if any algorthm is running - connected with Graphicscene
+         State type = Node::Inactive;
+         int gridX,gridY;
+         Node * pathParent = nullptr; 
+         inline static bool algoRunning = false; 
 signals:
          void sourceSet();
          void targetSet();
