@@ -373,12 +373,6 @@ void GraphicsScene::cleanup(){
 
 // follows the parent pointer of target node until it reaches source
 void GraphicsScene::pathConnect() const{
-         if(static bool initialized = false;initialized){
-                  return;
-         }else{
-                  initialized = true;
-         }
-
          auto moveUp = [this,currentNode = targetNode,newStart = true]() mutable{
                   if(newStart){
                            currentNode = targetNode;
@@ -436,12 +430,6 @@ void GraphicsScene::dijkstraStart(const bool & newStart) const{
 
 // tab index : 0
 void GraphicsScene::bfsConnect() const{
-         if(static bool initialized = false;initialized){
-                  return;
-         }else{
-                  initialized = true;
-         }
-
          auto infoLine = getStatusBar(0);
 
          auto implementation = [this,infoLine = infoLine]{
@@ -496,15 +484,6 @@ void GraphicsScene::bfsConnect() const{
 // tab index : 1
 // connects dfsTimer with the 'implementation' lambda
 void GraphicsScene::dfsConnect() const{
-         if(static bool initialized = false;initialized){
-                  return;
-         }else{
-                  initialized = true;
-         }
-
-         if(static bool initialized = false;initialized) return;
-         else initialized = true;
-
          auto infoLine = getStatusBar(1);
          
          auto implementation = [this,infoLine = infoLine]{
@@ -561,12 +540,6 @@ void GraphicsScene::dfsConnect() const{
 // tab index : 2
 // connects dijistraTimer with 'implementation' lambda
 void GraphicsScene::dijkstraConnect() const{
-         if(static bool initialized = false;initialized){
-                  return;
-         }else{
-                  initialized = true;
-         }
-
          auto infoLine = getStatusBar(2);
 
          auto implementation = [this,infoLine = infoLine]{
