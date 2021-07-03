@@ -266,14 +266,12 @@ bool GraphicsScene::isRunning() const{
          return runningState;
 }
 
-// linked with timers
 void GraphicsScene::setDelay(const uint32_t & newDelay){
          // slide bar has more value when it is set on the fuller side convert before
-         timerDelay = std::abs(1000ll - newDelay); // ll to avoid unsigned 
+         timerDelay = std::abs((int64_t)1000 - newDelay); // ll to avoid unsigned 
          setTimersIntervals(timerDelay);
 }
 
-// sets intervals - linked with slide bar
 void GraphicsScene::setTimersIntervals(const uint32_t & newDelay) const{
          dfsTimer->setInterval(newDelay);
          bfsTimer->setInterval(newDelay);
@@ -281,7 +279,6 @@ void GraphicsScene::setTimersIntervals(const uint32_t & newDelay) const{
          pathTimer->setInterval(newDelay);
 }
 
-// stops all timers - removes pending shots if any
 void GraphicsScene::stopTimers() const{
          dfsTimer->stop();
          bfsTimer->stop();
@@ -289,7 +286,6 @@ void GraphicsScene::stopTimers() const{
          pathTimer->stop();
 }
 
-// returns a new node and connects signals to update when source and target is changed
 Node * GraphicsScene::getNewNode(const int & row,const int & col){
          auto node = new Node(row,col);
 
@@ -362,7 +358,6 @@ void GraphicsScene::populateGridScene(){
          innerScene->setFocus();
 }
 
-// clears everything except the user specified blocks
 void GraphicsScene::cleanup(){
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
@@ -376,14 +371,22 @@ void GraphicsScene::cleanup(){
 
 /// implementations - gets called when statusBut is clicked ///
 
-// follows the parent pointer in node class and marks the visited node to show path
+// follows the parent pointer of target node until it reaches source
 void GraphicsScene::pathConnect() const{
-         auto moveUp = [this,currentNode = targetNode,counter = 0]() mutable {
-                  if(!counter++){ // called for the first time - TODO find better way
+         if(static bool initialized = false;initialized){
+                  return;
+         }else{
+                  initialized = true;
+         }
+
+         auto moveUp = [this,currentNode = targetNode,newStart = true]() mutable{
+                  if(newStart){
                            currentNode = targetNode;
                   }
+                  newStart = false;
+                  
                   if(!currentNode){
-                           counter = 0; // reset counter for the next start
+                           newStart = true;
                            pathTimer->stop();
                            return;
                   }else if(!isSpecial(currentNode)){
@@ -431,12 +434,14 @@ void GraphicsScene::dijkstraStart(const bool & newStart) const{
          dijkstraTimer->start();
 }
 
-/// connections - only called once to set connections with respective timers ///
-//TODO move out of functions and connect directly
-
 // tab index : 0
-// connects bfstimer with the 'implementation' lambda
 void GraphicsScene::bfsConnect() const{
+         if(static bool initialized = false;initialized){
+                  return;
+         }else{
+                  initialized = true;
+         }
+
          auto infoLine = getStatusBar(0);
 
          auto implementation = [this,infoLine = infoLine]{
@@ -491,6 +496,15 @@ void GraphicsScene::bfsConnect() const{
 // tab index : 1
 // connects dfsTimer with the 'implementation' lambda
 void GraphicsScene::dfsConnect() const{
+         if(static bool initialized = false;initialized){
+                  return;
+         }else{
+                  initialized = true;
+         }
+
+         if(static bool initialized = false;initialized) return;
+         else initialized = true;
+
          auto infoLine = getStatusBar(1);
          
          auto implementation = [this,infoLine = infoLine]{
@@ -547,6 +561,12 @@ void GraphicsScene::dfsConnect() const{
 // tab index : 2
 // connects dijistraTimer with 'implementation' lambda
 void GraphicsScene::dijkstraConnect() const{
+         if(static bool initialized = false;initialized){
+                  return;
+         }else{
+                  initialized = true;
+         }
+
          auto infoLine = getStatusBar(2);
 
          auto implementation = [this,infoLine = infoLine]{
