@@ -125,7 +125,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          mainLayout->addWidget(view,0,0);
 
          {        // right side bar
-                  auto sideLayout = new QVBoxLayout();
+                  auto sideLayout = new QVBoxLayout(); // parent layout deletes
                   mainLayout->addLayout(sideLayout,0,1);
                   sideLayout->setAlignment(Qt::AlignTop);
 
@@ -233,6 +233,88 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                                     emit close();
                            }
                   });
+
+                  sideLayout->addSpacing(25);
+                  auto legendLabel = new QLabel("Legend:",widget);
+                  sideLayout->addWidget(legendLabel);
+
+                  {
+                           auto sourceNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(sourceNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/source.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Source",widget);
+                           iconLabel->setPixmap(pix);
+                           sourceNodeLayout->addWidget(iconLabel);
+                           sourceNodeLayout->addWidget(textLabel);
+                  }
+
+                  {
+                           auto targetNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(targetNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/target.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Target",widget);
+                           iconLabel->setPixmap(pix);
+                           targetNodeLayout->addWidget(iconLabel);
+                           targetNodeLayout->addWidget(textLabel);
+                  }
+
+                  {
+                           auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(activeNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/active.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Active",widget);
+                           iconLabel->setPixmap(pix);
+                           activeNodeLayout->addWidget(iconLabel);
+                           activeNodeLayout->addWidget(textLabel);
+                  }
+
+                  {
+                           auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(activeNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/block.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Block",widget);
+                           iconLabel->setPixmap(pix);
+                           activeNodeLayout->addWidget(iconLabel);
+                           activeNodeLayout->addWidget(textLabel);
+                  }
+
+                  {
+                           auto inactiveNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(inactiveNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/inactive.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Unvisited",widget);
+                           iconLabel->setPixmap(pix);
+                           inactiveNodeLayout->addWidget(iconLabel);
+                           inactiveNodeLayout->addWidget(textLabel);
+                  }
+
+                  {        
+                           auto visitedNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(visitedNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/inactive.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Visited",widget);
+                           iconLabel->setWindowOpacity(0.5); //TODO fix opacity
+                           iconLabel->setPixmap(pix);
+                           visitedNodeLayout->addWidget(iconLabel);
+                           visitedNodeLayout->addWidget(textLabel);
+                  }
+
+                  {
+                           auto pathNodeLayout = new QHBoxLayout(); // parent layout deletes
+                           sideLayout->addLayout(pathNodeLayout);
+                           QPixmap pix(":/pixmaps/icons/inpath.png");
+                           auto iconLabel = new QLabel(widget);
+                           auto textLabel = new QLabel("Path",widget);
+                           iconLabel->setPixmap(pix);
+                           pathNodeLayout->addWidget(iconLabel);
+                           pathNodeLayout->addWidget(textLabel);
+                  }
          }
 
          {        // bottom bar 

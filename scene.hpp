@@ -11,6 +11,7 @@ class QLineEdit;
 class QGraphicsGridLayout;
 class Node;
 class QHBoxLayout;
+class QVBoxLayout;
 class QTimer;
 
 class GraphicsScene : public QGraphicsScene{

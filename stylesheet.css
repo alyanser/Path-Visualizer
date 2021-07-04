@@ -9,6 +9,10 @@ QPushButton{
          min-height: 40px;
 }
 
+QLabel{
+         font-size:18px;
+}
+
 QTabBar::tab{
          height: 50px; 
          width: 100px; 
