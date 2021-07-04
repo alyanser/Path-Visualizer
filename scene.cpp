@@ -34,7 +34,7 @@ namespace{
 
 // for inner scene
 const int rowCnt = 10,colCnt = 20; 
-const uint32_t defDelay = 25; 
+const uint32_t defDelay = 250; // ms
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
@@ -201,7 +201,6 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            }
 
                   });
-
                   connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 
                   // different from resetbuttons signal as that doesn't reset whole grid
@@ -215,7 +214,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                                              auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
                                              if(isSpecial(node)) continue; 
                                              node->setPathParent(nullptr);
-                                             node->setType(Node::Inactive);
+                                             bool runAnimations = false;
+                                             node->setType(Node::Inactive,runAnimations);
                                     }
                            }
                            auto curTabIndex = bar->currentIndex();
@@ -450,7 +450,8 @@ void GraphicsScene::cleanup(){
                   for(int col = 0;col < colCnt;col++){
                            auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
                            if(isBlock(node)) continue;
-                           node->setType(Node::Inactive);
+                           bool runAnimations = false;
+                           node->setType(Node::Inactive,runAnimations); 
                   }
          }
          updateSrcTarNodes();

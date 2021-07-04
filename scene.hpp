@@ -60,11 +60,10 @@ private:
          void stopTimers() const;
          void pathConnect() const; 
          void getPath() const; 
-         // algorithms implemented in lambda inside these methods
+         // implementations of algorithms
          void bfsConnect() const;
          void dfsConnect() const ;
          void dijkstraConnect() const;
-         // newStart := whether to start an algorithm from beginning (true) or continue (false)
          void bfsStart(const bool newStart) const;
          void dfsStart(const bool newStart) const;
          void dijkstraStart(const bool newStart) const;
