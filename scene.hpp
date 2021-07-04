@@ -46,13 +46,13 @@ private:
          bool isRunning() const; 
          void cleanup(); 
          void updateSrcTarNodes(); // srcTar := source Target
-         bool validCordinate(const int & row,const int & col) const;
-         Node * getNewNode(const int & row,const int & col);
-         Node * getNodeAt(const int & row,const int & col) const;
-         QLineEdit * getStatusBar(const int & tabIndex) const;
+         bool validCordinate(const int row,const int col) const;
+         Node * getNewNode(const int row,const int col);
+         Node * getNodeAt(const int row,const int col) const;
+         QLineEdit * getStatusBar(const int tabIndex) const;
          bool isBlock(Node * currentNode) const;
          bool isSpecial(Node * currentNode) const;
-         void setTimersIntervals(const uint32_t & newSpeed) const;
+         void setTimersIntervals(const uint32_t newSpeed) const;
          void memsetDs();
          void stopTimers() const;
          void pathConnect() const; 
@@ -62,15 +62,15 @@ private:
          void dfsConnect() const ;
          void dijkstraConnect() const;
          // newStart := whether to start an algorithm from beginning (true) or continue (false)
-         void bfsStart(const bool & newStart) const;
-         void dfsStart(const bool & newStart) const;
-         void dijkstraStart(const bool & newStart) const;
+         void bfsStart(const bool newStart) const;
+         void dfsStart(const bool newStart) const;
+         void dijkstraStart(const bool newStart) const;
 signals:
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends
-         void runningStatusChanged(const bool & newState); // connected with Node class 
+         void runningStatusChanged(const bool newState); // connected with Node class 
 public slots:
-         void setDelay(const uint32_t & newDelay);
+         void setDelay(const uint32_t newDelay);
 };
 
 #endif

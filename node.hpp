@@ -13,7 +13,7 @@ public:
          Node(int row,int col,QGraphicsItem * parent = nullptr);
          ~Node() = default;
          // utility
-         void setType(const State & newType);
+         void setType(const State newType);
          State getType() const;
          void setPathParent(Node * newParent);
          Node * getPathParent() const;
@@ -31,14 +31,15 @@ protected:
          void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
          State type = Node::Inactive;
-         int gridX,gridY;
          Node * pathParent = nullptr; 
+         std::pair<int,int> currentLocation;
          inline static bool algoRunning = false; 
+         ///
 signals:
          void sourceSet();
          void targetSet();
 public slots:
-         static void setRunningState(const bool & newState);
+         static void setRunningState(const bool newState);
 
 };
 

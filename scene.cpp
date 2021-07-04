@@ -19,13 +19,11 @@
 #include <memory>
 #include <QGraphicsProxyWidget>
 #include <QWidget>
-#include <QList>
 #include <QStateMachine>
 #include <QState>
 #include <queue>
 #include <stack>
 #include <QTimer>
-#include <iostream>
 #include "scene.hpp"
 #include "PushButton.hpp"
 #include "node.hpp"
@@ -351,13 +349,13 @@ bool GraphicsScene::isRunning() const{
          return runningState;
 }
 
-void GraphicsScene::setDelay(const uint32_t & newDelay){
+void GraphicsScene::setDelay(const uint32_t newDelay){
          // slide bar has more value when it is set on the fuller side convert before
          timerDelay = std::abs((int64_t)1000 - newDelay); // ll to avoid unsigned 
          setTimersIntervals(timerDelay);
 }
 
-void GraphicsScene::setTimersIntervals(const uint32_t & newDelay) const{
+void GraphicsScene::setTimersIntervals(const uint32_t newDelay) const{
          dfsTimer->setInterval(newDelay);
          bfsTimer->setInterval(newDelay);
          dijkstraTimer->setInterval(newDelay);
@@ -371,7 +369,7 @@ void GraphicsScene::stopTimers() const{
          pathTimer->stop();
 }
 
-Node * GraphicsScene::getNewNode(const int & row,const int & col){
+Node * GraphicsScene::getNewNode(const int row,const int col){
          auto node = new Node(row,col);
 
          connect(node,&Node::sourceSet,[&sourceNode = sourceNode,node]{
@@ -385,17 +383,17 @@ Node * GraphicsScene::getNewNode(const int & row,const int & col){
 }
 
 // returns the node ref present inside the grid
-Node * GraphicsScene::getNodeAt(const int & row,const int & col) const{
+Node * GraphicsScene::getNodeAt(const int row,const int col) const{
          return static_cast<Node*>(innerLayout->itemAt(row,col));
 }
 
 // returns true of {row,col} is a valid cordinate for grid
-bool GraphicsScene::validCordinate(const int & row,const int & col) const{
+bool GraphicsScene::validCordinate(const int row,const int col) const{
          return row >= 0 && row < rowCnt && col >= 0 && col < colCnt;
 }
 
 // returns the bottom lineEdit which displays the current algorithm state
-QLineEdit * GraphicsScene::getStatusBar(const int & tabIndex) const{
+QLineEdit * GraphicsScene::getStatusBar(const int tabIndex) const{
          assert(tabIndex < bar->count());
          auto widget = bar->widget(tabIndex);
          auto absLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
@@ -483,7 +481,7 @@ void GraphicsScene::getPath() const{
 }
 
 // called when start is pressed on bfs Tab
-void GraphicsScene::bfsStart(const bool & newStart) const{
+void GraphicsScene::bfsStart(const bool newStart) const{
          if(newStart){ 
                   queue->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
@@ -493,7 +491,7 @@ void GraphicsScene::bfsStart(const bool & newStart) const{
 }
 
 // called when start is pressed on dfs tab
-void GraphicsScene::dfsStart(const bool & newStart) const{
+void GraphicsScene::dfsStart(const bool newStart) const{
          if(newStart){
                   stack->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
@@ -503,7 +501,7 @@ void GraphicsScene::dfsStart(const bool & newStart) const{
 }
 
 // called when start is pressed on dijistraTab
-void GraphicsScene::dijkstraStart(const bool & newStart) const{
+void GraphicsScene::dijkstraStart(const bool newStart) const{
          if(newStart){ 
                   pq->push({0,sourceNode});
                   auto [startX,startY] = sourceNode->getCord();

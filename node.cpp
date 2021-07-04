@@ -7,13 +7,13 @@
 #include <QPainter>
 #include "node.hpp"
 
-Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), gridX(row), gridY(col){
+Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}{
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
          setGraphicsItem(this);
 }
 
-void Node::setRunningState(const bool & newState){
+void Node::setRunningState(const bool newState){
          algoRunning = newState;
 }
 
@@ -33,7 +33,7 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
                   case Target : pix.load(":/pixmaps/icons/target.png");break;
                   case Active : pix.load(":/pixmaps/icons/active.png");break;
                   case Inactive : pix.load(":/pixmaps/icons/inactive.png");break;
-                  case Visited : pix.load(":/pixmaps/icons/inactive.png");painter->setOpacity(0.5);break; //TODO lighter road
+                  case Visited : pix.load(":/pixmaps/icons/inactive.png");painter->setOpacity(0.5);break;
                   case Block : pix.load(":/pixmaps/icons/block.png");break;
                   case Inpath : pix.load(":/pixmaps/icons/inpath.png");break;
                   default : assert(false);
@@ -55,7 +55,7 @@ void Node::setGeometry(const QRectF & geometry){
          setPos(geometry.topLeft());
 }
 
-void Node::setType(const State & newType){
+void Node::setType(const State newType){
          type = newType;
          bool dropValue = true;
 
@@ -76,7 +76,7 @@ void Node::setPathParent(Node * newParent){
 }
 
 std::pair<int,int> Node::getCord() const{
-         return {gridX,gridY};
+         return currentLocation;
 }
 
 Node * Node::getPathParent() const{
