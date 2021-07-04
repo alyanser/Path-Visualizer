@@ -1,2 +1,5 @@
 # qtGraphAlgos
-Graph algorithms visualizer made using Qt Framework (C++)
+Graph algorithms visualizer - Qt (C++)
+
+<i>Currently under progress</i>
+
