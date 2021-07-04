@@ -69,21 +69,18 @@ GraphicsScene::~GraphicsScene(){
 
 // sets up top bar
 void GraphicsScene::populateBar(){
-
          {        // bfs
                   auto bfsWidget = new QWidget(bar);
                   const QString algoName = "BFS";
                   bar->addTab(bfsWidget,algoName);
                   populateWidget(bfsWidget,algoName,::bfsInfo /*inside defines header*/ ); 
          }
-
          {        // dfs
                   auto dfsWidget = new QWidget(bar);
                   const QString algoName = "DFS";
                   bar->addTab(dfsWidget,algoName);
                   populateWidget(dfsWidget,algoName,::dfsInfo /*inside defines header*/ );
          }
-
          {        // dijkstra
                   auto dijWidget = new QWidget(bar);
                   const QString algoName = "Dijkstra";
@@ -199,8 +196,8 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                                     case 2 : dijkstraStart(newStart);break;
                                     default : assert(false);
                            }
-
                   });
+
                   connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 
                   // different from resetbuttons signal as that doesn't reset whole grid
@@ -236,7 +233,6 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 }
 
 void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const{
-
          sideLayout->addSpacing(25);
          auto legendLabel = new QLabel("Legend:",parentWidget);
          sideLayout->addWidget(legendLabel);
@@ -251,7 +247,6 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   sourceNodeLayout->addWidget(iconLabel);
                   sourceNodeLayout->addWidget(textLabel);
          }
-
          {
                   auto targetNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(targetNodeLayout);
@@ -262,7 +257,6 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   targetNodeLayout->addWidget(iconLabel);
                   targetNodeLayout->addWidget(textLabel);
          }
-
          {
                   auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(activeNodeLayout);
@@ -273,7 +267,6 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   activeNodeLayout->addWidget(iconLabel);
                   activeNodeLayout->addWidget(textLabel);
          }
-
          {
                   auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(activeNodeLayout);
@@ -284,7 +277,6 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   activeNodeLayout->addWidget(iconLabel);
                   activeNodeLayout->addWidget(textLabel);
          }
-
          {
                   auto inactiveNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(inactiveNodeLayout);
@@ -295,7 +287,6 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   inactiveNodeLayout->addWidget(iconLabel);
                   inactiveNodeLayout->addWidget(textLabel);
          }
-
          {        
                   auto visitedNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(visitedNodeLayout);
@@ -307,7 +298,6 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   visitedNodeLayout->addWidget(iconLabel);
                   visitedNodeLayout->addWidget(textLabel);
          }
-
          {
                   auto pathNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(pathNodeLayout);
@@ -321,7 +311,7 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
 }
 
 void GraphicsScene::populateSideBar(QWidget * parentWidget,QGridLayout * mainLayout) const{
-          auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
+         auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
          infoLine->setAlignment(Qt::AlignCenter); // text align
          infoLine->setReadOnly(true);
          
@@ -355,7 +345,7 @@ bool GraphicsScene::isRunning() const{
 
 void GraphicsScene::setDelay(const uint32_t newDelay){
          // slide bar has more value when it is set on the fuller side convert before
-         timerDelay = std::abs((int64_t)1000 - newDelay); // ll to avoid unsigned 
+         timerDelay = std::abs((int64_t)1000 - newDelay); 
          setTimersIntervals(timerDelay);
 }
 
@@ -375,11 +365,9 @@ void GraphicsScene::stopTimers() const{
 
 Node * GraphicsScene::getNewNode(const int row,const int col){
          auto node = new Node(row,col);
-
          connect(node,&Node::sourceSet,[&sourceNode = sourceNode,node]{
                   sourceNode = node;
          });
-
          connect(node,&Node::targetSet,[&targetNode = targetNode,node]{
                   targetNode = node;
          });
@@ -435,7 +423,6 @@ void GraphicsScene::populateGridScene(){
                            innerLayout->addItem(node,row,col);
                   }
          }
-
          startCord = {0,0};
          endCord = {rowCnt-1,colCnt-1};
 
@@ -564,7 +551,6 @@ void GraphicsScene::bfsConnect() const{
                            }
                   }
          };
-         // calls std::move on implemenation - connected just once
          connect(bfsTimer,&QTimer::timeout,implementation);
 }
 
@@ -574,14 +560,12 @@ void GraphicsScene::dfsConnect() const{
          auto infoLine = getStatusBar(1);
          
          auto implementation = [this,infoLine = infoLine]{
-
                   if(stack->empty()){
                            dfsTimer->stop();
                            infoLine->setText("Could not reach destination.");
                            emit resetButtons();
                            return;
                   }
-
                   auto [currentNode,currentDistance] = stack->top();
                   stack->pop();
 
@@ -590,21 +574,18 @@ void GraphicsScene::dfsConnect() const{
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
                   }
-
                   if(currentNode == targetNode){
                            dfsTimer->stop();
                            getPath();
                            emit resetButtons();
                            return;
                   }
-
                   auto [currentRow,currentCol] = currentNode->getCord();
                   auto nodeParent = currentNode->getPathParent();
 
                   if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::Visited);
                   }
-
                   for(int direction = 0;direction < 4;direction++){
                            int toRow = currentRow + xCord[direction];
                            int toCol = currentCol + yCord[direction];
@@ -620,7 +601,6 @@ void GraphicsScene::dfsConnect() const{
                            }
                   }
          };
-         // calls std::move on implementation - connected just once
          connect(dfsTimer,&QTimer::timeout,implementation);
 }
 
@@ -636,10 +616,8 @@ void GraphicsScene::dijkstraConnect() const{
                            emit resetButtons();
                            return;
                   }
-
                   auto [currentDistance,currentNode] = pq->top();
                   pq->pop();
-
                   auto [curX,curY] = currentNode->getCord();
 
                   if((*distance)[curX][curY] != currentDistance) return;
@@ -647,13 +625,11 @@ void GraphicsScene::dijkstraConnect() const{
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
                   }
-
                   auto nodeParent = currentNode->getPathParent();
                   
                   if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::Visited);
                   }
-
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
@@ -683,6 +659,5 @@ void GraphicsScene::dijkstraConnect() const{
                            }
                   }
          };
-         // calls std::move on implementation - connected just once
          connect(dijkstraTimer,&QTimer::timeout,implementation);         
 }

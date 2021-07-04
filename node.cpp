@@ -90,9 +90,7 @@ void Node::configureForwardTimer(){
 
 void Node::setType(const State newType,const bool startTimer){
          type = newType;
-         
          bool acceptDrag = true;
-
          if(type == Source){
                   acceptDrag = false;
                   emit sourceSet(); // update source node in GraphicsScene class
@@ -102,10 +100,16 @@ void Node::setType(const State newType,const bool startTimer){
          }
          setAcceptDrops(acceptDrag); 
 
+         undoNodeRotation(); 
+         
          switch(type){
                   case Source : icon.load(":/pixmaps/icons/source.png");break;
                   case Target : icon.load(":/pixmaps/icons/target.png");break;
-                  case Active : icon.load(":/pixmaps/icons/active.png");break;
+                  case Active : {
+                           icon.load(":/pixmaps/icons/active.png");
+                           setNodeRotation();
+                           break;
+                  }
                   case Inactive : icon.load(":/pixmaps/icons/inactive.png");break;
                   case Visited : icon.load(":/pixmaps/icons/inactive.png");break;
                   case Block : icon.load(":/pixmaps/icons/block.png");break;
@@ -114,8 +118,54 @@ void Node::setType(const State newType,const bool startTimer){
          }
          if(startTimer && backwardTimer->state() == QTimeLine::NotRunning){
                   backwardTimer->start();
-         }else{
+         }else{ //! check if needed
                   update();
+         }
+}
+
+void Node::setNodeRotation(){
+         if(pathParent){
+                  const auto [selfX,selfY] = getCord();
+                  const auto [parentX,parentY] = pathParent->getCord();
+                  if(selfX != parentX){ // X axis changed
+                           if(selfX < parentX){ // top of parent
+                                    moveBy(halfDimension,halfDimension);
+                                    setRotation(180);
+                                    moveBy(halfDimension,halfDimension);
+                           }
+                  }else{ // Y axis changed
+                           moveBy(halfDimension,halfDimension);
+                           if(selfY < parentY){ // left of parent
+                                    setRotation(90);
+                                    moveBy(halfDimension ,-halfDimension);
+                           }else{ // oppsite
+                                    setRotation(270);
+                                    moveBy(-halfDimension,halfDimension);
+                           }
+                  }
+         }
+}
+
+void Node::undoNodeRotation(){
+         int currentRotation = rotation();
+         switch(currentRotation){
+                  case 180 : {
+                           moveBy(-halfDimension,-halfDimension);
+                           setRotation(0);
+                           moveBy(-halfDimension,-halfDimension);
+                           break;
+                  }
+                  case 270 : {
+                           moveBy(-halfDimension,-halfDimension);
+                           setRotation(0);
+                           moveBy(-halfDimension,halfDimension);
+                           break;
+                  }
+                  case 90 : {
+                           moveBy(-halfDimension,-halfDimension);
+                           setRotation(0);
+                           moveBy(halfDimension,-halfDimension);
+                  }
          }
 }
 
@@ -137,7 +187,6 @@ Node::State Node::getType() const{
 
 void Node::dragEnterEvent(QGraphicsSceneDragDropEvent * event){
          auto mimeData = event->mimeData();
-
          if(mimeData->hasText()){
                   const QString & text = mimeData->text();
                   if(text == "inverter"){
