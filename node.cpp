@@ -18,7 +18,7 @@ void Node::setRunningState(const bool & newState){
 }
 
 QRectF Node::boundingRect() const{
-         return QRectF(0,0,24,23);
+         return QRectF(0,0,32,32);
 }
 
 void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget){
@@ -29,24 +29,24 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
          QBrush brush(Qt::red);
 
          switch(type){
-                  case Source : pix.load(":/pixmaps/icons/source.ico");break;
-                  case Target : pix.load(":/pixmaps/icons/target.ico");break;
-                  case Active : pix.load(":/pixmaps/icons/active.ico");break;
-                  case Inactive : pix.load(":/pixmaps/icons/inactive.ico");break;
-                  case Visited : pix.load(":/pixmaps/icons/inactive.ico");break;
-                  case Block : pix.load(":/pixmaps/icons/block.ico");break;
-                  case Inpath : painter->setBrush(brush);painter->drawEllipse(0,0,24,23);break;
+                  case Source : pix.load(":/pixmaps/icons/source.png");break;
+                  case Target : pix.load(":/pixmaps/icons/target.png");break;
+                  case Active : pix.load(":/pixmaps/icons/active.png");break;
+                  case Inactive : pix.load(":/pixmaps/icons/inactive.png");break;
+                  case Visited : pix.load(":/pixmaps/icons/inactive.png");painter->setOpacity(0.5);break; //TODO lighter road
+                  case Block : pix.load(":/pixmaps/icons/block.png");break;
+                  case Inpath : pix.load(":/pixmaps/icons/inpath.png");break;
                   default : assert(false);
          }
          painter->setRenderHint(QPainter::Antialiasing);
-         painter->drawPixmap(0,0,24,23,pix);
+         painter->drawPixmap(0,0,32,32,pix);
 }
 
 QSizeF Node::sizeHint(Qt::SizeHint which, const QSizeF & constraint) const{
          Q_UNUSED(which);
          Q_UNUSED(constraint);
 
-         return QSizeF(24,23);
+         return QSizeF(32,32);
 }
 
 void Node::setGeometry(const QRectF & geometry){

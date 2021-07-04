@@ -29,10 +29,13 @@
 #include "scene.hpp"
 #include "PushButton.hpp"
 #include "node.hpp"
-#include "defines.hpp"
+
+namespace{
+         #include "defines.hpp"
+}
 
 // for inner scene
-const int rowCnt = 12,colCnt = 25; 
+const int rowCnt = 10,colCnt = 21; 
 const uint32_t defDelay = 25;
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
@@ -75,21 +78,21 @@ void GraphicsScene::populateBar(){
                   auto bfsWidget = new QWidget(bar);
                   const QString algoName = "BFS";
                   bar->addTab(bfsWidget,algoName);
-                  populateWidget(bfsWidget,algoName,bfsInfo /*inside defines header*/ ); 
+                  populateWidget(bfsWidget,algoName,::bfsInfo /*inside defines header*/ ); 
          }
 
          {        // dfs
                   auto dfsWidget = new QWidget(bar);
                   const QString algoName = "DFS";
                   bar->addTab(dfsWidget,algoName);
-                  populateWidget(dfsWidget,algoName,dfsInfo /*inside defines header*/ );
+                  populateWidget(dfsWidget,algoName,::dfsInfo /*inside defines header*/ );
          }
 
          {        // dijkstra
                   auto dijWidget = new QWidget(bar);
                   const QString algoName = "Dijkstra";
                   bar->addTab(dijWidget,algoName);
-                  populateWidget(dijWidget,algoName,dijkstraInfo /*inside defines header*/ );
+                  populateWidget(dijWidget,algoName,::dijkstraInfo /*inside defines header*/ );
          }
 }
 
@@ -368,7 +371,6 @@ void GraphicsScene::cleanup(){
          }
          updateSrcTarNodes();
 }
-
 /// implementations - gets called when statusBut is clicked ///
 
 // follows the parent pointer of target node until it reaches source
@@ -596,6 +598,6 @@ void GraphicsScene::dijkstraConnect() const{
                            }
                   }
          };
-         // cals std::move on implementation - connected just once
+         // calls std::move on implementation - connected just once
          connect(dijkstraTimer,&QTimer::timeout,implementation);         
 }
