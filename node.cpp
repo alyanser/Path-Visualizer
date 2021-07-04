@@ -18,7 +18,7 @@ void Node::setRunningState(const bool newState){
 }
 
 QRectF Node::boundingRect() const{
-         return QRectF(0,0,32,32);
+         return QRectF(0,0,dimension,dimension);
 }
 
 void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget){
@@ -39,14 +39,14 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
                   default : assert(false);
          }
          painter->setRenderHint(QPainter::Antialiasing);
-         painter->drawPixmap(0,0,32,32,pix);
+         painter->drawPixmap(0,0,dimension,dimension,pix);
 }
 
 QSizeF Node::sizeHint(Qt::SizeHint which, const QSizeF & constraint) const{
          Q_UNUSED(which);
          Q_UNUSED(constraint);
 
-         return QSizeF(32,32);
+         return QSizeF(dimension,dimension);
 }
 
 void Node::setGeometry(const QRectF & geometry){

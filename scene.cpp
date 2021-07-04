@@ -33,15 +33,14 @@ namespace{
 }
 
 // for inner scene
-const int rowCnt = 10,colCnt = 21; 
-const uint32_t defDelay = 25;
+const int rowCnt = 10,colCnt = 20; 
+const uint32_t defDelay = 25; 
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
 GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          setSceneRect(0,0,size.width(),size.height());
-
-         // bar is set as parent - auto deletion of timers
+         
          bfsTimer = new QTimer(bar);
          dfsTimer = new QTimer(bar);
          dijkstraTimer = new QTimer(bar);
@@ -58,7 +57,6 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new
          populateBar();
          populateGridScene();
 
-         // connects the timers' timeout signal with lambdas inside these methods
          bfsConnect();
          dfsConnect();
          dijkstraConnect();

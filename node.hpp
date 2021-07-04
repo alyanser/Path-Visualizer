@@ -34,6 +34,7 @@ private:
          Node * pathParent = nullptr; 
          std::pair<int,int> currentLocation;
          inline static bool algoRunning = false; 
+         inline const static int dimension = 32;
          ///
 signals:
          void sourceSet();
