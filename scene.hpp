@@ -14,10 +14,11 @@ class QHBoxLayout;
 class QVBoxLayout;
 class QGridLayout;
 class QTimer;
+class QPushButton;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
-         Q_PROPERTY(bool on WRITE setRunning READ isRunning);
+         Q_PROPERTY(bool runningState WRITE setRunning READ isRunning);
 public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
@@ -42,13 +43,16 @@ private:
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
          void populateGridScene(); 
          void populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const;
-         void populateSideBar(QWidget * parentWidget,QGridLayout * mainLayout) const;
+         void populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const;
+         void populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText);
+         // setups
+         void configureMachine(QWidget * parentWidget,QPushButton * statusBut);
          // utility
          void allocDataStructures();
-         void setRunning(const bool & newState); 
+         void setRunning(const bool newState); 
          bool isRunning() const; 
-         void cleanup(); 
-         void updateSrcTarNodes(); // srcTar := source Target
+         void cleanup() const; 
+         void updateSrcTarNodes() const; // srcTar := source Target
          bool validCordinate(const int row,const int col) const;
          Node * getNewNode(const int row,const int col);
          Node * getNodeAt(const int row,const int col) const;
@@ -56,7 +60,7 @@ private:
          bool isBlock(Node * currentNode) const;
          bool isSpecial(Node * currentNode) const;
          void setTimersIntervals(const uint32_t newSpeed) const;
-         void memsetDs();
+         void memsetDs() const;
          void stopTimers() const;
          void pathConnect() const; 
          void getPath() const; 

@@ -35,7 +35,7 @@ private:
          State type = Node::Inactive;
          Node * pathParent = nullptr; 
          std::pair<int,int> currentLocation;
-         inline static bool algoRunning = false; 
+         inline static bool algorithmRunning = false; 
          inline const static int dimension = 32; // px
          inline const static int halfDimension = 16; // px
          inline const static uint32_t backwardDuration = 200;  // ms
@@ -51,7 +51,7 @@ signals:
          void sourceSet();
          void targetSet();
 public slots:
-         static void setRunningState(const bool newState);
+         static void setRunningState(const bool newAlgorithmState);
 
 };
 

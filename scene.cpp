@@ -34,7 +34,7 @@ namespace{
 
 // for inner scene
 const int rowCnt = 10,colCnt = 20; 
-const uint32_t defDelay = 250; // ms
+const uint32_t defDelay = 200; // ms
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
@@ -61,6 +61,8 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new
          dfsConnect();
          dijkstraConnect();
          pathConnect();
+
+         connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
 }
 
 GraphicsScene::~GraphicsScene(){
@@ -101,7 +103,7 @@ void GraphicsScene::allocDataStructures(){
          pq = make_unique<std::priority_queue<nodePair,vector<nodePair>,std::greater<>>>(); // {distance:}
 }
 
-void GraphicsScene::memsetDs(){
+void GraphicsScene::memsetDs() const{
          while(!queue->empty()) queue->pop();
          while(!stack->empty()) stack->pop();
          while(!pq->empty()) pq->pop();
@@ -116,120 +118,122 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
          auto view = new QGraphicsView(innerScene,widget); 
          mainLayout->addWidget(view,0,0);
+       
+         auto sideLayout = new QVBoxLayout(); // parent layout deletes
+         mainLayout->addLayout(sideLayout,0,1);
+         sideLayout->setAlignment(Qt::AlignTop);
 
-         {        // right side bar
-                  auto sideLayout = new QVBoxLayout(); // parent layout deletes
-                  mainLayout->addLayout(sideLayout,0,1);
-                  sideLayout->setAlignment(Qt::AlignTop);
+         populateSideLayout(sideLayout,algoName,infoText);
 
-                  auto infoBut = new PushButton("Information",widget);
-                  auto statusBut = new PushButton("Run",widget);
-                  auto resetBut = new PushButton("Reset",widget);
-                  auto exitBut = new PushButton("Exit",widget);
-         
-                  sideLayout->addWidget(infoBut);
-                  sideLayout->addWidget(statusBut);
-                  sideLayout->addWidget(resetBut);
-                  sideLayout->addWidget(exitBut);
-                  sideLayout->insertSpacing(3,100);
+         populateLegend(widget,sideLayout);
+         populateBottomLayout(widget,mainLayout);
+}
 
-                  {        // state machine for buttons
-                           auto machine = new QStateMachine(widget);
-                           auto statusStart = new QState(machine);
-                           auto statusEnd = new QState(machine);
+void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText){
+         auto parentWidget = sideLayout->widget();
+         auto infoBut = new PushButton("Information",parentWidget);
+         auto statusBut = new PushButton("Run",parentWidget);
+         auto resetBut = new PushButton("Reset",parentWidget);
+         auto exitBut = new PushButton("Exit",parentWidget);
 
-                           machine->setInitialState(statusStart);
-                           statusStart->assignProperty(statusBut,"bgColor",QColor(Qt::green));
-                           statusEnd->assignProperty(statusBut,"bgColor",QColor(Qt::red));
+         sideLayout->addWidget(infoBut);
+         sideLayout->addWidget(statusBut);
+         sideLayout->addWidget(resetBut);
+         sideLayout->addWidget(exitBut);
+         sideLayout->insertSpacing(3,100);
 
-                           statusStart->assignProperty(this,"on",false);
-                           statusEnd->assignProperty(this,"on",true);
+         configureMachine(parentWidget,statusBut);
 
-                           auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
-                           auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
-                           auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
-                           auto colorAnimation = new QPropertyAnimation(statusBut,"bgColor",widget);
+         connect(infoBut,&QPushButton::clicked,[algoName,infoText]{
+                  QMessageBox::information(nullptr,algoName,infoText);
+         });
 
-                           colorAnimation->setDuration(1000);
-                           startToEnd->addAnimation(colorAnimation);
-                           endToStart->addAnimation(colorAnimation);
-                           startToEnd->setTargetState(statusEnd);
-                           endToStart->setTargetState(statusStart);
-                           endedTransition->setTargetState(statusStart);
-                           endedTransition->addAnimation(colorAnimation);
+         // emitted when an algorithm finishes 
+         connect(this,&GraphicsScene::resetButtons,statusBut,[this,statusBut]{
+                  statusBut->setText("Run");
+                  memsetDs();
+         });
 
-                           statusStart->addTransition(startToEnd);
-                           statusEnd->addTransition(endToStart);
-                           machine->start();
+         connect(statusBut,&QPushButton::clicked,statusBut,[this,statusBut]{
+                  const QString & currentText = statusBut->text();
+                  bool newStart = false;
+
+                  if(currentText == "Stop"){
+                           statusBut->setText("Continue");
+                           stopTimers();
+                           return;
+                  }else if(currentText == "Run"){ 
+                           cleanup(); // remove any previous items
+                           statusBut->setText("Stop");
+                           newStart = true;
+                  }else{
+                           statusBut->setText("Stop");
                   }
 
-                  connect(infoBut,&QPushButton::clicked,[algoName,infoText]{
-                           //! setting widget gives weird layout - TODO fix later
-                           QMessageBox::information(nullptr,algoName,infoText);
-                  });
+                  switch(bar->currentIndex()){
+                           case 0 : bfsStart(newStart);break;
+                           case 1 : dfsStart(newStart);break;
+                           case 2 : dijkstraStart(newStart);break;
+                           default : assert(false);
+                  }
+         });
 
-                  // emitted when an algorithm finishes 
-                  connect(this,&GraphicsScene::resetButtons,statusBut,[this,statusBut]{
-                           statusBut->setText("Run");
-                           memsetDs();
-                  });
-
-                  connect(statusBut,&QPushButton::clicked,statusBut,[this,statusBut]{
-                           const QString & currentText = statusBut->text();
-                           bool newStart = false;
-
-                           if(currentText == "Stop"){
-                                    statusBut->setText("Continue");
-                                    stopTimers();
-                                    return;
-                           }else if(currentText == "Run"){ 
-                                    cleanup(); // remove any previous items
-                                    statusBut->setText("Stop");
-                                    newStart = true;
-                           }else{
-                                    statusBut->setText("Stop");
+         connect(resetBut,&QPushButton::clicked,statusBut,[this,statusBut]{
+                  statusBut->setText("Run");
+                  stopTimers();
+                  emit resetButtons();
+                  memsetDs();
+                  for(int row = 0;row < rowCnt;row++){
+                           for(int col = 0;col < colCnt;col++){
+                                    auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                                    if(isSpecial(node)) continue; 
+                                    node->setPathParent(nullptr);
+                                    bool runAnimations = false;
+                                    node->setType(Node::Inactive,runAnimations);
                            }
+                  }
+                  auto curTabIndex = bar->currentIndex();
+                  auto lineInfo = getStatusBar(curTabIndex);
+                  lineInfo->setText("Click on run button on sidebar to display algorithm status");
+         });
 
-                           switch(bar->currentIndex()){
-                                    case 0 : bfsStart(newStart);break;
-                                    case 1 : dfsStart(newStart);break;
-                                    case 2 : dijkstraStart(newStart);break;
-                                    default : assert(false);
-                           }
-                  });
+         connect(exitBut,&QPushButton::clicked,this,[this]{
+                  auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
+                  if(choice == QMessageBox::Yes){
+                           emit close();
+                  }
+         });
+}
 
-                  connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
+// manager custom properties - currently just statusbutton
+void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * statusBut){
+         auto machine = new QStateMachine(parentWidget);
+         auto statusStart = new QState(machine);
+         auto statusEnd = new QState(machine);
 
-                  // different from resetbuttons signal as that doesn't reset whole grid
-                  connect(resetBut,&QPushButton::clicked,statusBut,[this,statusBut]{
-                           statusBut->setText("Run");
-                           stopTimers();
-                           emit resetButtons();
-                           memsetDs();
-                           for(int row = 0;row < rowCnt;row++){
-                                    for(int col = 0;col < colCnt;col++){
-                                             auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
-                                             if(isSpecial(node)) continue; 
-                                             node->setPathParent(nullptr);
-                                             bool runAnimations = false;
-                                             node->setType(Node::Inactive,runAnimations);
-                                    }
-                           }
-                           auto curTabIndex = bar->currentIndex();
-                           auto lineInfo = getStatusBar(curTabIndex);
-                           lineInfo->setText("Click on run button on sidebar to display algorithm status");
-                  });
+         statusStart->assignProperty(this,"runningState",false);
+         statusStart->assignProperty(this,"runningState",true);
 
-                  connect(exitBut,&QPushButton::clicked,this,[this]{
-                           auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
-                           if(choice == QMessageBox::Yes){
-                                    emit close();
-                           }
-                  });
+         machine->setInitialState(statusStart);
+         statusStart->assignProperty(statusBut,"bgColor",QColor(Qt::green));
+         statusEnd->assignProperty(statusBut,"bgColor",QColor(Qt::red));
 
-                  populateLegend(widget,sideLayout);
-         }
-         populateSideBar(widget,mainLayout);
+         auto startToEnd = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
+         auto endToStart = new QEventTransition(statusBut,QEvent::MouseButtonPress,machine);
+         auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
+         auto colorAnimation = new QPropertyAnimation(statusBut,"bgColor",parentWidget);
+
+         colorAnimation->setDuration(1000);
+         startToEnd->addAnimation(colorAnimation);
+         endToStart->addAnimation(colorAnimation);
+         startToEnd->setTargetState(statusEnd);
+         endToStart->setTargetState(statusStart);
+         endedTransition->setTargetState(statusStart);
+         endedTransition->addAnimation(colorAnimation);
+
+         statusStart->addTransition(startToEnd);
+         statusEnd->addTransition(endToStart);
+         machine->start();
 }
 
 void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const{
@@ -310,7 +314,7 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
          }
 }
 
-void GraphicsScene::populateSideBar(QWidget * parentWidget,QGridLayout * mainLayout) const{
+void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const{
          auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
          infoLine->setAlignment(Qt::AlignCenter); // text align
          infoLine->setReadOnly(true);
@@ -333,7 +337,7 @@ void GraphicsScene::populateSideBar(QWidget * parentWidget,QGridLayout * mainLay
 
 /// utility ///
 
-void GraphicsScene::setRunning(const bool & newState){
+void GraphicsScene::setRunning(const bool newState){
          runningState = newState;
          emit runningStatusChanged(runningState); // connected with node class
 }
@@ -368,9 +372,11 @@ Node * GraphicsScene::getNewNode(const int row,const int col){
          connect(node,&Node::sourceSet,[&sourceNode = sourceNode,node]{
                   sourceNode = node;
          });
+
          connect(node,&Node::targetSet,[&targetNode = targetNode,node]{
                   targetNode = node;
          });
+         
          return node;
 }
 
@@ -398,7 +404,7 @@ bool GraphicsScene::isSpecial(Node * currentNode) const{
 }
 
 // sets the type - used in cleanup && reset button
-void GraphicsScene::updateSrcTarNodes(){
+void GraphicsScene::updateSrcTarNodes() const{
          assert(sourceNode && targetNode);
          sourceNode->setType(Node::Source);
          targetNode->setType(Node::Target);
@@ -432,7 +438,7 @@ void GraphicsScene::populateGridScene(){
          innerScene->setFocus();
 }
 
-void GraphicsScene::cleanup(){
+void GraphicsScene::cleanup() const{
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
                            auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
@@ -574,6 +580,7 @@ void GraphicsScene::dfsConnect() const{
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
                   }
+
                   if(currentNode == targetNode){
                            dfsTimer->stop();
                            getPath();
@@ -586,6 +593,7 @@ void GraphicsScene::dfsConnect() const{
                   if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::Visited);
                   }
+
                   for(int direction = 0;direction < 4;direction++){
                            int toRow = currentRow + xCord[direction];
                            int toCol = currentCol + yCord[direction];

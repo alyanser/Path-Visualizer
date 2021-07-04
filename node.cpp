@@ -26,8 +26,8 @@ Node::~Node(){
          delete forwardTimer;
 }
 
-void Node::setRunningState(const bool newState){
-         algoRunning = newState;
+void Node::setRunningState(const bool newAlgorithmState){
+         algorithmRunning = newAlgorithmState;
 }
 
 QRectF Node::boundingRect() const{
@@ -39,7 +39,7 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
          Q_UNUSED(widget);
 
          if(type == Visited){
-                  painter->setOpacity(opacity() / 2.0);
+                  painter->setOpacity(opacity() / 3.33);
          }
          painter->setRenderHint(QPainter::Antialiasing);
          painter->drawPixmap(0,0,dimension,dimension,icon);
@@ -116,6 +116,7 @@ void Node::setType(const State newType,const bool startTimer){
                   case Inpath : icon.load(":/pixmaps/icons/inpath.png");break;
                   default : assert(false);
          }
+         
          if(startTimer && backwardTimer->state() == QTimeLine::NotRunning){
                   backwardTimer->start();
          }else{ //! check if needed
@@ -156,15 +157,15 @@ void Node::undoNodeRotation(){
                            break;
                   }
                   case 270 : {
-                           moveBy(-halfDimension,-halfDimension);
+                           moveBy(halfDimension,-halfDimension);
                            setRotation(0);
-                           moveBy(-halfDimension,halfDimension);
+                           moveBy(-halfDimension,-halfDimension);
                            break;
                   }
                   case 90 : {
-                           moveBy(-halfDimension,-halfDimension);
+                           moveBy(-halfDimension,halfDimension);
                            setRotation(0);
-                           moveBy(halfDimension,-halfDimension);
+                           moveBy(-halfDimension,-halfDimension);
                   }
          }
 }
@@ -217,6 +218,7 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
+         if(algorithmRunning && type == Source) return;
          auto dragger = new QDrag(this);
          auto mimeData = new QMimeData();
          dragger->setMimeData(mimeData);
