@@ -230,109 +230,115 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
                            }
                   });
 
-                  sideLayout->addSpacing(25);
-                  auto legendLabel = new QLabel("Legend:",widget);
-                  sideLayout->addWidget(legendLabel);
+                  populateLegend(widget,sideLayout);
+         }
+         populateSideBar(widget,mainLayout);
+}
 
-                  {
-                           auto sourceNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(sourceNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/source.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Source",widget);
-                           iconLabel->setPixmap(pix);
-                           sourceNodeLayout->addWidget(iconLabel);
-                           sourceNodeLayout->addWidget(textLabel);
-                  }
+void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const{
 
-                  {
-                           auto targetNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(targetNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/target.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Target",widget);
-                           iconLabel->setPixmap(pix);
-                           targetNodeLayout->addWidget(iconLabel);
-                           targetNodeLayout->addWidget(textLabel);
-                  }
+         sideLayout->addSpacing(25);
+         auto legendLabel = new QLabel("Legend:",parentWidget);
+         sideLayout->addWidget(legendLabel);
 
-                  {
-                           auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(activeNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/active.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Active",widget);
-                           iconLabel->setPixmap(pix);
-                           activeNodeLayout->addWidget(iconLabel);
-                           activeNodeLayout->addWidget(textLabel);
-                  }
-
-                  {
-                           auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(activeNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/block.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Block",widget);
-                           iconLabel->setPixmap(pix);
-                           activeNodeLayout->addWidget(iconLabel);
-                           activeNodeLayout->addWidget(textLabel);
-                  }
-
-                  {
-                           auto inactiveNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(inactiveNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/inactive.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Unvisited",widget);
-                           iconLabel->setPixmap(pix);
-                           inactiveNodeLayout->addWidget(iconLabel);
-                           inactiveNodeLayout->addWidget(textLabel);
-                  }
-
-                  {        
-                           auto visitedNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(visitedNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/inactive.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Visited",widget);
-                           iconLabel->setWindowOpacity(0.5); //TODO fix opacity
-                           iconLabel->setPixmap(pix);
-                           visitedNodeLayout->addWidget(iconLabel);
-                           visitedNodeLayout->addWidget(textLabel);
-                  }
-
-                  {
-                           auto pathNodeLayout = new QHBoxLayout(); // parent layout deletes
-                           sideLayout->addLayout(pathNodeLayout);
-                           QPixmap pix(":/pixmaps/icons/inpath.png");
-                           auto iconLabel = new QLabel(widget);
-                           auto textLabel = new QLabel("Path",widget);
-                           iconLabel->setPixmap(pix);
-                           pathNodeLayout->addWidget(iconLabel);
-                           pathNodeLayout->addWidget(textLabel);
-                  }
+         {
+                  auto sourceNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(sourceNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/source.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Source",parentWidget);
+                  iconLabel->setPixmap(pix);
+                  sourceNodeLayout->addWidget(iconLabel);
+                  sourceNodeLayout->addWidget(textLabel);
          }
 
-         {        // bottom bar 
-                  auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",widget);
-                  infoLine->setAlignment(Qt::AlignCenter); // text align
-                  infoLine->setReadOnly(true);
-                  
-                  auto slider = new QSlider(Qt::Horizontal,widget);
-                  slider->setRange(0,1000);
-                  slider->setValue(925);
-                  slider->setTracking(true);
+         {
+                  auto targetNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(targetNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/target.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Target",parentWidget);
+                  iconLabel->setPixmap(pix);
+                  targetNodeLayout->addWidget(iconLabel);
+                  targetNodeLayout->addWidget(textLabel);
+         }
 
-                  connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
+         {
+                  auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(activeNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/active.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Active",parentWidget);
+                  iconLabel->setPixmap(pix);
+                  activeNodeLayout->addWidget(iconLabel);
+                  activeNodeLayout->addWidget(textLabel);
+         }
+
+         {
+                  auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(activeNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/block.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Block",parentWidget);
+                  iconLabel->setPixmap(pix);
+                  activeNodeLayout->addWidget(iconLabel);
+                  activeNodeLayout->addWidget(textLabel);
+         }
+
+         {
+                  auto inactiveNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(inactiveNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/inactive.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Unvisited",parentWidget);
+                  iconLabel->setPixmap(pix);
+                  inactiveNodeLayout->addWidget(iconLabel);
+                  inactiveNodeLayout->addWidget(textLabel);
+         }
+
+         {        
+                  auto visitedNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(visitedNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/inactive.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Visited",parentWidget);
+                  iconLabel->setWindowOpacity(0.5); //TODO fix opacity
+                  iconLabel->setPixmap(pix);
+                  visitedNodeLayout->addWidget(iconLabel);
+                  visitedNodeLayout->addWidget(textLabel);
+         }
+
+         {
+                  auto pathNodeLayout = new QHBoxLayout(); // parent layout deletes
+                  sideLayout->addLayout(pathNodeLayout);
+                  QPixmap pix(":/pixmaps/icons/inpath.png");
+                  auto iconLabel = new QLabel(parentWidget);
+                  auto textLabel = new QLabel("Path",parentWidget);
+                  iconLabel->setPixmap(pix);
+                  pathNodeLayout->addWidget(iconLabel);
+                  pathNodeLayout->addWidget(textLabel);
+         }
+}
+
+void GraphicsScene::populateSideBar(QWidget * parentWidget,QGridLayout * mainLayout) const{
+          auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
+         infoLine->setAlignment(Qt::AlignCenter); // text align
+         infoLine->setReadOnly(true);
          
-                  auto bottomLayout = new QHBoxLayout(); 
-                  bottomLayout->setAlignment(Qt::AlignCenter);
-                  bottomLayout->addWidget(infoLine);
-                  bottomLayout->addSpacing(40);
-                  bottomLayout->addWidget(new QLabel("Speed: "));
-                  bottomLayout->addWidget(slider);
-                  mainLayout->addLayout(bottomLayout,1,0);
-         }
+         auto slider = new QSlider(Qt::Horizontal,parentWidget);
+         slider->setRange(0,1000);
+         slider->setValue(925);
+         slider->setTracking(true);
+
+         connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
+
+         auto bottomLayout = new QHBoxLayout(); 
+         bottomLayout->setAlignment(Qt::AlignCenter);
+         bottomLayout->addWidget(infoLine);
+         bottomLayout->addSpacing(40);
+         bottomLayout->addWidget(new QLabel("Speed: "));
+         bottomLayout->addWidget(slider);
+         mainLayout->addLayout(bottomLayout,1,0);
 }
 
 /// utility ///

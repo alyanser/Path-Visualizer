@@ -12,6 +12,7 @@ class QGraphicsGridLayout;
 class Node;
 class QHBoxLayout;
 class QVBoxLayout;
+class QGridLayout;
 class QTimer;
 
 class GraphicsScene : public QGraphicsScene{
@@ -40,6 +41,8 @@ private:
          void populateBar();
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
          void populateGridScene(); 
+         void populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const;
+         void populateSideBar(QWidget * parentWidget,QGridLayout * mainLayout) const;
          // utility
          void allocDataStructures();
          void setRunning(const bool & newState); 
