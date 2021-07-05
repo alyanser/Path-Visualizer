@@ -1,4 +1,5 @@
 #include <QTabWidget>
+#include <random>
 #include <QSlider>
 #include <QSignalTransition>
 #include <QGraphicsLineItem>
@@ -33,14 +34,14 @@ namespace{
 }
 
 // for inner scene
-const int rowCnt = 10,colCnt = 20; 
-const uint32_t defDelay = 100; // ms
-const int xCord[] {-1,1,0,0};
-const int yCord[] {0,0,1,-1};
+constexpr int rowCnt = 10,colCnt = 20;
+constexpr uint32_t defDelay = 75; // ms
+constexpr int xCord[] {-1,1,0,0};
+constexpr int yCord[] {0,0,1,-1};
 
 GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new QTabWidget()), innerScene(new QGraphicsScene(this)){
          setSceneRect(0,0,size.width(),size.height());
-         
+
          bfsTimer = new QTimer(bar);
          dfsTimer = new QTimer(bar);
          dijkstraTimer = new QTimer(bar);
@@ -53,7 +54,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay), bar(new
          bar->setFixedHeight(size.height()-25); //? fix
 
          allocDataStructures();
-         memsetDs(); 
+         memsetDs();
          populateBar();
          populateGridScene();
 
@@ -75,7 +76,7 @@ void GraphicsScene::populateBar(){
                   auto bfsWidget = new QWidget(bar);
                   const QString algoName = "BFS";
                   bar->addTab(bfsWidget,algoName);
-                  populateWidget(bfsWidget,algoName,::bfsInfo /*inside defines header*/ ); 
+                  populateWidget(bfsWidget,algoName,::bfsInfo /*inside defines header*/ );
          }
          {        // dfs
                   auto dfsWidget = new QWidget(bar);
@@ -94,13 +95,13 @@ void GraphicsScene::populateBar(){
 void GraphicsScene::allocDataStructures(){
          using std::make_unique;
          using std::vector;
+         typedef std::pair<int,Node*> pIntNode;
 
          queue = make_unique<std::queue<std::pair<Node*,int>>>(); // {:distance}
          stack = make_unique<std::stack<std::pair<Node*,int>>>(); // {:distance}
-         visited = make_unique<vector<vector<bool>>>(); 
+         visited = make_unique<vector<vector<bool>>>();
          distance = make_unique<vector<vector<int>>>();
-         using nodePair = std::pair<int,Node*>;
-         pq = make_unique<std::priority_queue<nodePair,vector<nodePair>,std::greater<>>>(); // {distance:}
+         pq = make_unique<std::priority_queue<pIntNode,vector<pIntNode>,std::greater<>>>(); // {distance:}
 }
 
 void GraphicsScene::memsetDs() const{
@@ -116,9 +117,9 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->setSpacing(10);
 
-         auto view = new QGraphicsView(innerScene,widget); 
+         auto view = new QGraphicsView(innerScene,widget);
          mainLayout->addWidget(view,0,0);
-       
+
          auto sideLayout = new QVBoxLayout(); // parent layout deletes
          mainLayout->addLayout(sideLayout,0,1);
          sideLayout->setAlignment(Qt::AlignTop);
@@ -135,10 +136,12 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
          auto statusBut = new PushButton("Run",parentWidget);
          auto resetBut = new PushButton("Reset",parentWidget);
          auto exitBut = new PushButton("Exit",parentWidget);
+         auto randomBut = new PushButton("Random",parentWidget);
 
          sideLayout->addWidget(infoBut);
          sideLayout->addWidget(statusBut);
          sideLayout->addWidget(resetBut);
+         sideLayout->addWidget(randomBut);
          sideLayout->addWidget(exitBut);
          sideLayout->insertSpacing(3,100);
 
@@ -148,7 +151,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                   QMessageBox::information(nullptr,algoName,infoText);
          });
 
-         // emitted when an algorithm finishes 
+         // emitted when an algorithm finishes
          connect(this,&GraphicsScene::resetButtons,statusBut,[this,statusBut]{
                   statusBut->setText("Run");
                   memsetDs();
@@ -163,7 +166,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                            stopTimers();
                            setRunning(true);
                            return;
-                  }else if(currentText == "Run"){ 
+                  }else if(currentText == "Run"){
                            cleanup(); // remove any previous items
                            statusBut->setText("Stop");
                            newStart = true;
@@ -181,21 +184,12 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
 
          connect(resetBut,&QPushButton::clicked,statusBut,[this,statusBut]{
                   statusBut->setText("Run");
-                  stopTimers();
-                  emit resetButtons();
-                  memsetDs();
-                  for(int row = 0;row < rowCnt;row++){
-                           for(int col = 0;col < colCnt;col++){
-                                    auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
-                                    if(isSpecial(node)) continue; 
-                                    node->setPathParent(nullptr);
-                                    bool runAnimations = false;
-                                    node->setType(Node::Inactive,runAnimations);
-                           }
-                  }
-                  auto curTabIndex = bar->currentIndex();
-                  auto lineInfo = getStatusBar(curTabIndex);
-                  lineInfo->setText("Click on run button on sidebar to display algorithm status");
+                  resetGrid();
+         });
+
+         connect(randomBut,&PushButton::clicked,[this]{
+                  resetGrid();
+                  generateRandGridPattern();
          });
 
          connect(exitBut,&QPushButton::clicked,this,[this]{
@@ -204,6 +198,53 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                            emit close();
                   }
          });
+}
+
+void GraphicsScene::resetGrid() const{
+         stopTimers();
+         emit resetButtons();
+         memsetDs();
+         for(int row = 0;row < rowCnt;row++){
+                  for(int col = 0;col < colCnt;col++){
+                           auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                           if(isSpecial(node)) continue;
+                           node->setPathParent(nullptr);
+                           bool runAnimations = false;
+                           node->setType(Node::Inactive,runAnimations);
+                  }
+         }
+         auto curTabIndex = bar->currentIndex();
+         auto lineInfo = getStatusBar(curTabIndex);
+         lineInfo->setText("Click on run button on sidebar to display algorithm status");
+}
+
+void GraphicsScene::generateRandGridPattern(){
+         startCord = getRandomCord();
+         while((endCord = getRandomCord()) == startCord){
+                  qInfo() << "what";
+         }
+
+         sourceNode->setType(Node::Inactive);
+         targetNode->setType(Node::Inactive);
+         sourceNode = getNodeAt(startCord.first,startCord.second);
+         targetNode = getNodeAt(endCord.first,endCord.second);
+         updateSrcTarNodes();
+
+         constexpr int maximumBlocks = 60; // / 200
+
+         std::random_device rd;
+         std::mt19937 gen(rd());
+         std::uniform_int_distribution<int> binary(0,1);
+
+         for(int placed = 0;placed < maximumBlocks;){
+                  auto [randX,randY] = getRandomCord();
+                  auto node = getNodeAt(randX,randY);
+
+                  if(binary(gen) && !isSpecial(node)){
+                           placed++;
+                           node->setType(Node::Block);
+                  }
+         }
 }
 
 // manager custom properties - currently just statusbutton
@@ -292,7 +333,7 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
                   inactiveNodeLayout->addWidget(iconLabel);
                   inactiveNodeLayout->addWidget(textLabel);
          }
-         {        
+         {
                   auto visitedNodeLayout = new QHBoxLayout(); // parent layout deletes
                   sideLayout->addLayout(visitedNodeLayout);
                   QPixmap pix(":/pixmaps/icons/inactive.png");
@@ -319,7 +360,7 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
          auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
          infoLine->setAlignment(Qt::AlignCenter); // text align
          infoLine->setReadOnly(true);
-         
+
          auto slider = new QSlider(Qt::Horizontal,parentWidget);
          slider->setRange(0,1000);
          slider->setValue(925);
@@ -327,7 +368,7 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
 
          connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
 
-         auto bottomLayout = new QHBoxLayout(); 
+         auto bottomLayout = new QHBoxLayout();
          bottomLayout->setAlignment(Qt::AlignCenter);
          bottomLayout->addWidget(infoLine);
          bottomLayout->addSpacing(40);
@@ -343,6 +384,15 @@ void GraphicsScene::setRunning(const bool newState){
          emit runningStatusChanged(runningState); // connected with node class
 }
 
+std::pair<int,int> GraphicsScene::getRandomCord() const{
+         std::random_device rd;  
+         std::mt19937 gen(rd());
+         std::uniform_int_distribution<int> rowRange(0,rowCnt-1);
+         std::uniform_int_distribution<int> colRange(0,colCnt-1);
+
+         return std::make_pair(rowRange(gen),colRange(gen));
+}
+
 // algorithm state
 bool GraphicsScene::isRunning() const{
          return runningState;
@@ -350,7 +400,7 @@ bool GraphicsScene::isRunning() const{
 
 void GraphicsScene::setDelay(const uint32_t newDelay){
          // slide bar has more value when it is set on the fuller side convert before
-         timerDelay = std::abs((int64_t)1000 - newDelay); 
+         timerDelay = std::abs((int64_t)1000 - newDelay);
          setTimersIntervals(timerDelay);
 }
 
@@ -370,14 +420,17 @@ void GraphicsScene::stopTimers() const{
 
 Node * GraphicsScene::getNewNode(const int row,const int col){
          auto node = new Node(row,col);
-         connect(node,&Node::sourceSet,[&sourceNode = sourceNode,node]{
+
+         connect(node,&Node::sourceSet,[this,node,row,col]{
+                  startCord = {row,col};
                   sourceNode = node;
          });
 
-         connect(node,&Node::targetSet,[&targetNode = targetNode,node]{
+         connect(node,&Node::targetSet,[this,node,row,col]{
+                  endCord = {row,col};
                   targetNode = node;
          });
-         
+
          return node;
 }
 
@@ -423,20 +476,19 @@ void GraphicsScene::populateGridScene(){
          holder->setLayout(innerLayout);
          innerScene->addItem(holder);
          innerLayout->setSpacing(25);
-         
+
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
                            auto node = getNewNode(row,col);
                            innerLayout->addItem(node,row,col);
                   }
          }
-         startCord = {0,0};
-         endCord = {rowCnt-1,colCnt-1};
+         startCord = getRandomCord();
+         endCord = getRandomCord();
 
          sourceNode = getNodeAt(startCord.first,startCord.second);
          targetNode = getNodeAt(endCord.first,endCord.second);
-         updateSrcTarNodes(); 
-         innerScene->setFocus();
+         updateSrcTarNodes();
 }
 
 void GraphicsScene::cleanup() const{
@@ -445,7 +497,7 @@ void GraphicsScene::cleanup() const{
                            auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
                            if(isBlock(node)) continue;
                            bool runAnimations = false;
-                           node->setType(Node::Inactive,runAnimations); 
+                           node->setType(Node::Inactive,runAnimations);
                   }
          }
          updateSrcTarNodes();
@@ -459,7 +511,7 @@ void GraphicsScene::pathConnect() const{
                            currentNode = targetNode;
                   }
                   newStart = false;
-                  
+
                   if(!currentNode){
                            newStart = true;
                            pathTimer->stop();
@@ -481,7 +533,7 @@ void GraphicsScene::getPath() const{
 
 // called when start is pressed on bfs Tab
 void GraphicsScene::bfsStart(const bool newStart) const{
-         if(newStart){ 
+         if(newStart){
                   queue->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
                   (*visited)[startX][startY] = true;
@@ -501,7 +553,7 @@ void GraphicsScene::dfsStart(const bool newStart) const{
 
 // called when start is pressed on dijistraTab
 void GraphicsScene::dijkstraStart(const bool newStart) const{
-         if(newStart){ 
+         if(newStart){
                   pq->push({0,sourceNode});
                   auto [startX,startY] = sourceNode->getCord();
                   (*distance)[startX][startY] = 0;
@@ -549,7 +601,7 @@ void GraphicsScene::bfsConnect() const{
                                     auto togoNode = getNodeAt(toRow,toCol);
 
                                     if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
-                                    
+
                                     (*visited)[toRow][toCol] = true;
                                     togoNode->setPathParent(currentNode);
                                     queue->push({togoNode,currentDistance+1});
@@ -564,7 +616,7 @@ void GraphicsScene::bfsConnect() const{
 // connects dfsTimer with the 'implementation' lambda
 void GraphicsScene::dfsConnect() const{
          auto infoLine = getStatusBar(1);
-         
+
          auto implementation = [this,infoLine = infoLine]{
                   if(stack->empty()){
                            dfsTimer->stop();
@@ -601,7 +653,7 @@ void GraphicsScene::dfsConnect() const{
                                     auto togoNode = getNodeAt(toRow,toCol);
 
                                     if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
-                                    
+
                                     (*visited)[toRow][toCol] = true;
                                     togoNode->setPathParent(currentNode);
                                     stack->push({togoNode,currentDistance+1});
@@ -634,7 +686,7 @@ void GraphicsScene::dijkstraConnect() const{
                            currentNode->setType(Node::Active);
                   }
                   auto nodeParent = currentNode->getPathParent();
-                  
+
                   if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::Visited);
                   }
@@ -656,7 +708,7 @@ void GraphicsScene::dijkstraConnect() const{
 
                                     if(isBlock(togoNode)) continue;
 
-                                    int & destDistance = (*distance)[toRow][toCol]; 
+                                    int & destDistance = (*distance)[toRow][toCol];
                                     const int newDistance = currentDistance + 1;
 
                                     if(newDistance < destDistance){
@@ -668,5 +720,5 @@ void GraphicsScene::dijkstraConnect() const{
                   }
          };
 
-         connect(dijkstraTimer,&QTimer::timeout,implementation);         
+         connect(dijkstraTimer,&QTimer::timeout,implementation);
 }
