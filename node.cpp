@@ -8,8 +8,9 @@
 #include <QTimeLine>
 #include "node.hpp"
 
-Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}, 
-         backwardTimer(new QTimeLine()), forwardTimer(new QTimeLine()){
+Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}{
+         backwardTimer = new QTimeLine();
+         forwardTimer = new QTimeLine();
          
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
@@ -30,14 +31,11 @@ void Node::setRunningState(const bool newAlgorithmState){
          algorithmPaused = newAlgorithmState;
 }
 
-QRectF Node::boundingRect() const{
+QRectF Node::boundingRect() const {
          return QRectF(0,0,dimension,dimension);
 }
 
-void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWidget * widget){
-         Q_UNUSED(option);
-         Q_UNUSED(widget);
-
+void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * ,QWidget * ){
          if(type == Visited){
                   painter->setOpacity(opacity() / 3.33);
          }
@@ -45,10 +43,7 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * option,QWid
          painter->drawPixmap(0,0,dimension,dimension,icon);
 }
 
-QSizeF Node::sizeHint(Qt::SizeHint which, const QSizeF & constraint) const{
-         Q_UNUSED(which);
-         Q_UNUSED(constraint);
-
+QSizeF Node::sizeHint(Qt::SizeHint , const QSizeF & ) const {
          return QSizeF(dimension,dimension);
 }
 
@@ -101,21 +96,20 @@ void Node::setType(const State newType,const bool startTimer){
                   emit targetSet(); // update target node in GraphicsScene class
          }
          setAcceptDrops(acceptDrag); 
-
          undoNodeRotation(); 
          
          switch(type){
-                  case Source : icon.load(":/pixmaps/icons/source.png");break;
-                  case Target : icon.load(":/pixmaps/icons/target.png");break;
+                  case Source : icon.load(":/pixmaps/icons/source.png"); break;
+                  case Target : icon.load(":/pixmaps/icons/target.png"); break;
                   case Active : {
                            icon.load(":/pixmaps/icons/active.png");
                            setNodeRotation();
                            break;
                   }
-                  case Inactive : icon.load(":/pixmaps/icons/inactive.png");break;
-                  case Visited : icon.load(":/pixmaps/icons/inactive.png");break;
-                  case Block : icon.load(":/pixmaps/icons/block.png");break;
-                  case Inpath : icon.load(":/pixmaps/icons/inpath.png");break;
+                  case Inactive : icon.load(":/pixmaps/icons/inactive.png"); break;
+                  case Visited : icon.load(":/pixmaps/icons/inactive.png"); break;
+                  case Block : icon.load(":/pixmaps/icons/block.png"); break;
+                  case Inpath : icon.load(":/pixmaps/icons/inpath.png"); break;
                   default : assert(false);
          }
          
@@ -176,15 +170,15 @@ void Node::setPathParent(Node * newParent){
          pathParent = newParent;
 }
 
-std::pair<int,int> Node::getCord() const{
+std::pair<int,int> Node::getCord() const {
          return currentLocation;
 }
 
-Node * Node::getPathParent() const{
+Node * Node::getPathParent() const {
          return pathParent;
 }
 
-Node::State Node::getType() const{
+Node::State Node::getType() const {
          return type;
 }
 
@@ -195,7 +189,7 @@ void Node::dragEnterEvent(QGraphicsSceneDragDropEvent * event){
                   if(text == "inverter"){
                            switch(type){
                                     case Source | Target : break;
-                                    case Block : setType(Inactive);event->accept();break;
+                                    case Block : setType(Inactive);event->accept(); break;
                                     default : setType(Block);event->accept();
                            }
                   }

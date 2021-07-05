@@ -6,12 +6,14 @@ CONFIG += \
 SOURCES += \
          main.cpp \
          scene.cpp \ 
-         node.cpp
+         node.cpp \
+         helpDialog.cpp
 
 HEADERS += \
          scene.hpp \
          PushButton.hpp \
-         node.hpp
+         node.hpp \ 
+         helpDialog.hpp
 
 TARGET = qtGraphAlgos
 

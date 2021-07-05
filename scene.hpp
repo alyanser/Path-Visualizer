@@ -15,6 +15,7 @@ class QVBoxLayout;
 class QGridLayout;
 class QTimer;
 class QPushButton;
+class QStackedWidget;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -24,12 +25,10 @@ public:
          GraphicsScene(const QSize & size);
          ~GraphicsScene();
 private:
-         bool runningState = false; // 0 : no - 1 : yes
-         Node * sourceNode = nullptr; 
-         Node * targetNode = nullptr; 
          uint32_t timerDelay; 
-         QTabWidget * bar; 
+         std::unique_ptr<QStackedWidget> helpWidget;
          QGraphicsScene * innerScene; // grid
+         QTabWidget * bar;
          QTimer * bfsTimer,* dfsTimer,* dijkstraTimer,* pathTimer; 
          std::pair<int,int> startCord;// sourceNode position
          std::pair<int,int> endCord; // targetNode position
@@ -39,16 +38,19 @@ private:
          std::unique_ptr<std::vector<std::vector<bool>>> visited; 
          std::unique_ptr<std::vector<std::vector<int>>> distance;
          std::unique_ptr<std::priority_queue<pIntNode,std::vector<pIntNode>,std::greater<>>> pq;
-         /// visual designs
+         bool runningState = false; // 0 : no - 1 : yes
+         Node * sourceNode = nullptr; 
+         Node * targetNode = nullptr; 
+
          void populateBar();
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
          void populateGridScene(); 
          void populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const;
          void populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const;
          void populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText);
-         // setups
+
          void configureMachine(QWidget * parentWidget,QPushButton * statusBut);
-         // utility
+
          void generateRandGridPattern();
          void allocDataStructures();
          void setRunning(const bool newState); 
@@ -68,10 +70,11 @@ private:
          void pathConnect() const; 
          void getPath() const; 
          std::pair<int,int> getRandomCord() const;
-         // implementations of algorithms
+         
          void bfsConnect() const;
          void dfsConnect() const ;
          void dijkstraConnect() const;
+         
          void bfsStart(const bool newStart) const;
          void dfsStart(const bool newStart) const;
          void dijkstraStart(const bool newStart) const;
