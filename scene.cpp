@@ -129,6 +129,7 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          mainLayout->addWidget(view,0,0);
 
          auto sideLayout = new QVBoxLayout(); 
+         sideLayout->setSpacing(5);
          mainLayout->addLayout(sideLayout,0,1);
          sideLayout->setAlignment(Qt::AlignTop);
 
@@ -153,7 +154,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
          sideLayout->addWidget(randombutton);
          sideLayout->addWidget(helpbutton);
          sideLayout->addWidget(exitbutton);
-         sideLayout->insertSpacing(4,100);
+         sideLayout->insertSpacing(4,25);
 
          configureMachine(parentWidget,statusbutton);
 
@@ -269,13 +270,13 @@ void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * status
          statusEnd->assignProperty(this,"runningState",true);
 
          machine->setInitialState(statusStart);
-         statusStart->assignProperty(statusbutton,"bgColor",QColor(Qt::green));
-         statusEnd->assignProperty(statusbutton,"bgColor",QColor(Qt::red));
+         statusStart->assignProperty(statusbutton,"backgroundColor",QColor(Qt::green));
+         statusEnd->assignProperty(statusbutton,"backgroundColor",QColor(Qt::red));
 
          auto startToEnd = new QEventTransition(statusbutton,QEvent::MouseButtonPress,machine);
          auto endToStart = new QEventTransition(statusbutton,QEvent::MouseButtonPress,machine);
          auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
-         auto colorAnimation = new QPropertyAnimation(statusbutton,"bgColor",parentWidget);
+         auto colorAnimation = new QPropertyAnimation(statusbutton,"backgroundColor",parentWidget);
 
          colorAnimation->setDuration(1000);
          startToEnd->addAnimation(colorAnimation);

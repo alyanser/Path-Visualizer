@@ -1,14 +1,13 @@
-#include "helpDialog.hpp"
-#include "PushButton.hpp"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QTextEdit>
-#include <QTextEdit>
 #include <QGridLayout>
 #include <QStackedLayout>
-#include <QLineEdit>
 #include <QLabel>
+#include <QMovie>
+#include "helpDialog.hpp"
+#include "PushButton.hpp"
 
 StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
          setGeometry(200,200,400,400); //TODO align in mid

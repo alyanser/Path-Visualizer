@@ -10,4 +10,7 @@
          <file>icons/source.png</file>
          <file>icons/target.png</file>
     </qresource>
+    <qresource prefix="/anims">
+         <file>gifs/place.gif</file>
+    </qresource>
 </RCC>

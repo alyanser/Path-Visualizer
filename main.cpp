@@ -2,6 +2,8 @@
 #include <QGraphicsView>
 #include <QScreen>
 #include <QFile>
+#include <QLabel>
+#include <QMovie>
 #include "scene.hpp"
 #include "node.hpp"
 

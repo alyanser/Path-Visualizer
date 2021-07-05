@@ -2,23 +2,16 @@
 #define PUSHBUTTON_HPP
 
 #include <QPushButton>
-#include <QDebug>
 
 class PushButton : public QPushButton{
          Q_OBJECT
-         Q_PROPERTY(QColor bgColor WRITE setColor READ color)
-         QColor bgColor;
+         Q_PROPERTY(QColor backgroundColor WRITE setColor READ color)
+         QColor backgroundColor;
 public:
-         PushButton(const QString & text,QWidget * parent = nullptr) : QPushButton(text,parent){}
-
-         void setColor(const QColor & toCol){
-                  bgColor = toCol;
-                  setStyleSheet(QString("background-color:%1").arg(bgColor.name()));
-         }
-
-         QColor color() const{
-                  return bgColor;
-         }
+         PushButton(const QString & text,QWidget * parent = nullptr);
+         
+         void setColor(const QColor & toCol);
+         QColor color() const;
 };
 
 #endif

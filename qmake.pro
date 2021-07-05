@@ -7,7 +7,8 @@ SOURCES += \
          main.cpp \
          scene.cpp \ 
          node.cpp \
-         helpDialog.cpp
+         helpDialog.cpp \
+         PushButton.cpp
 
 HEADERS += \
          scene.hpp \
