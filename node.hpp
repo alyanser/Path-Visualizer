@@ -35,11 +35,11 @@ private:
          State type = Node::Inactive;
          Node * pathParent = nullptr; 
          std::pair<int,int> currentLocation;
-         inline static bool algorithmRunning = false; 
+         inline static bool algorithmPaused = false; 
          inline const static int dimension = 32; // px
          inline const static int halfDimension = 16; // px
-         inline const static uint32_t backwardDuration = 200;  // ms
-         inline const static uint32_t forwardDuration = 200;  // ms
+         inline const static uint32_t backwardDuration = 175;  // ms
+         inline const static uint32_t forwardDuration = 175;  // ms
          QPixmap icon;
          QTimeLine * backwardTimer,* forwardTimer;
          ///

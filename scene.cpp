@@ -34,7 +34,7 @@ namespace{
 
 // for inner scene
 const int rowCnt = 10,colCnt = 20; 
-const uint32_t defDelay = 200; // ms
+const uint32_t defDelay = 100; // ms
 const int xCord[] {-1,1,0,0};
 const int yCord[] {0,0,1,-1};
 
@@ -161,6 +161,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                   if(currentText == "Stop"){
                            statusBut->setText("Continue");
                            stopTimers();
+                           setRunning(true);
                            return;
                   }else if(currentText == "Run"){ 
                            cleanup(); // remove any previous items
@@ -212,7 +213,7 @@ void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * status
          auto statusEnd = new QState(machine);
 
          statusStart->assignProperty(this,"runningState",false);
-         statusStart->assignProperty(this,"runningState",true);
+         statusEnd->assignProperty(this,"runningState",true);
 
          machine->setInitialState(statusStart);
          statusStart->assignProperty(statusBut,"bgColor",QColor(Qt::green));
@@ -526,13 +527,11 @@ void GraphicsScene::bfsConnect() const{
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::Active);
                   }
-
                   auto nodeParent = currentNode->getPathParent();
 
                   if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::Visited);
                   }
-
                   infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
                   if(currentNode == targetNode){
@@ -557,6 +556,7 @@ void GraphicsScene::bfsConnect() const{
                            }
                   }
          };
+
          connect(bfsTimer,&QTimer::timeout,implementation);
 }
 
@@ -574,7 +574,6 @@ void GraphicsScene::dfsConnect() const{
                   }
                   auto [currentNode,currentDistance] = stack->top();
                   stack->pop();
-
                   infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
                   if(!isSpecial(currentNode)){
@@ -609,6 +608,7 @@ void GraphicsScene::dfsConnect() const{
                            }
                   }
          };
+
          connect(dfsTimer,&QTimer::timeout,implementation);
 }
 
@@ -667,5 +667,6 @@ void GraphicsScene::dijkstraConnect() const{
                            }
                   }
          };
+
          connect(dijkstraTimer,&QTimer::timeout,implementation);         
 }

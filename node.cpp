@@ -10,7 +10,7 @@
 
 Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}, 
          backwardTimer(new QTimeLine()), forwardTimer(new QTimeLine()){
-
+         
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
          setGraphicsItem(this);
@@ -27,7 +27,7 @@ Node::~Node(){
 }
 
 void Node::setRunningState(const bool newAlgorithmState){
-         algorithmRunning = newAlgorithmState;
+         algorithmPaused = newAlgorithmState;
 }
 
 QRectF Node::boundingRect() const{
@@ -62,6 +62,7 @@ void Node::configureBackwardTimer(){
          backwardTimer->setDirection(QTimeLine::Backward);
          backwardTimer->setFrameRange(70,100);
          backwardTimer->setDuration(backwardDuration);
+         backwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
          connect(backwardTimer,&QTimeLine::frameChanged,[this](int delta){
                   const qreal converted = delta / 100.0;
@@ -79,6 +80,7 @@ void Node::configureForwardTimer(){
          forwardTimer->setDirection(QTimeLine::Forward);
          forwardTimer->setFrameRange(70,100);
          forwardTimer->setDuration(forwardDuration);
+         forwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
          connect(forwardTimer,&QTimeLine::frameChanged,[this](int delta){
                   const qreal converted = delta / 100.0;
@@ -218,7 +220,7 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
-         if(algorithmRunning && type == Source) return;
+         if(algorithmPaused && type == Source) return; // cannot change source
          auto dragger = new QDrag(this);
          auto mimeData = new QMimeData();
          dragger->setMimeData(mimeData);
