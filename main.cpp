@@ -17,6 +17,7 @@ int main(int argc, char ** argv){
 
          GraphicsScene scene(mainRect);
          QGraphicsView view(&scene);
+
          view.setWindowTitle("Graph Algorithm Visualizer");
          
          QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);
@@ -25,6 +26,5 @@ int main(int argc, char ** argv){
          view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          view.setFixedSize(mainRect);
          view.show();
-         
 	return app.exec();
 }

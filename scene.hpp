@@ -15,7 +15,7 @@ class QVBoxLayout;
 class QGridLayout;
 class QTimer;
 class QPushButton;
-class QStackedWidget;
+class StackedWidget;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -26,8 +26,8 @@ public:
          ~GraphicsScene();
 private:
          uint32_t timerDelay; 
-         std::unique_ptr<QStackedWidget> helpWidget;
          QGraphicsScene * innerScene; // grid
+         StackedWidget * helpWidget;
          QTabWidget * bar;
          QTimer * bfsTimer,* dfsTimer,* dijkstraTimer,* pathTimer; 
          std::pair<int,int> startCord;// sourceNode position
@@ -49,7 +49,7 @@ private:
          void populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const;
          void populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText);
 
-         void configureMachine(QWidget * parentWidget,QPushButton * statusBut);
+         void configureMachine(QWidget * parentWidget,QPushButton * statusButton);
 
          void generateRandGridPattern();
          void allocDataStructures();
