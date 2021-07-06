@@ -8,9 +8,43 @@ QPushButton{
          min-width: 80px;
          min-height: 40px;
 }
+ 
+/* QTabBar::tab{
+         background: rgb(77, 77, 187);
+         border: 1px solid lightgray; 
+         padding: 15px;
+}  */
+
+QTabBar::tab {
+         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                     stop: 0 #fafafa, stop: 0.4 #f4f4f4,
+                                     stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+} 
+
+QTabBar::tab:selected,QTabBar::tab:hover{
+         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                     stop: 0 rgb(77, 77, 187), stop: 0.4 rgb(166, 166, 255),
+                                     stop: 0.5 rgb(166, 166, 255), stop: 1.0 rgb(77, 77, 187));
+} 
+
+QPushButton:hover{
+         background-color:rgb(77, 77, 187);
+}
+
+QPushButton:!enabled{
+         background-color:grey;
+}
 
 QLabel{
          font-size:18px;
+}
+
+QWidget > QPushButton{
+         background-color:rgb(166, 166, 255);
+}
+
+QGraphicsView {
+         background-color:aliceblue;
 }
 
 QTabBar::tab{

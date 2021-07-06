@@ -12,7 +12,6 @@ public:
          
          void setColor(const QColor & toCol);
          QColor color() const;
-
 private:
          void addShadowEffect();
 };

@@ -87,6 +87,8 @@ signals:
          void runningStatusChanged(const bool newState); // connected with Node class 
 public slots:
          void setDelay(const uint32_t newDelay);
+         void disableBarTabs(const int exception) const;
+         void enableAllBarTabs() const;
 };
 
 #endif
