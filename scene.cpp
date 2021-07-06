@@ -25,6 +25,9 @@
 #include <queue>
 #include <stack>
 #include <QTimer>
+#include <QGraphicsOpacityEffect>
+#include <QTabBar>
+#include <QChar>
 #include "scene.hpp"
 #include "pushButton.hpp"
 #include "node.hpp"
@@ -48,6 +51,8 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          dfsTimer = new QTimer(bar);
          dijkstraTimer = new QTimer(bar);
          pathTimer = new QTimer(bar);
+
+         bar->setTabShape(QTabWidget::TabShape::Triangular); //?
 
          setSceneRect(0,0,size.width(),size.height());
          setTimersIntervals(timerDelay);
@@ -293,80 +298,20 @@ void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * status
 
 void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const {
          sideLayout->addSpacing(25);
+
          auto legendLabel = new QLabel("Legend:",parentWidget);
          sideLayout->addWidget(legendLabel);
 
-         {
-                  auto sourceNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(sourceNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/source.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Source",parentWidget);
-                  iconLabel->setPixmap(pix);
-                  sourceNodeLayout->addWidget(iconLabel);
-                  sourceNodeLayout->addWidget(textLabel);
-         }
-         {
-                  auto targetNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(targetNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/target.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Target",parentWidget);
-                  iconLabel->setPixmap(pix);
-                  targetNodeLayout->addWidget(iconLabel);
-                  targetNodeLayout->addWidget(textLabel);
-         }
-         {
-                  auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(activeNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/active.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Active",parentWidget);
-                  iconLabel->setPixmap(pix);
-                  activeNodeLayout->addWidget(iconLabel);
-                  activeNodeLayout->addWidget(textLabel);
-         }
-         {
-                  auto activeNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(activeNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/block.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Block",parentWidget);
-                  iconLabel->setPixmap(pix);
-                  activeNodeLayout->addWidget(iconLabel);
-                  activeNodeLayout->addWidget(textLabel);
-         }
-         {
-                  auto inactiveNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(inactiveNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/inactive.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Unvisited",parentWidget);
-                  iconLabel->setPixmap(pix);
-                  inactiveNodeLayout->addWidget(iconLabel);
-                  inactiveNodeLayout->addWidget(textLabel);
-         }
-         {
-                  auto visitedNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(visitedNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/inactive.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Visited",parentWidget);
-                  iconLabel->setWindowOpacity(0.5); //TODO fix opacity
-                  iconLabel->setPixmap(pix);
-                  visitedNodeLayout->addWidget(iconLabel);
-                  visitedNodeLayout->addWidget(textLabel);
-         }
-         {
-                  auto pathNodeLayout = new QHBoxLayout(); // parent layout deletes
-                  sideLayout->addLayout(pathNodeLayout);
-                  QPixmap pix(":/pixmaps/icons/inpath.png");
-                  auto iconLabel = new QLabel(parentWidget);
-                  auto textLabel = new QLabel("Path",parentWidget);
-                  iconLabel->setPixmap(pix);
-                  pathNodeLayout->addWidget(iconLabel);
-                  pathNodeLayout->addWidget(textLabel);
-         }
+         legendLabel->setObjectName("legendTitle");  // for css
+         addShadowEffect(legendLabel);
+
+         sideLayout->addLayout(getLegendLayout(parentWidget,"source"));
+         sideLayout->addLayout(getLegendLayout(parentWidget,"target"));
+         sideLayout->addLayout(getLegendLayout(parentWidget,"active"));
+         sideLayout->addLayout(getLegendLayout(parentWidget,"inactive"));
+         sideLayout->addLayout(getLegendLayout(parentWidget,"visited"));
+         sideLayout->addLayout(getLegendLayout(parentWidget,"block"));
+         sideLayout->addLayout(getLegendLayout(parentWidget,"inpath"));
 }
 
 void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const {
@@ -404,6 +349,44 @@ std::pair<int,int> GraphicsScene::getRandomCord() const {
          std::uniform_int_distribution<int> colRange(0,colCnt-1);
 
          return std::make_pair(rowRange(gen),colRange(gen));
+}
+
+void GraphicsScene::addShadowEffect(QLabel * label) const {
+         auto shadowEffect = new QGraphicsDropShadowEffect(label);
+         shadowEffect->setBlurRadius(4);// px
+         shadowEffect->setOffset(0.5,0.5); // x,y px
+         label->setGraphicsEffect(shadowEffect);
+}
+
+//! alternative later
+QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * parentWidget,QString token) const {
+         const QString pattern = R"(:/pixmaps/icons/%1.png)";
+         QString labelText = token;
+         labelText[0] = labelText[0].toUpper();
+
+         auto layout = new QHBoxLayout(); // parent layout deletes
+         auto label = new QLabel(labelText,parentWidget);
+         auto icon = new QLabel(parentWidget);
+
+         layout->addWidget(icon);
+         layout->addWidget(label);
+
+         if(token == "visited"){
+                  token = "inactive";
+                  addShadowEffect(label);
+
+                  auto opacityEffect = new QGraphicsOpacityEffect(icon);
+                  opacityEffect->setOpacity(0.5);
+                  icon->setGraphicsEffect(opacityEffect);
+         }else{
+                  addShadowEffect(icon);
+         }
+         
+         QPixmap pixmap(pattern.arg(token));
+         icon->setPixmap(pixmap);
+         assert(!icon->pixmap().isNull());
+
+         return layout;
 }
 
 // algorithm state

@@ -16,6 +16,7 @@ class QGridLayout;
 class QTimer;
 class QPushButton;
 class StackedWidget;
+class QLabel;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -70,6 +71,8 @@ private:
          void pathConnect() const; 
          void getPath() const; 
          std::pair<int,int> getRandomCord() const;
+         void addShadowEffect(QLabel * label) const;
+         QHBoxLayout * getLegendLayout(QWidget * parentWidget,QString token) const;
          
          void bfsConnect() const;
          void dfsConnect() const;

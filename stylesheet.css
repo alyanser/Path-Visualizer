@@ -26,3 +26,7 @@ QMessageBox{
 QLineEdit{
          font-size:15px;
 }
+
+#legendTitle{
+         font-size:25px;
+}
