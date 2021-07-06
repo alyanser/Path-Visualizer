@@ -8,8 +8,9 @@
 #include "pushButton.hpp"
 
 StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
-         // setGeometry(200,200,400,400); // TODO align in mid
-         setFixedSize(600,480);
+         //todo geometry figure
+         setFixedSize(800,400);
+         setWindowTitle("Help Dialog - Visualizer");
 
          addWidget(populateDefinitionPage());
          addWidget(populateBlockGifPage());
@@ -23,20 +24,24 @@ QWidget * StackedWidget::populateDefinitionPage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget); 
 
-         auto label = getLabel(parentWidget);
+         auto topLabel = getLabel(parentWidget);
+         auto bottomLabel = getLabel(parentWidget);
 
-         label->setText(R"(Welcome to the visualizer.<br><br><i>You may click on <strong>Next/Prev</strong> buttons 
+         topLabel->setText(R"(Welcome to the visualizer.<br><br><i>You may click on <strong>Next/Prev</strong> buttons 
          to navigate or click on <strong>Skip</strong> button to close the help menu directly.<br><br>This help menu will 
-         make you familiar with the features of the visualizer.</i><br><br><br><strong>Information Button</strong> : 
-         Displays information about the current algorithm.<br><strong>Run/Stop Button</strong> - Starts or stops current
-         algorithm.<br><strong>Reset Button</strong> - Resets the grid to the initial state (Removes all blocks).
+         make you familiar with the features of the visualizer.</i>)");
+
+         bottomLabel->setText(R"(<strong>Information Button</strong> : Displays information about the current 
+         algorithm.<br><strong>Run/Stop Button</strong> - Starts or stops current algorithm.<br><strong>
+         Reset Button</strong> - Resets the grid to the initial state (Removes all blocks).
          <br><strong>Random Button</strong> - Generats a random grid.<br><strong>Help Button</strong> - Open this 
          help menu.<br><strong>Exit Button</strong> - Exits the visualizer.)");
 
-         mainGridLayout->addWidget(label,0,0);
+         mainGridLayout->addWidget(topLabel,mainGridLayout->rowCount(),0);
+         mainGridLayout->addWidget(bottomLabel,mainGridLayout->rowCount(),0);
 
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Starting);
-         mainGridLayout->addLayout(bottomLayout,1,0);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
 
          return parentWidget;
 }
@@ -98,6 +103,14 @@ QWidget * StackedWidget::populateTabShiftPage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget);
 
+         {
+                  auto tabShiftLabel = getLabel(parentWidget);
+                  QPixmap pix(":/pixmaps/icons/tabs.png");
+                  tabShiftLabel->setPixmap(pix);
+                  assert(!tabShiftLabel->pixmap().isNull());
+                  mainGridLayout->addWidget(tabShiftLabel,mainGridLayout->rowCount(),0);
+         }
+
          auto label = getLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
@@ -114,6 +127,14 @@ QWidget * StackedWidget::populateSpeedPage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget);
 
+         {
+                  auto speedLabel = getLabel(parentWidget);
+                  QPixmap pix(":/pixmaps/icons/speed.png");
+                  speedLabel->setPixmap(pix);
+                  assert(!speedLabel->pixmap().isNull());
+                  mainGridLayout->addWidget(speedLabel,mainGridLayout->rowCount(),0);
+         }
+
          auto label = getLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
@@ -129,6 +150,14 @@ QWidget * StackedWidget::populateSpeedPage(){
 QWidget * StackedWidget::populateDistancePage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget);
+
+         {
+                  auto distanceLabel = getLabel(parentWidget);
+                  QPixmap pix(":/pixmaps/icons/distance.png");
+                  distanceLabel->setPixmap(pix);
+                  assert(!distanceLabel->pixmap().isNull());
+                  mainGridLayout->addWidget(distanceLabel,mainGridLayout->rowCount(),0);
+         }
 
          auto label = getLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
@@ -184,6 +213,7 @@ PushButton * StackedWidget::getPrevButton(QWidget * parentWidget){
 QLabel * StackedWidget::getLabel(QWidget * parentWidget) const {
          auto label = new QLabel(parentWidget);
          label->setWordWrap(true);
+         label->setAlignment(Qt::AlignCenter);
          return label;
 }
 

@@ -28,6 +28,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QTabBar>
 #include <QChar>
+#include <QIcon>
 #include "scene.hpp"
 #include "pushButton.hpp"
 #include "node.hpp"
@@ -52,7 +53,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          dijkstraTimer = new QTimer(bar);
          pathTimer = new QTimer(bar);
 
-         bar->setTabShape(QTabWidget::TabShape::Triangular); //?
+         // bar->setTabShape(QTabWidget::TabShape::Triangular); //?
 
          setSceneRect(0,0,size.width(),size.height());
          setTimersIntervals(timerDelay);
@@ -277,10 +278,10 @@ void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * status
          statusStart->assignProperty(statusbutton,"backgroundColor",QColor(Qt::green));
          statusEnd->assignProperty(statusbutton,"backgroundColor",QColor(Qt::red));
 
-         auto startToEnd = new QEventTransition(statusbutton,QEvent::MouseButtonRelease,machine);
-         auto endToStart = new QEventTransition(statusbutton,QEvent::MouseButtonRelease,machine);
-         auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd); //! memory leak
-         auto colorAnimation = new QPropertyAnimation(statusbutton,"backgroundColor",parentWidget);
+         auto startToEnd = new QEventTransition(statusbutton,QEvent::MouseButtonRelease,statusStart);
+         auto endToStart = new QEventTransition(statusbutton,QEvent::MouseButtonRelease,statusEnd);
+         auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
+         auto colorAnimation = new QPropertyAnimation(statusbutton,"backgroundColor",statusStart);
 
          colorAnimation->setDuration(1000);
          startToEnd->addAnimation(colorAnimation);
@@ -319,6 +320,13 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
          auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
          infoLine->setAlignment(Qt::AlignCenter); // text align
          infoLine->setReadOnly(true);
+         
+         {
+                  auto shadowEffect = new QGraphicsDropShadowEffect(infoLine);
+                  shadowEffect->setBlurRadius(10);
+                  shadowEffect->setOffset(2,2);
+                  infoLine->setGraphicsEffect(shadowEffect);
+         }
 
          auto slider = new QSlider(Qt::Horizontal,parentWidget);
          slider->setRange(0,1000);

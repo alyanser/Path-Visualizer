@@ -3,28 +3,24 @@
 }
 
 QPushButton{
+         background-color:rgb(166, 166, 255);
          text-align:center;
          font-size: 20px;
          min-width: 80px;
          min-height: 40px;
 }
- 
-/* QTabBar::tab{
-         background: rgb(77, 77, 187);
-         border: 1px solid lightgray; 
-         padding: 15px;
-}  */
 
 QTabBar::tab {
-         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                     stop: 0 #fafafa, stop: 0.4 #f4f4f4,
-                                     stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+         height: 50px; 
+         width: 100px; 
+         font-size:20px;
+         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 #fafafa, stop: 0.4 #f4f4f4,
+                                    stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
 } 
 
 QTabBar::tab:selected,QTabBar::tab:hover{
-         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                     stop: 0 rgb(77, 77, 187), stop: 0.4 rgb(166, 166, 255),
-                                     stop: 0.5 rgb(166, 166, 255), stop: 1.0 rgb(77, 77, 187));
+         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(77, 77, 187),stop: 0.4 rgb(166, 166, 255),
+                                    stop: 0.5 rgb(166, 166, 255), stop: 1.0 rgb(77, 77, 187));
 } 
 
 QPushButton:hover{
@@ -39,18 +35,12 @@ QLabel{
          font-size:18px;
 }
 
-QWidget > QPushButton{
-         background-color:rgb(166, 166, 255);
+QTabWidget{
+         background-color:rgb(208, 208, 208);
 }
 
 QGraphicsView {
          background-color:aliceblue;
-}
-
-QTabBar::tab{
-         height: 50px; 
-         width: 100px; 
-         font-size:20px;
 }
 
 QMessageBox{
@@ -58,9 +48,27 @@ QMessageBox{
 }
 
 QLineEdit{
-         font-size:15px;
+         /* background-color:rgb(92, 92, 92); */
+         /* color: white; */
+         font-size:19px;
 }
 
 #legendTitle{
          font-size:25px;
+}
+
+/* copy paste */
+QSlider::groove:horizontal {
+	border:2px solid #999999;
+	height:20px;
+	background:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #B1B1B1, stop:1 #c4c4c4);
+	margin:2px 0;
+}
+ 
+QSlider::handle:horizontal {
+	background:qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #b4b4b4, stop:1 #8f8f8f);
+	border:2px solid #5C5C5C;
+	border-radius:5px;
+	width:18px;
+	margin:-2px 0;
 }

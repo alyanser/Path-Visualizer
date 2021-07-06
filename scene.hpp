@@ -73,6 +73,8 @@ private:
          std::pair<int,int> getRandomCord() const;
          void addShadowEffect(QLabel * label) const;
          QHBoxLayout * getLegendLayout(QWidget * parentWidget,QString token) const;
+         void disableBarTabs(const int exception) const;
+         void enableAllBarTabs() const;
          
          void bfsConnect() const;
          void dfsConnect() const;
@@ -87,8 +89,7 @@ signals:
          void runningStatusChanged(const bool newState); // connected with Node class 
 public slots:
          void setDelay(const uint32_t newDelay);
-         void disableBarTabs(const int exception) const;
-         void enableAllBarTabs() const;
+         
 };
 
 #endif
