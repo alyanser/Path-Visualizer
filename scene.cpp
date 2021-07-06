@@ -36,7 +36,7 @@ namespace{
 
 // for inner scene
 constexpr int rowCnt = 10,colCnt = 20;
-constexpr uint32_t defDelay = 75; // ms
+constexpr uint32_t defDelay = 100; // ms
 constexpr int xCord[] {-1,1,0,0};
 constexpr int yCord[] {0,0,1,-1};
 

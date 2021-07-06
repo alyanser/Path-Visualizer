@@ -5,7 +5,7 @@
 
 #include <QStackedWidget>
 
-class QPushButton;
+class PushButton;
 
 class StackedWidget : public QStackedWidget{
          Q_OBJECT
@@ -20,7 +20,10 @@ private:
          void populateFrontPage();
          void populateMiddlePage();
          void populateLastPage();
-         void connectWithWidgetClose(QPushButton * button);
+         void connectWithWidgetClose(PushButton * button);
+         PushButton * getNextButton();
+         PushButton * getSkipButton();
+         PushButton * getPrevButton();
 };
 
 #endif // HELPDIALOG_HPP

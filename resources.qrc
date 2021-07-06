@@ -12,5 +12,6 @@
     </qresource>
     <qresource prefix="/anims">
          <file>gifs/place.gif</file>
+         <file>gifs/smaller.gif</file>
     </qresource>
 </RCC>

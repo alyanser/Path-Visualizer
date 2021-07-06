@@ -42,7 +42,7 @@ private:
          inline constexpr static int halfDimension = 16; // px
          inline constexpr static uint32_t backwardDuration = 175;  // ms
          inline constexpr static uint32_t forwardDuration = 175;  // ms
-         
+
          void configureBackwardTimer();
          void configureForwardTimer();
          void setNodeRotation();

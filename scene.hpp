@@ -72,7 +72,7 @@ private:
          std::pair<int,int> getRandomCord() const;
          
          void bfsConnect() const;
-         void dfsConnect() const ;
+         void dfsConnect() const;
          void dijkstraConnect() const;
          
          void bfsStart(const bool newStart) const;
