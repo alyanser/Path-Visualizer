@@ -21,6 +21,7 @@ private:
          QWidget * populateNodeDragPage();
          QWidget * populateDistancePage();
          QWidget * populateTabShiftPage();
+         QWidget * populateSpeedPage();
 
          QHBoxLayout * getBottomLayout(QWidget * parentWidget,const PagePosition position);
          PushButton * getNextButton(QWidget * parentWidget);

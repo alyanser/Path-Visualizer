@@ -26,7 +26,7 @@
 #include <stack>
 #include <QTimer>
 #include "scene.hpp"
-#include "PushButton.hpp"
+#include "pushButton.hpp"
 #include "node.hpp"
 #include "helpDialog.hpp"
 

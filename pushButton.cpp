@@ -1,4 +1,4 @@
-#include "PushButton.hpp"
+#include "pushButton.hpp"
 
 PushButton::PushButton(const QString & text,QWidget * parent) : QPushButton(text,parent){
          

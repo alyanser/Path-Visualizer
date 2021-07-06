@@ -12,6 +12,6 @@
     </qresource>
     <qresource prefix="/anims">
          <file>gifs/place.gif</file>
-         <file>gifs/smaller.gif</file>
+         <file>gifs/nodeDrag.gif</file>
     </qresource>
 </RCC>

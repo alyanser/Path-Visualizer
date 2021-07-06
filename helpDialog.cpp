@@ -5,7 +5,7 @@
 #include <QLabel>
 #include <QMovie>
 #include "helpDialog.hpp"
-#include "PushButton.hpp"
+#include "pushButton.hpp"
 
 StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
          // setGeometry(200,200,400,400); // TODO align in mid
@@ -15,6 +15,7 @@ StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
          addWidget(populateBlockGifPage());
          addWidget(populateNodeDragPage());
          addWidget(populateTabShiftPage());
+         addWidget(populateSpeedPage());
          addWidget(populateDistancePage());
 }
 
@@ -47,7 +48,7 @@ QWidget * StackedWidget::populateBlockGifPage(){
          {
                   auto holder = new QLabel(parentWidget);
                   auto player = new QMovie(holder);
-                  player->setFileName(":/anims/gifs/smaller.gif");
+                  player->setFileName(":/anims/gifs/place.gif");
                   holder->setAlignment(Qt::AlignCenter);
                   holder->setMovie(player);
                   player->start();
@@ -71,11 +72,21 @@ QWidget * StackedWidget::populateNodeDragPage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget);
 
+         {
+                  auto holder = new QLabel(parentWidget);
+                  auto player = new QMovie(holder);
+                  player->setFileName(":/anims/gifs/nodeDrag.gif");
+                  holder->setAlignment(Qt::AlignCenter);
+                  holder->setMovie(player);
+                  player->start();
+                  mainGridLayout->addWidget(holder,0,0);
+         }
+
          auto label = getLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
          
-         label->setText(R"(You may click on <strong>Source <small>and</small> Target Nodes</strong> and
-         move them to any other location inside the grid. They should not overlap each other.)");
+         label->setText(R"(The position of <strong>Source <small>and</small> Target Nodes</strong> can be
+         changed by dragging them to other part of the grid. They cannot be placed on top of each other.)");
 
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
          mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
@@ -90,7 +101,24 @@ QWidget * StackedWidget::populateTabShiftPage(){
          auto label = getLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
-         label->setText(R"(You can switch between different tabs which will determine the algorithm to run.)");
+         label->setText(R"(Current selected tab determines which algorithm to run. You may switch
+         between the tabs to run a different algorithm on the same grid.)");
+
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
+
+         return parentWidget;
+}
+
+QWidget * StackedWidget::populateSpeedPage(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget);
+
+         auto label = getLabel(parentWidget);
+         mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
+
+         label->setText(R"(You can change the speed at which an algorithm operates by the <strong>slider</strong> 
+         at bottom.)");
 
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
          mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
@@ -179,6 +207,7 @@ PushButton * StackedWidget::getCloseButton(QWidget * parentWidget){
 
 void StackedWidget::connectWithWidgetClose(PushButton * button){
          connect(button,&QPushButton::clicked,[this]{
+                  qInfo() << "I'm here";
                   setCurrentIndex(0);
                   close();
          });
