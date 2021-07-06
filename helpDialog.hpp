@@ -7,6 +7,7 @@
 
 class PushButton;
 class QHBoxLayout;
+class QLabel;
 
 class StackedWidget : public QStackedWidget{
          Q_OBJECT
@@ -19,11 +20,13 @@ private:
          QWidget * populateBlockGifPage();
          QWidget * populateNodeDragPage();
          QWidget * populateDistancePage();
+         QWidget * populateTabShiftPage();
 
          QHBoxLayout * getBottomLayout(QWidget * parentWidget,const PagePosition position);
          PushButton * getNextButton(QWidget * parentWidget);
          PushButton * getCloseButton(QWidget * parentWidget);
          PushButton * getPrevButton(QWidget * parentWidget);
+         QLabel * getLabel(QWidget * parentWidget) const;
 
          void connectWithWidgetClose(PushButton * button);
 };

@@ -8,18 +8,21 @@
 #include "PushButton.hpp"
 
 StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
-         setGeometry(200,200,400,400); // TODO align in mid
+         // setGeometry(200,200,400,400); // TODO align in mid
+         setFixedSize(600,480);
 
          addWidget(populateDefinitionPage());
          addWidget(populateBlockGifPage());
          addWidget(populateNodeDragPage());
+         addWidget(populateTabShiftPage());
          addWidget(populateDistancePage());
 }
 
 QWidget * StackedWidget::populateDefinitionPage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget); 
-         auto label = new QLabel(parentWidget);
+
+         auto label = getLabel(parentWidget);
 
          label->setText(R"(Welcome to the visualizer.<br><br><i>You may click on <strong>Next/Prev</strong> buttons 
          to navigate or click on <strong>Skip</strong> button to close the help menu directly.<br><br>This help menu will 
@@ -51,18 +54,46 @@ QWidget * StackedWidget::populateBlockGifPage(){
                   mainGridLayout->addWidget(holder,0,0);
          }
 
+         auto label = getLabel(parentWidget);
+         mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
+         
+         label->setText(R"(<br>You can click on any icon <small>with the exception of source and target nodes</small>
+         and start dragging over other icons to change the state from a <strong>Block Node</strong> to <strong>Path 
+         Node</strong> and vice versa. The visualizer will not pass through <strong>Block Nodes</strong>.)");
+
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
-         mainGridLayout->addLayout(bottomLayout,1,0);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
 
          return parentWidget;
 }
 
 QWidget * StackedWidget::populateNodeDragPage(){
          auto parentWidget = new QWidget(this);
-         auto mainGridLayout = new QGridLayout(parentWidget); 
+         auto mainGridLayout = new QGridLayout(parentWidget);
+
+         auto label = getLabel(parentWidget);
+         mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
+         
+         label->setText(R"(You may click on <strong>Source <small>and</small> Target Nodes</strong> and
+         move them to any other location inside the grid. They should not overlap each other.)");
 
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
-         mainGridLayout->addLayout(bottomLayout,1,0);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
+
+         return parentWidget;
+}
+
+QWidget * StackedWidget::populateTabShiftPage(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget);
+
+         auto label = getLabel(parentWidget);
+         mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
+
+         label->setText(R"(You can switch between different tabs which will determine the algorithm to run.)");
+
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
 
          return parentWidget;
 }
@@ -70,8 +101,15 @@ QWidget * StackedWidget::populateNodeDragPage(){
 QWidget * StackedWidget::populateDistancePage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget);
+
+         auto label = getLabel(parentWidget);
+         mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
+
+         label->setText(R"(The status bar <small>placed at the bottom</small> will display the current distance
+         which the active node is at from the source node)");
+         
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Ending);
-         mainGridLayout->addLayout(bottomLayout,0,0);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
 
          return parentWidget;
 }
@@ -93,13 +131,14 @@ QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePo
                            prevButton->setToolTip("No previous page");
                            break;
                   }
+                  case Middle : break;
                   case Ending : {
                            nextButton->setEnabled(false);
                            nextButton->setToolTip("No next page");
                            break;
                   }
          }
-         
+
          return bottomLayout;
 }
 
@@ -114,8 +153,14 @@ PushButton * StackedWidget::getPrevButton(QWidget * parentWidget){
          return button;
 }
 
+QLabel * StackedWidget::getLabel(QWidget * parentWidget) const {
+         auto label = new QLabel(parentWidget);
+         label->setWordWrap(true);
+         return label;
+}
+
 PushButton * StackedWidget::getNextButton(QWidget * parentWidget){
-         auto button = new PushButton("Next");
+         auto button = new PushButton("Next",parentWidget);
          button->setToolTip("Go to next page");
 
          connect(button,&PushButton::clicked,[this]{
@@ -126,7 +171,7 @@ PushButton * StackedWidget::getNextButton(QWidget * parentWidget){
 }
 
 PushButton * StackedWidget::getCloseButton(QWidget * parentWidget){
-         auto button = new PushButton("Close",this);
+         auto button = new PushButton("Close",parentWidget);
          button->setToolTip("Close this help menu");
          connectWithWidgetClose(button);
          return button;
