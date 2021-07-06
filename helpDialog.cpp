@@ -1,7 +1,5 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QPushButton>
-#include <QTextEdit>
 #include <QGridLayout>
 #include <QStackedLayout>
 #include <QLabel>
@@ -11,24 +9,18 @@
 
 StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
          setGeometry(200,200,400,400); // TODO align in mid
-         frontWidget = new QWidget(this); 
-         middleWidget = new QWidget(this); 
-         lastWidget = new QWidget(this);
 
-         populateFrontPage(); 
-         populateMiddlePage();
-         populateLastPage();
-         addWidget(frontWidget);
-         addWidget(middleWidget);
-         addWidget(lastWidget);
+         addWidget(populateDefinitionPage());
+         addWidget(populateBlockGifPage());
+         addWidget(populateNodeDragPage());
+         addWidget(populateDistancePage());
 }
 
-void StackedWidget::populateFrontPage(){
-         auto layout = new QGridLayout(frontWidget);
-         auto bottomLayout = new QHBoxLayout();
-         bottomLayout->setAlignment(Qt::AlignTop);
+QWidget * StackedWidget::populateDefinitionPage(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget); 
+         auto label = new QLabel(parentWidget);
 
-         auto label = new QLabel(frontWidget);
          label->setText(R"(Welcome to the visualizer.<br><br><i>You may click on <strong>Next/Prev</strong> buttons 
          to navigate or click on <strong>Skip</strong> button to close the help menu directly.<br><br>This help menu will 
          make you familiar with the features of the visualizer.</i><br><br><br><strong>Information Button</strong> : 
@@ -37,86 +29,92 @@ void StackedWidget::populateFrontPage(){
          <br><strong>Random Button</strong> - Generats a random grid.<br><strong>Help Button</strong> - Open this 
          help menu.<br><strong>Exit Button</strong> - Exits the visualizer.)");
 
-         layout->addWidget(label,0,0,1,2);
-         layout->addLayout(bottomLayout,1,0);
+         mainGridLayout->addWidget(label,0,0);
 
-         {
-                  auto skipButton = getSkipButton();
-                  auto prevButton = getPrevButton();
-                  auto nextButton = getNextButton();
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Starting);
+         mainGridLayout->addLayout(bottomLayout,1,0);
 
-                  prevButton->setEnabled(false);
-
-                  bottomLayout->addWidget(skipButton); 
-                  bottomLayout->addWidget(prevButton);
-                  bottomLayout->addWidget(nextButton);
-         }
+         return parentWidget;
 }
 
-void StackedWidget::populateMiddlePage(){
-         auto layout = new QGridLayout(middleWidget); 
-         auto bottomLayout = new QHBoxLayout();
+QWidget * StackedWidget::populateBlockGifPage(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget); 
 
          {
-                  auto holder = new QLabel(middleWidget);
+                  auto holder = new QLabel(parentWidget);
                   auto player = new QMovie(holder);
                   player->setFileName(":/anims/gifs/smaller.gif");
                   holder->setAlignment(Qt::AlignCenter);
                   holder->setMovie(player);
                   player->start();
-                  layout->addWidget(holder,0,0);
+                  mainGridLayout->addWidget(holder,0,0);
+         }
+
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
+         mainGridLayout->addLayout(bottomLayout,1,0);
+
+         return parentWidget;
+}
+
+QWidget * StackedWidget::populateNodeDragPage(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget); 
+
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
+         mainGridLayout->addLayout(bottomLayout,1,0);
+
+         return parentWidget;
+}
+
+QWidget * StackedWidget::populateDistancePage(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget);
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Ending);
+         mainGridLayout->addLayout(bottomLayout,0,0);
+
+         return parentWidget;
+}
+
+QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePosition position){
+         auto bottomLayout = new QHBoxLayout(); // parent's main layout deletes
+
+         auto skipButton = getCloseButton(parentWidget);
+         auto prevButton = getPrevButton(parentWidget);
+         auto nextButton = getNextButton(parentWidget);
+
+         bottomLayout->addWidget(skipButton);
+         bottomLayout->addWidget(prevButton);
+         bottomLayout->addWidget(nextButton);
+
+         switch(position){
+                  case Starting : {
+                           prevButton->setEnabled(false);
+                           prevButton->setToolTip("No previous page");
+                           break;
+                  }
+                  case Ending : {
+                           nextButton->setEnabled(false);
+                           nextButton->setToolTip("No next page");
+                           break;
+                  }
          }
          
-         {        
-                  layout->addLayout(bottomLayout,1,0);
-                  
-                  auto skipButton = getSkipButton();
-                  auto prevButton = getPrevButton();
-                  auto nextButton = getNextButton();
-                  
-                  bottomLayout->addWidget(skipButton); 
-                  bottomLayout->addWidget(prevButton);
-                  bottomLayout->addWidget(nextButton);
-         }
+         return bottomLayout;
 }
 
-void StackedWidget::populateLastPage(){
-         auto layout = new QGridLayout(lastWidget); 
-         auto bottomLayout = new QHBoxLayout();
-         layout->addLayout(bottomLayout,1,0);
-
-         {        
-                  auto skipButton = getSkipButton();
-                  auto prevButton = getPrevButton();
-                  auto finishBut = new PushButton("Finish",lastWidget);
-                  finishBut->setToolTip("Close this help menu");
-
-                  connectWithWidgetClose(finishBut);
-
-                  bottomLayout->addWidget(skipButton); 
-                  bottomLayout->addWidget(prevButton);
-                  bottomLayout->addWidget(finishBut);
-         }
-}
-
-void StackedWidget::connectWithWidgetClose(PushButton * button){
-         connect(button,&QPushButton::clicked,[this]() -> void{
-                  setCurrentIndex(0);
-                  close();
-         });
-}
-
-PushButton * StackedWidget::getPrevButton(){
-         auto button = new PushButton("Prev");
-         button->setToolTip("Go to previous page.");
+PushButton * StackedWidget::getPrevButton(QWidget * parentWidget){
+         auto button = new PushButton("Prev",parentWidget);
+         button->setToolTip("Go to previous page");
 
          connect(button,&PushButton::clicked,[this]{
                   setCurrentIndex(currentIndex() - 1);
          });
+
          return button;
 }
 
-PushButton * StackedWidget::getNextButton(){
+PushButton * StackedWidget::getNextButton(QWidget * parentWidget){
          auto button = new PushButton("Next");
          button->setToolTip("Go to next page");
 
@@ -127,9 +125,16 @@ PushButton * StackedWidget::getNextButton(){
          return button;
 }
 
-PushButton * StackedWidget::getSkipButton(){
-         auto button = new PushButton("Skip",this);
+PushButton * StackedWidget::getCloseButton(QWidget * parentWidget){
+         auto button = new PushButton("Close",this);
          button->setToolTip("Close this help menu");
          connectWithWidgetClose(button);
          return button;
+}
+
+void StackedWidget::connectWithWidgetClose(PushButton * button){
+         connect(button,&QPushButton::clicked,[this]{
+                  setCurrentIndex(0);
+                  close();
+         });
 }
