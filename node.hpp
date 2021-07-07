@@ -39,19 +39,20 @@ private:
          QPixmap icon;
          inline static bool algorithmPaused = false; 
          inline constexpr static int dimension = 32; // px
-         inline constexpr static int halfDimension = 16; // px
-         inline constexpr static uint32_t backwardDuration = 175;  // ms
-         inline constexpr static uint32_t forwardDuration = 175;  // ms
+         inline constexpr static int halfDimension = dimension / 2; // px
+         inline constexpr static uint32_t defaultTimerDuration = 175;  // ms
 
+         void setTimersDuration(const uint32_t newDuration) const;
          void configureBackwardTimer();
          void configureForwardTimer();
          void setNodeRotation();
          void undoNodeRotation();
+public slots:
+         static void setRunningState(const bool newAlgorithmState);
+         void changeAnimationDuration(const uint32_t newDuration) const;
 signals:
          void sourceSet();
          void targetSet();
-public slots:
-         static void setRunningState(const bool newAlgorithmState);
 };
 
 #endif

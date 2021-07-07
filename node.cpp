@@ -19,6 +19,7 @@ Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), cu
 
          configureBackwardTimer();
          configureForwardTimer();
+         setTimersDuration(defaultTimerDuration);
 
          constexpr bool startTimer = false;
          setType(type,startTimer);
@@ -58,7 +59,6 @@ void Node::setGeometry(const QRectF & geometry){
 void Node::configureBackwardTimer(){
          backwardTimer->setDirection(QTimeLine::Backward);
          backwardTimer->setFrameRange(70,100);
-         backwardTimer->setDuration(backwardDuration);
          backwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
          connect(backwardTimer,&QTimeLine::frameChanged,[this](int delta){
@@ -69,14 +69,15 @@ void Node::configureBackwardTimer(){
          });
 
          connect(backwardTimer,&QTimeLine::finished,[forwardTimer = forwardTimer]{
-                  forwardTimer->start();
+                  if(forwardTimer->state() == QTimeLine::NotRunning){
+                           forwardTimer->start();
+                  }
          });
 }
 
 void Node::configureForwardTimer(){
          forwardTimer->setDirection(QTimeLine::Forward);
          forwardTimer->setFrameRange(70,100);
-         forwardTimer->setDuration(forwardDuration);
          forwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
          connect(forwardTimer,&QTimeLine::frameChanged,[this](int delta){
@@ -168,6 +169,12 @@ void Node::undoNodeRotation(){
          }
 }
 
+void Node::changeAnimationDuration(const uint32_t newDuration) const {
+         double delta = static_cast<double>(newDuration / 1000.0);
+         const uint32_t toSet = static_cast<uint32_t>(delta * defaultTimerDuration);
+         setTimersDuration(toSet);
+}
+
 void Node::setPathParent(Node * newParent){
          pathParent = newParent;
 }
@@ -213,6 +220,11 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
                   }
          }
          QGraphicsItem::dropEvent(event);
+}
+
+void Node::setTimersDuration(const uint32_t newDuration) const {
+         forwardTimer->setDuration(newDuration);
+         backwardTimer->setDuration(newDuration);
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){

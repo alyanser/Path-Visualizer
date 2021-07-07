@@ -87,13 +87,14 @@ private:
          void bfsStart(const bool newStart) const;
          void dfsStart(const bool newStart) const;
          void dijkstraStart(const bool newStart) const;
+public slots:
+         void setDelay(const uint32_t newDelay);
 signals:
          void foundPath() const;
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends
-         void runningStatusChanged(const bool newState); // connected with Node class 
-public slots:
-         void setDelay(const uint32_t newDelay);
+         void runningStatusChanged(const bool newState) const; // connected with Node class  
+         void animationDurationChanged(const uint32_t newDuration) const; // connected with Node class
 };
 
 #endif

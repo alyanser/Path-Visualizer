@@ -337,6 +337,7 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
          slider->setTracking(true);
 
          connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
+         connect(slider,&QSlider::valueChanged,this,&GraphicsScene::animationDurationChanged);
 
          auto bottomLayout = new QHBoxLayout();
          bottomLayout->setAlignment(Qt::AlignCenter);
@@ -444,6 +445,8 @@ void GraphicsScene::stopTimers() const {
 
 Node * GraphicsScene::getNewNode(const int row,const int col){
          auto node = new Node(row,col);
+
+         connect(this,&GraphicsScene::animationDurationChanged,node,&Node::changeAnimationDuration);
 
          connect(node,&Node::sourceSet,[this,node,row,col]{
                   sourceNodeCord = {row,col};
