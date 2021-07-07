@@ -42,6 +42,11 @@ private:
          bool runningState = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
+         constexpr inline static int rowCnt = 10;
+         constexpr inline static int colCnt = 19;
+         constexpr inline static uint32_t defDelay = 100; // ms
+         constexpr inline static int xCord[] {-1,1,0,0}; 
+         constexpr inline static int yCord[] {0,0,1,-1};
 
          void populateBar();
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);

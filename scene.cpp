@@ -39,12 +39,6 @@ namespace{
          #include "defines.hpp"
 }
 
-// for inner scene
-constexpr int rowCnt = 10,colCnt = 20;
-constexpr uint32_t defDelay = 100; // ms
-constexpr int xCord[] {-1,1,0,0};
-constexpr int yCord[] {0,0,1,-1};
-
 GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          innerScene = new QGraphicsScene(this);
          helpWidget = new StackedWidget();
@@ -53,8 +47,6 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          dfsTimer = new QTimer(bar);
          dijkstraTimer = new QTimer(bar);
          pathTimer = new QTimer(bar);
-
-         // bar->setTabShape(QTabWidget::TabShape::Triangular); //?
 
          setSceneRect(0,0,size.width(),size.height());
          setTimersIntervals(timerDelay);
@@ -92,19 +84,19 @@ void GraphicsScene::populateBar(){
                   auto bfsWidget = new QWidget(bar);
                   const QString algoName = "BFS";
                   bar->addTab(bfsWidget,algoName);
-                  populateWidget(bfsWidget,algoName,::bfsInfo /*inside defines header*/ );
+                  populateWidget(bfsWidget,algoName,::bfsInfo);
          }
          {        // dfs
                   auto dfsWidget = new QWidget(bar);
                   const QString algoName = "DFS";
                   bar->addTab(dfsWidget,algoName);
-                  populateWidget(dfsWidget,algoName,::dfsInfo /*inside defines header*/ );
+                  populateWidget(dfsWidget,algoName,::dfsInfo);
          }
          {        // dijistra 
                   auto dijkstraWidget = new QWidget(bar);
                   const QString algoName = "Dijkstra";
                   bar->addTab(dijkstraWidget,algoName);
-                  populateWidget(dijkstraWidget,algoName,::dijkstraInfo /*inside defines header*/ );
+                  populateWidget(dijkstraWidget,algoName,::dijkstraInfo);
          }
 }
 
