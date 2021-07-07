@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QLabel>
 #include <QMovie>
+#include <QIcon>
 #include "scene.hpp"
 #include "node.hpp"
 
@@ -20,6 +21,7 @@ int main(int argc, char ** argv){
          GraphicsScene scene(mainRect);
          QGraphicsView view(&scene);
 
+         view.setWindowIcon(QIcon(":/pixmaps/icons/windowIcon.png"));
          view.setWindowTitle("Graph Algorithm Visualizer");
          
          QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);

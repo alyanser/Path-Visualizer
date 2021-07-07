@@ -12,6 +12,7 @@ class QLabel;
 class StackedWidget : public QStackedWidget{
          Q_OBJECT
          enum PagePosition {Starting,Middle,Ending};
+         typedef int64_t ll;
 public:
          StackedWidget(QWidget * parent = nullptr);
          ~StackedWidget() = default;

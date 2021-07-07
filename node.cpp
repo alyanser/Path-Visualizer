@@ -6,19 +6,21 @@
 #include <QGraphicsView>
 #include <QPainter>
 #include <QTimeLine>
+#include <QMouseEvent>
 #include "node.hpp"
 
 Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}{
          backwardTimer = new QTimeLine();
          forwardTimer = new QTimeLine();
-         
+
+         setGraphicsItem(this);
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
-         setGraphicsItem(this);
+
          configureBackwardTimer();
          configureForwardTimer();
 
-         bool startTimer = false;
+         constexpr bool startTimer = false;
          setType(type,startTimer);
 }
 

@@ -29,6 +29,7 @@
 #include <QTabBar>
 #include <QChar>
 #include <QIcon>
+#include <chrono>
 #include "scene.hpp"
 #include "pushButton.hpp"
 #include "node.hpp"
@@ -77,6 +78,7 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          QTimer::singleShot(helpShowDelay,helpWidget,&StackedWidget::show);
 
          connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
+         connect(this,SIGNAL(foundPath()),pathTimer,SLOT(start()));
 }
 
 GraphicsScene::~GraphicsScene(){
@@ -238,15 +240,13 @@ void GraphicsScene::resetGrid() const {
 }
 
 void GraphicsScene::generateRandGridPattern(){
-         startCord = getRandomCord();
-         while((endCord = getRandomCord()) == startCord){
-                  qInfo() << "what";
-         }
+         sourceNodeCord = getRandomCord();
+         while((targetNodeCord = getRandomCord()) == sourceNodeCord);
 
          sourceNode->setType(Node::Inactive);
          targetNode->setType(Node::Inactive);
-         sourceNode = getNodeAt(startCord.first,startCord.second);
-         targetNode = getNodeAt(endCord.first,endCord.second);
+         sourceNode = getNodeAt(sourceNodeCord.first,sourceNodeCord.second);
+         targetNode = getNodeAt(targetNodeCord.first,targetNodeCord.second);
          updateSrcTarNodes();
 
          constexpr int maximumBlocks = 60; // / 200
@@ -318,8 +318,19 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
 
 void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const {
          auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
-         infoLine->setAlignment(Qt::AlignCenter); // text align
+         infoLine->setAlignment(Qt::AlignCenter); 
          infoLine->setReadOnly(true);
+
+         {        // hefty -  improve later
+                  connect(this,&GraphicsScene::foundPath,[infoLine]{
+                           auto currentText = infoLine->text();
+                           QString digits;
+                           for(auto character : currentText){
+                                    if(character.isNumber()) digits += character;
+                           }
+                           infoLine->setText(QString("Final Distance : %1").arg(digits));
+                  });
+         }
          
          {
                   auto shadowEffect = new QGraphicsDropShadowEffect(infoLine);
@@ -363,7 +374,6 @@ std::pair<int,int> GraphicsScene::getRandomCord() const {
          std::mt19937 gen(rd());
          std::uniform_int_distribution<int> rowRange(0,rowCnt-1);
          std::uniform_int_distribution<int> colRange(0,colCnt-1);
-
          return std::make_pair(rowRange(gen),colRange(gen));
 }
 
@@ -389,14 +399,13 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * parentWidget,QString toke
 
          if(token == "visited"){
                   token = "inactive";
-                  addShadowEffect(label);
-
                   auto opacityEffect = new QGraphicsOpacityEffect(icon);
                   opacityEffect->setOpacity(0.5);
                   icon->setGraphicsEffect(opacityEffect);
          }else{
                   addShadowEffect(icon);
          }
+         addShadowEffect(label);
          
          QPixmap pixmap(pattern.arg(token));
          icon->setPixmap(pixmap);
@@ -450,12 +459,12 @@ Node * GraphicsScene::getNewNode(const int row,const int col){
          auto node = new Node(row,col);
 
          connect(node,&Node::sourceSet,[this,node,row,col]{
-                  startCord = {row,col};
+                  sourceNodeCord = {row,col};
                   sourceNode = node;
          });
 
          connect(node,&Node::targetSet,[this,node,row,col]{
-                  endCord = {row,col};
+                  targetNodeCord = {row,col};
                   targetNode = node;
          });
 
@@ -511,11 +520,11 @@ void GraphicsScene::populateGridScene(){
                            innerLayout->addItem(node,row,col);
                   }
          }
-         startCord = getRandomCord();
-         endCord = getRandomCord();
+         sourceNodeCord = getRandomCord();
+         targetNodeCord = getRandomCord();
 
-         sourceNode = getNodeAt(startCord.first,startCord.second);
-         targetNode = getNodeAt(endCord.first,endCord.second);
+         sourceNode = getNodeAt(sourceNodeCord.first,sourceNodeCord.second);
+         targetNode = getNodeAt(targetNodeCord.first,targetNodeCord.second);
          updateSrcTarNodes();
 }
 
@@ -553,11 +562,6 @@ void GraphicsScene::pathConnect() const {
 }
 
 /// starters ///
-
-// called when an algorithm succeeds
-void GraphicsScene::getPath() const {
-         pathTimer->start();
-}
 
 // called when start is pressed on bfs Tab
 void GraphicsScene::bfsStart(const bool newStart) const {
@@ -616,7 +620,7 @@ void GraphicsScene::bfsConnect() const {
 
                   if(currentNode == targetNode){
                            bfsTimer->stop();
-                           getPath();
+                           emit foundPath();
                            emit resetButtons();
                            return;
                   }
@@ -662,7 +666,7 @@ void GraphicsScene::dfsConnect() const {
 
                   if(currentNode == targetNode){
                            dfsTimer->stop();
-                           getPath();
+                           emit foundPath();
                            emit resetButtons();
                            return;
                   }
@@ -722,7 +726,7 @@ void GraphicsScene::dijkstraConnect() const {
 
                   if(currentNode == targetNode){
                            dijkstraTimer->stop();
-                           getPath();
+                           emit foundPath();
                            emit resetButtons();
                            return;
                   }

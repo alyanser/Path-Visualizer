@@ -27,19 +27,19 @@ public:
          ~GraphicsScene();
 private:
          uint32_t timerDelay; 
-         QGraphicsScene * innerScene; // grid
+         QGraphicsScene * innerScene;
          StackedWidget * helpWidget;
          QTabWidget * bar;
          QTimer * bfsTimer,* dfsTimer,* dijkstraTimer,* pathTimer; 
-         std::pair<int,int> startCord;// sourceNode position
-         std::pair<int,int> endCord; // targetNode position
-         QGraphicsGridLayout * innerLayout; // layout of grid
+         std::pair<int,int> sourceNodeCord;
+         std::pair<int,int> targetNodeCord;
+         QGraphicsGridLayout * innerLayout; 
          std::unique_ptr<std::queue<std::pair<Node*,int>>> queue; 
          std::unique_ptr<std::stack<std::pair<Node*,int>>> stack;
          std::unique_ptr<std::vector<std::vector<bool>>> visited; 
          std::unique_ptr<std::vector<std::vector<int>>> distance;
          std::unique_ptr<std::priority_queue<pIntNode,std::vector<pIntNode>,std::greater<>>> pq;
-         bool runningState = false; // 0 : no - 1 : yes
+         bool runningState = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
 
@@ -69,7 +69,6 @@ private:
          void memsetDs() const;
          void stopTimers() const;
          void pathConnect() const; 
-         void getPath() const; 
          std::pair<int,int> getRandomCord() const;
          void addShadowEffect(QLabel * label) const;
          QHBoxLayout * getLegendLayout(QWidget * parentWidget,QString token) const;
@@ -84,12 +83,12 @@ private:
          void dfsStart(const bool newStart) const;
          void dijkstraStart(const bool newStart) const;
 signals:
+         void foundPath() const;
          void close() const; // connected with qapplication - to quit
          void resetButtons() const; // connected with buttons to reset state after process ends
          void runningStatusChanged(const bool newState); // connected with Node class 
 public slots:
          void setDelay(const uint32_t newDelay);
-         
 };
 
 #endif
