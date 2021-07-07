@@ -27,9 +27,14 @@ int main(int argc, char ** argv){
          
          QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);
 
-         view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         view.setFixedSize(mainRect);
+         // view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         // view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+         QObject::connect(&scene,&GraphicsScene::changed,[&scene]{
+                  auto rec = scene.itemsBoundingRect();
+                  scene.setSceneRect(rec);
+         });
+
          view.show();
 	return app.exec();
 }

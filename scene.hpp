@@ -27,9 +27,9 @@ public:
          ~GraphicsScene();
 private:
          uint32_t timerDelay; 
-         QGraphicsScene * innerScene;
-         StackedWidget * helpWidget;
          QTabWidget * bar;
+         QGraphicsScene * innerScene;
+         StackedWidget * helpDialogWidget;
          QTimer * bfsTimer,* dfsTimer,* dijkstraTimer,* pathTimer; 
          std::pair<int,int> sourceNodeCord;
          std::pair<int,int> targetNodeCord;
@@ -57,6 +57,10 @@ private:
 
          void configureMachine(QWidget * parentWidget,QPushButton * statusButton);
 
+         void allocTimers();
+         void setMainSceneConnections() const;
+         void connectPaths() const;
+         void configureInnerScene();
          void generateRandGridPattern();
          void allocDataStructures();
          void setRunning(const bool newState); 
@@ -90,11 +94,11 @@ private:
 public slots:
          void setDelay(const uint32_t newDelay);
 signals:
-         void foundPath() const;
-         void close() const; // connected with qapplication - to quit
-         void resetButtons() const; // connected with buttons to reset state after process ends
-         void runningStatusChanged(const bool newState) const; // connected with Node class  
-         void animationDurationChanged(const uint32_t newDuration) const; // connected with Node class
+         void foundPath() const; 
+         void close() const; // connected with qapplication
+         void resetButtons() const; 
+         void runningStatusChanged(const bool newState) const; 
+         void animationDurationChanged(const uint32_t newDuration) const; 
 };
 
 #endif

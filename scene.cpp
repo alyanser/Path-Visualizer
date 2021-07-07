@@ -41,60 +41,78 @@ namespace{
 
 GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          innerScene = new QGraphicsScene(this);
-         helpWidget = new StackedWidget();
-         bar = new QTabWidget();
-         bfsTimer = new QTimer(bar);
-         dfsTimer = new QTimer(bar);
-         dijkstraTimer = new QTimer(bar);
-         pathTimer = new QTimer(bar);
+         helpDialogWidget = new StackedWidget();
 
-         helpWidget->setObjectName("__helpWidget__"); // css
-
-         setSceneRect(0,0,size.width(),size.height());
-         setTimersIntervals(timerDelay);
-
-         addWidget(bar);
-
-         bar->setFixedWidth(size.width());
-         bar->setFixedHeight(size.height()-25); //? fix
-
-         allocDataStructures();
-         memsetDs();
          populateBar();
-         populateGridScene();
+         allocTimers();
+         setTimersIntervals(timerDelay);
+        
+         configureInnerScene();
+         connectPaths();
+         setMainSceneConnections();
 
-         bfsConnect();
-         dfsConnect();
-         dijkstraConnect();
-         pathConnect();
+         helpDialogWidget->setObjectName("__helpWidget__"); // css
+}
 
-         constexpr int helpShowDelay = 1000;
-         QTimer::singleShot(helpShowDelay,helpWidget,&StackedWidget::show);
+GraphicsScene::~GraphicsScene(){
+         delete bar;
+         delete helpDialogWidget;
+}
+
+void GraphicsScene::setMainSceneConnections() const {
+         {
+                  constexpr int helpShowDelay = 1000;
+                  QTimer::singleShot(helpShowDelay,helpDialogWidget,&StackedWidget::show);
+         }
 
          connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
          connect(this,SIGNAL(foundPath()),pathTimer,SLOT(start()));
 }
 
-GraphicsScene::~GraphicsScene(){
-         delete bar;
-         delete helpWidget;
+void GraphicsScene::allocTimers(){
+         assert(bar);
+         bfsTimer = new QTimer(bar);
+         dfsTimer = new QTimer(bar);
+         dijkstraTimer = new QTimer(bar);
+         pathTimer = new QTimer(bar);
+}
+
+void GraphicsScene::connectPaths() const {
+         bfsConnect();
+         dfsConnect();
+         dijkstraConnect();
+         pathConnect();
+}
+
+void GraphicsScene::configureInnerScene() {
+         populateGridScene();
+         allocDataStructures();
+         memsetDs();
 }
 
 // sets up top bar
 void GraphicsScene::populateBar(){
-         {        // bfs
+
+         {
+                  bar = new QTabWidget();
+                  addWidget(bar);
+                  // @bargeomtry
+         }
+
+         {        
                   auto bfsWidget = new QWidget(bar);
+                  bfsWidget->setFixedSize(100,100);
                   const QString algoName = "BFS";
                   bar->addTab(bfsWidget,algoName);
                   populateWidget(bfsWidget,algoName,::bfsInfo);
          }
-         {        // dfs
+         {        
                   auto dfsWidget = new QWidget(bar);
                   const QString algoName = "DFS";
                   bar->addTab(dfsWidget,algoName);
                   populateWidget(dfsWidget,algoName,::dfsInfo);
          }
-         {        // dijistra 
+         {        
                   auto dijkstraWidget = new QWidget(bar);
                   const QString algoName = "Dijkstra";
                   bar->addTab(dijkstraWidget,algoName);
@@ -171,8 +189,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
          });
 
          connect(statusButton,&QPushButton::released,statusButton,[this,statusButton]{
-                  // statemachine has already changed the state as it acts first
-                  
+                  // statemachine would have already changed the state - @configureMachine
                   if(running){
                            bool toStartNew = statusButton->text() == "Run";  // else continue
                            statusButton->setText("Stop");
@@ -181,7 +198,6 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                                     cleanup();
                                     memsetDs();
                            }
-
                            switch(bar->currentIndex()){
                                     case 0 : bfsStart(toStartNew);break;
                                     case 1 : dfsStart(toStartNew);break;
@@ -204,7 +220,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                   generateRandGridPattern();
          });
          
-         connect(helpButton,&PushButton::released,&*helpWidget,&QStackedWidget::show);
+         connect(helpButton,&PushButton::released,helpDialogWidget,&QStackedWidget::show);
 
          connect(exitButton,&QPushButton::released,this,[this]{
                   auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
@@ -218,6 +234,7 @@ void GraphicsScene::resetGrid() const {
          stopTimers();
          emit resetButtons();
          memsetDs();
+
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
                            auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
@@ -290,6 +307,7 @@ void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * status
          machine->setInitialState(stoppedState);
          machine->start();
 }
+
 
 void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const {
          sideLayout->addSpacing(25);

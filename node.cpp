@@ -171,10 +171,10 @@ void Node::undoNodeRotation(){
 
 void Node::changeAnimationDuration(const uint32_t newDuration) const {
          double factor = static_cast<double>(newDuration / 1000.0);
-         assert(factor <= 1.00);
-         factor = 1.00 - factor;
+         assert(factor <= 1 && factor >= 0);
+         factor = 1 - factor;
          uint32_t delta = static_cast<uint32_t>(factor * defaultTimerDuration);
-         setTimersDuration((delta ? delta * 2 : defaultTimerDuration));
+         setTimersDuration(delta ? delta * 2 : defaultTimerDuration);
 }
 
 void Node::setPathParent(Node * newParent){
