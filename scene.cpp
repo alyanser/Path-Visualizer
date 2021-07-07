@@ -48,6 +48,8 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          dijkstraTimer = new QTimer(bar);
          pathTimer = new QTimer(bar);
 
+         helpWidget->setObjectName("__helpWidget__"); // css
+
          setSceneRect(0,0,size.width(),size.height());
          setTimersIntervals(timerDelay);
 
@@ -372,7 +374,7 @@ void GraphicsScene::addShadowEffect(QLabel * label) const {
          label->setGraphicsEffect(shadowEffect);
 }
 
-//! alternative later
+//! alternative required
 QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * parentWidget,QString token) const {
          const QString pattern = R"(:/pixmaps/icons/%1.png)";
          QString labelText = token;

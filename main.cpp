@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QMovie>
 #include <QIcon>
+#include <QBrush>
 #include "scene.hpp"
 #include "node.hpp"
 

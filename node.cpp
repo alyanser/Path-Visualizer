@@ -39,7 +39,7 @@ QRectF Node::boundingRect() const {
 
 void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * ,QWidget * ){
          if(type == Visited){
-                  painter->setOpacity(opacity() / 3.33);
+                  painter->setOpacity(opacity() / 2);
          }
          painter->setRenderHint(QPainter::Antialiasing);
          painter->drawPixmap(0,0,dimension,dimension,icon);

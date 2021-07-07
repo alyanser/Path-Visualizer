@@ -41,6 +41,7 @@ QTabWidget{
 
 QGraphicsView {
          background-color:aliceblue;
+         background-image: url(":/pixmaps/icons/background.png") 0 0 0 0 stretch stretch;
 }
 
 QMessageBox{
@@ -53,6 +54,10 @@ QLineEdit{
 
 #legendTitle{
          font-size:25px;
+}
+
+#__helpWidget__{
+         border-radius: 10px;
 }
 
 /* copy paste */

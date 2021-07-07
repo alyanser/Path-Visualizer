@@ -27,9 +27,9 @@ QWidget * StackedWidget::populateDefinitionPage(){
          auto topLabel = getLabel(parentWidget);
          auto bottomLabel = getLabel(parentWidget);
 
-         topLabel->setText(R"(Welcome to the visualizer.<br><br><i>You may click on <strong>Next/Prev</strong> buttons 
-         to navigate or click on <strong>Skip</strong> button to close the help menu directly.<br><br>This help menu will 
-         make you familiar with the features of the visualizer.</i>)");
+         topLabel->setText(R"(<strong>Welcome to the visualizer</srong>.<br><br><i>You may click on <strong>Next
+         /Prev</strong> buttons to navigate or click on <strong>Skip</strong> button to close the help menu 
+         directly.<br><br>This help menu will make you familiar with the features of the visualizer.</i>)");
 
          bottomLabel->setText(R"(<strong>Information Button</strong> : Displays information about the current 
          algorithm.<br><strong>Run/Stop Button</strong> - Starts or stops current algorithm.<br><strong>
