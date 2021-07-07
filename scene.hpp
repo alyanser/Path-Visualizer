@@ -20,7 +20,7 @@ class QLabel;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
-         Q_PROPERTY(bool runningState WRITE setRunning READ isRunning);
+         Q_PROPERTY(bool running WRITE setRunning READ isRunning);
          typedef std::pair<int,Node*> pIntNode;
 public:
          GraphicsScene(const QSize & size);
@@ -39,7 +39,7 @@ private:
          std::unique_ptr<std::vector<std::vector<bool>>> visited; 
          std::unique_ptr<std::vector<std::vector<int>>> distance;
          std::unique_ptr<std::priority_queue<pIntNode,std::vector<pIntNode>,std::greater<>>> pq;
-         bool runningState = false; 
+         bool running = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
          constexpr inline static int rowCnt = 10;

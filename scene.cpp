@@ -141,71 +141,70 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
 
 void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText){
          auto parentWidget = sideLayout->widget();
-         auto infobutton = new PushButton("Information",parentWidget);
-         auto statusbutton = new PushButton("Run",parentWidget);
-         auto resetbutton = new PushButton("Reset",parentWidget);
-         auto randombutton = new PushButton("Random",parentWidget);
-         auto helpbutton = new PushButton("Help",parentWidget);
-         auto exitbutton = new PushButton("Exit",parentWidget);
+         auto infoButton = new PushButton("Information",parentWidget);
+         auto statusButton = new PushButton("Run",parentWidget);
+         auto resetButton = new PushButton("Reset",parentWidget);
+         auto randomButton = new PushButton("Random",parentWidget);
+         auto helpButton = new PushButton("Help",parentWidget);
+         auto exitButton = new PushButton("Exit",parentWidget);
 
-         sideLayout->addWidget(infobutton);
-         sideLayout->addWidget(statusbutton);
-         sideLayout->addWidget(resetbutton);
-         sideLayout->addWidget(randombutton);
-         sideLayout->addWidget(helpbutton);
-         sideLayout->addWidget(exitbutton);
+         sideLayout->addWidget(infoButton);
+         sideLayout->addWidget(statusButton);
+         sideLayout->addWidget(resetButton);
+         sideLayout->addWidget(randomButton);
+         sideLayout->addWidget(helpButton);
+         sideLayout->addWidget(exitButton);
          sideLayout->insertSpacing(4,25);
 
-         configureMachine(parentWidget,statusbutton);
+         configureMachine(parentWidget,statusButton);
 
-         connect(infobutton,&QPushButton::released,[algoName,infoText]{
+         connect(infoButton,&QPushButton::released,[algoName,infoText]{
                   QMessageBox::information(nullptr,algoName,infoText);
          });
 
          // emitted when an algorithm finishes
-         connect(this,&GraphicsScene::resetButtons,statusbutton,[this,statusbutton]{
-                  statusbutton->setText("Run");
+         connect(this,&GraphicsScene::resetButtons,statusButton,[this,statusButton]{
+                  statusButton->setText("Run");
                   memsetDs();
          });
 
-         connect(statusbutton,&QPushButton::released,statusbutton,[this,statusbutton]{
-                  const QString & currentText = statusbutton->text();
-                  bool newStart = false;
+         connect(statusButton,&QPushButton::released,statusButton,[this,statusButton]{
+                  // statemachine has already changed the state as it acts first
+                  
+                  if(running){
+                           bool toStartNew = statusButton->text() == "Run";  // else continue
+                           statusButton->setText("Stop");
 
-                  if(currentText == "Stop"){
-                           statusbutton->setText("Continue");
-                           stopTimers();
-                           setRunning(false);
-                           return;
-                  }else if(currentText == "Run"){
-                           cleanup(); 
-                           statusbutton->setText("Stop");
-                           newStart = true;
+                           if(toStartNew){
+                                    cleanup();
+                                    memsetDs();
+                           }
+
+                           switch(bar->currentIndex()){
+                                    case 0 : bfsStart(toStartNew);break;
+                                    case 1 : dfsStart(toStartNew);break;
+                                    case 2 : dijkstraStart(toStartNew);break;
+                                    default : assert(false);
+                           }
                   }else{
-                           statusbutton->setText("Stop");
-                  }
-
-                  switch(bar->currentIndex()){
-                           case 0 : bfsStart(newStart);break;
-                           case 1 : dfsStart(newStart);break;
-                           case 2 : dijkstraStart(newStart);break;
-                           default : assert(false);
+                           stopTimers();
+                           statusButton->setText("Continue");
                   }
          });
 
-         connect(resetbutton,&QPushButton::released,statusbutton,[this,statusbutton]{
-                  statusbutton->setText("Run");
+         connect(resetButton,&QPushButton::released,statusButton,[this,statusButton]{
+                  statusButton->setText("Run");
                   resetGrid();
          });
 
-         connect(randombutton,&PushButton::released,[this]{
+         connect(randomButton,&PushButton::released,[this]{
                   resetGrid();
                   generateRandGridPattern();
          });
          
-         connect(helpbutton,&PushButton::released,&*helpWidget,&QStackedWidget::show);
+         connect(helpButton,&PushButton::released,&*helpWidget,&QStackedWidget::show);
 
-         connect(exitbutton,&QPushButton::released,this,[this]{
+         connect(exitButton,&QPushButton::released,this,[this]{
                   auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
                   if(choice == QMessageBox::Yes){
                            emit close();
@@ -228,7 +227,7 @@ void GraphicsScene::resetGrid() const {
          }
          auto curTabIndex = bar->currentIndex();
          auto lineInfo = getStatusBar(curTabIndex);
-         lineInfo->setText("Click on run button on sidebar to display algorithm status");
+         lineInfo->setText("Click on run Button on sidebar to display algorithm status");
 }
 
 void GraphicsScene::generateRandGridPattern(){
@@ -258,35 +257,35 @@ void GraphicsScene::generateRandGridPattern(){
          }
 }
 
-// manager custom properties - currently just statusbutton
-void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * statusbutton){
+// manager custom properties - currently just statusButton
+void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * statusButton){
          auto machine = new QStateMachine(parentWidget);
-         auto statusStart = new QState(machine);
-         auto statusEnd = new QState(machine);
+         auto stoppedState = new QState(machine);
+         auto runningState = new QState(machine);
 
-         statusStart->assignProperty(this,"runningState",false);
-         statusEnd->assignProperty(this,"runningState",true);
+         stoppedState->assignProperty(this,"running",false);
+         runningState->assignProperty(this,"running",true);
 
-         statusStart->assignProperty(statusbutton,"backgroundColor",QColor(Qt::green));
-         statusEnd->assignProperty(statusbutton,"backgroundColor",QColor(Qt::red));
+         stoppedState->assignProperty(statusButton,"backgroundColor",QColor(Qt::green));
+         runningState->assignProperty(statusButton,"backgroundColor",QColor(Qt::red));
 
-         auto startToEnd = new QEventTransition(statusbutton,QEvent::MouseButtonRelease,statusStart);
-         auto endToStart = new QEventTransition(statusbutton,QEvent::MouseButtonRelease,statusEnd);
-         auto endedTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,statusEnd);
-         auto colorAnimation = new QPropertyAnimation(statusbutton,"backgroundColor",statusStart);
+         auto stopToRun = new QEventTransition(statusButton,QEvent::MouseButtonRelease,stoppedState);
+         auto runToStop = new QEventTransition(statusButton,QEvent::MouseButtonRelease,runningState);
+         auto resetTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,runningState);
+         auto colorAnimation = new QPropertyAnimation(statusButton,"backgroundColor",stoppedState);
 
          colorAnimation->setDuration(1000);
-         startToEnd->addAnimation(colorAnimation);
-         endToStart->addAnimation(colorAnimation);
-         startToEnd->setTargetState(statusEnd);
-         endToStart->setTargetState(statusStart);
-         endedTransition->setTargetState(statusStart);
-         endedTransition->addAnimation(colorAnimation);
+         stopToRun->addAnimation(colorAnimation);
+         runToStop->addAnimation(colorAnimation);
+         resetTransition->addAnimation(colorAnimation);
+         stopToRun->setTargetState(runningState);
+         runToStop->setTargetState(stoppedState);
+         resetTransition->setTargetState(stoppedState);
 
-         statusStart->addTransition(startToEnd);
-         statusEnd->addTransition(endToStart);
+         stoppedState->addTransition(stopToRun);
+         runningState->addTransition(runToStop);
 
-         machine->setInitialState(statusStart);
+         machine->setInitialState(stoppedState);
          machine->start();
 }
 
@@ -309,7 +308,7 @@ void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayo
 }
 
 void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const {
-         auto infoLine = new QLineEdit("Click on run button on sidebar to display algorithm status",parentWidget);
+         auto infoLine = new QLineEdit("Click on run Button on sidebar to display algorithm status",parentWidget);
          infoLine->setAlignment(Qt::AlignCenter); 
          infoLine->setReadOnly(true);
 
@@ -323,7 +322,6 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
                            infoLine->setText(QString("Final Distance : %1").arg(digits));
                   });
          }
-         
          {
                   auto shadowEffect = new QGraphicsDropShadowEffect(infoLine);
                   shadowEffect->setBlurRadius(10);
@@ -347,18 +345,16 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
          mainLayout->addLayout(bottomLayout,1,0);
 }
 
-/// utility ///
-
 void GraphicsScene::setRunning(const bool newState){
-         runningState = newState;
+         running = newState;
 
-         if(runningState){
+         if(running){ 
                   const int exception = bar->currentIndex();
                   disableBarTabs(exception);
          }else{
                   enableAllBarTabs();
          }
-         emit runningStatusChanged(runningState); // connected with node class
+         emit runningStatusChanged(running); // connected with node class
 }
 
 std::pair<int,int> GraphicsScene::getRandomCord() const {
@@ -407,8 +403,7 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * parentWidget,QString toke
 }
 
 void GraphicsScene::disableBarTabs(const int exception) const {
-         const int tabCount = bar->count();
-         for(int index = 0;index < tabCount;index++){
+         for(int index = 0;index < bar->count();index++){
                   if(index != exception){
                            bar->setTabEnabled(index,false);
                   }
@@ -416,19 +411,17 @@ void GraphicsScene::disableBarTabs(const int exception) const {
 }
 
 void GraphicsScene::enableAllBarTabs() const {
-         const int tabCount = bar->count();
-         for(int index = 0;index < tabCount;index++){
+         for(int index = 0;index < bar->count();index++){
                   bar->setTabEnabled(index,true);
          }
 }
 
 // algorithm state
 bool GraphicsScene::isRunning() const {
-         return runningState;
+         return running;
 }
 
 void GraphicsScene::setDelay(const uint32_t newDelay){
-         // slide bar has more value when it is set on the fuller side convert before
          timerDelay = std::abs((int64_t)1000 - newDelay);
          setTimersIntervals(timerDelay);
 }
@@ -463,7 +456,6 @@ Node * GraphicsScene::getNewNode(const int row,const int col){
          return node;
 }
 
-// returns the node ref present inside the grid
 Node * GraphicsScene::getNodeAt(const int row,const int col) const {
          return static_cast<Node*>(innerLayout->itemAt(row,col));
 }
@@ -473,32 +465,28 @@ bool GraphicsScene::validCordinate(const int row,const int col) const {
          return row >= 0 && row < rowCnt && col >= 0 && col < colCnt;
 }
 
-// returns the bottom lineEdit which displays the current algorithm state
+// returns the bottom lineEdit (statusBar)
 QLineEdit * GraphicsScene::getStatusBar(const int tabIndex) const {
          assert(tabIndex < bar->count());
          auto widget = bar->widget(tabIndex);
-         auto absLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
-         return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(absLayout)->itemAt(0)->widget());
+         auto abstractLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
+         return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(abstractLayout)->itemAt(0)->widget());
 }
 
-// returns true if current node is either sourceNode or targetNode - more status in update
 bool GraphicsScene::isSpecial(Node * currentNode) const {
          return currentNode == sourceNode || currentNode == targetNode;
 }
 
-// sets the type - used in cleanup && reset button
 void GraphicsScene::updateSrcTarNodes() const {
          assert(sourceNode && targetNode);
          sourceNode->setType(Node::Source);
          targetNode->setType(Node::Target);
 }
 
-// checks whether the algorithm can proceed through the current node
 bool GraphicsScene::isBlock(Node * currentNode) const {
          return currentNode->getType() == Node::Block;
 }
 
-// sets up the inner grid scene
 void GraphicsScene::populateGridScene(){
          auto holder = new QGraphicsWidget();
          innerLayout = new QGraphicsGridLayout(holder);
@@ -531,7 +519,6 @@ void GraphicsScene::cleanup() const {
          }
          updateSrcTarNodes();
 }
-/// implementations - gets called when statusbutton is clicked ///
 
 // follows the parent pointer of target node until it reaches source
 void GraphicsScene::pathConnect() const {
@@ -550,12 +537,12 @@ void GraphicsScene::pathConnect() const {
                   }
                   currentNode = currentNode->getPathParent();
          };
+
          connect(pathTimer,&QTimer::timeout,targetNode,moveUp,Qt::UniqueConnection);
 }
 
 /// starters ///
 
-// called when start is pressed on bfs Tab
 void GraphicsScene::bfsStart(const bool newStart) const {
          if(newStart){
                   queue->push({sourceNode,0});
@@ -565,7 +552,6 @@ void GraphicsScene::bfsStart(const bool newStart) const {
          bfsTimer->start();
 }
 
-// called when start is pressed on dfs tab
 void GraphicsScene::dfsStart(const bool newStart) const {
          if(newStart){
                   stack->push({sourceNode,0});
@@ -575,7 +561,6 @@ void GraphicsScene::dfsStart(const bool newStart) const {
          dfsTimer->start();
 }
 
-// called when start is pressed on dijistraTab
 void GraphicsScene::dijkstraStart(const bool newStart) const {
          if(newStart){
                   pq->push({0,sourceNode});
@@ -637,7 +622,6 @@ void GraphicsScene::bfsConnect() const {
 }
 
 // tab index : 1
-// connects dfsTimer with the 'implementation' lambda
 void GraphicsScene::dfsConnect() const {
          auto infoLine = getStatusBar(1);
 
@@ -689,7 +673,6 @@ void GraphicsScene::dfsConnect() const {
 }
 
 // tab index : 2
-// connects dijistraTimer with 'implementation' lambda
 void GraphicsScene::dijkstraConnect() const {
          auto infoLine = getStatusBar(2);
 
