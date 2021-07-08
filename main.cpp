@@ -1,13 +1,9 @@
 #include <QApplication>
 #include <QGraphicsView>
 #include <QScreen>
-#include <QFile>
-#include <QLabel>
-#include <QMovie>
 #include <QIcon>
-#include <QBrush>
+#include <QFile>
 #include "scene.hpp"
-#include "node.hpp"
 
 int main(int argc, char ** argv){
 	QApplication app(argc, argv);
@@ -17,9 +13,9 @@ int main(int argc, char ** argv){
                   app.setStyleSheet(file.readAll());
                   file.close();
          }
-         auto mainRect = QApplication::primaryScreen()->availableSize();
+         auto windowSize = QApplication::primaryScreen()->availableSize();
 
-         GraphicsScene scene(mainRect);
+         GraphicsScene scene(windowSize);
          QGraphicsView view(&scene);
 
          view.setWindowIcon(QIcon(":/pixmaps/icons/windowIcon.png"));
@@ -27,14 +23,11 @@ int main(int argc, char ** argv){
          
          QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);
 
-         // view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         // view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-         QObject::connect(&scene,&GraphicsScene::changed,[&scene]{
-                  auto rec = scene.itemsBoundingRect();
-                  scene.setSceneRect(rec);
-         });
+         view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+         view.setFixedSize(windowSize);
 
          view.show();
+         
 	return app.exec();
 }

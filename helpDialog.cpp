@@ -7,17 +7,24 @@
 #include "helpDialog.hpp"
 #include "pushButton.hpp"
 
-StackedWidget::StackedWidget(QWidget * parent) : QStackedWidget(parent){
-         //todo geometry figure
-         setFixedSize(800,400);
+StackedWidget::StackedWidget(const QSize windowSize,QWidget * parent) : QStackedWidget(parent){
          setWindowTitle("Help Dialog - Visualizer");
+         configureGeometry(windowSize);
 
          addWidget(populateDefinitionPage());
+         addWidget(populateUpdateTab());
          addWidget(populateBlockGifPage());
          addWidget(populateNodeDragPage());
          addWidget(populateTabShiftPage());
          addWidget(populateSpeedPage());
          addWidget(populateDistancePage());
+}
+
+void StackedWidget::configureGeometry(const QSize windowSize){
+         const uint32_t xCord = windowSize.width() / 2;
+         const uint32_t yCord = windowSize.height() / 2;
+         setGeometry(xCord - width / 2,yCord - height / 2,width,height);
+         setFixedSize(width,height);
 }
 
 QWidget * StackedWidget::populateDefinitionPage(){
@@ -28,14 +35,16 @@ QWidget * StackedWidget::populateDefinitionPage(){
          auto bottomLabel = getLabel(parentWidget);
 
          topLabel->setText(R"(<strong>Welcome to the visualizer</srong>.<br><br><i>You may click on <strong>Next
-         /Prev</strong> buttons to navigate or click on <strong>Skip</strong> button to close the help menu 
-         directly.<br><br>This help menu will make you familiar with the features of the visualizer.</i>)");
+         /Prev</strong> button to navigate or click on <strong>Skip</strong> button to close the help menu 
+         directly.</i>)");
 
-         bottomLabel->setText(R"(<strong>Information Button</strong> : Displays information about the current 
-         algorithm.<br><strong>Run/Stop Button</strong> - Starts or stops current algorithm.<br><strong>
-         Reset Button</strong> - Resets the grid to the initial state (Removes all blocks).
-         <br><strong>Random Button</strong> - Generats a random grid.<br><strong>Help Button</strong> - Open this 
-         help menu.<br><strong>Exit Button</strong> - Exits the visualizer.)");
+         bottomLabel->setText(R"(<strong>Information</strong> : Displays information about the current 
+         algorithm<br><strong>Run/Stop/Continue</strong> - Starts, Continues or stops current algorithm<br><strong>
+         Reset</strong> - Resets the grid to the initial state (also remvoes all placed blocks) <br><strong>
+         Random</strong> - Generates a random grid.<br><strong>Help</strong> - Opens this help menu.<br><strong>
+         Exit</strong> - Exits the visualizer.)");
+
+         bottomLabel->setAlignment(Qt::AlignLeft);
 
          mainGridLayout->addWidget(topLabel,mainGridLayout->rowCount(),0);
          mainGridLayout->addWidget(bottomLabel,mainGridLayout->rowCount(),0);
@@ -65,7 +74,7 @@ QWidget * StackedWidget::populateBlockGifPage(){
          
          label->setText(R"(<br>You can click on any icon <small>with the exception of source and target nodes</small>
          and start dragging over other icons to change the state from a <strong>Block Node</strong> to <strong>Path 
-         Node</strong> and vice versa. The visualizer will not pass through <strong>Block Nodes</strong>.)");
+         Node</strong> and vice versa. Active nodes will not pass through <strong>Block Nodes</strong>.)");
 
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
          mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
@@ -147,6 +156,24 @@ QWidget * StackedWidget::populateSpeedPage(){
          return parentWidget;
 }
 
+QWidget * StackedWidget::populateUpdateTab(){
+         auto parentWidget = new QWidget(this);
+         auto mainGridLayout = new QGridLayout(parentWidget);
+
+         auto label = getLabel(parentWidget);
+         mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
+
+         label->setText(R"(<strong>Following are the planned updates/additions:-</strong><br><br> 
+         - Resizable window<br> - Visual connections between nodes<br> - Weighted nodes (Currently BFS and 
+         Dijkstra are no different)<br> - Addition of more SP algorithms <small>after addition of weighted nodes</small> 
+         (BellmanFord, Floyd Warshall,..))");
+
+         auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Middle);
+         mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
+
+         return parentWidget;
+}
+
 QWidget * StackedWidget::populateDistancePage(){
          auto parentWidget = new QWidget(this);
          auto mainGridLayout = new QGridLayout(parentWidget);
@@ -163,7 +190,7 @@ QWidget * StackedWidget::populateDistancePage(){
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
          label->setText(R"(The status bar <small>placed at the bottom</small> will display the current distance
-         which the active node is at from the source node)");
+         which the active node is at from the source node. <br><br>Voila! That's all for now.)");
          
          auto bottomLayout = getBottomLayout(parentWidget,PagePosition::Ending);
          mainGridLayout->addLayout(bottomLayout,mainGridLayout->rowCount(),0);
@@ -237,7 +264,6 @@ PushButton * StackedWidget::getCloseButton(QWidget * parentWidget){
 
 void StackedWidget::connectWithWidgetClose(PushButton * button){
          connect(button,&QPushButton::clicked,[this]{
-                  qInfo() << "I'm here";
                   setCurrentIndex(0);
                   close();
          });

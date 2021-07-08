@@ -56,10 +56,6 @@ QLineEdit{
          font-size:25px;
 }
 
-#__helpWidget__{
-         border-radius: 10px;
-}
-
 /* copy paste */
 QSlider::groove:horizontal {
 	border:2px solid #999999;

@@ -5,6 +5,7 @@
 #include <stack>
 #include <queue>
 
+QT_BEGIN_NAMESPACE
 class QTabWidget;
 class QSize;
 class QLineEdit;
@@ -17,19 +18,21 @@ class QTimer;
 class QPushButton;
 class StackedWidget;
 class QLabel;
+QT_END_NAMESPACE
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
          Q_PROPERTY(bool running WRITE setRunning READ isRunning);
          typedef std::pair<int,Node*> pIntNode;
 public:
-         GraphicsScene(const QSize & size);
+         GraphicsScene(const QSize size);
          ~GraphicsScene();
 private:
          uint32_t timerDelay; 
-         QTabWidget * bar;
+         const QSize windowSize;
          QGraphicsScene * innerScene;
-         StackedWidget * helpDialogWidget;
+         std::unique_ptr<StackedWidget> helpDialogWidget;
+         std::unique_ptr<QTabWidget> bar;
          QTimer * bfsTimer,* dfsTimer,* dijkstraTimer,* pathTimer; 
          std::pair<int,int> sourceNodeCord;
          std::pair<int,int> targetNodeCord;
@@ -42,9 +45,10 @@ private:
          bool running = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
+         constexpr inline static int yOffset = -32;
          constexpr inline static int rowCnt = 10;
          constexpr inline static int colCnt = 19;
-         constexpr inline static uint32_t defDelay = 100; // ms
+         constexpr inline static uint32_t defaultDelay = 100; // ms
          constexpr inline static int xCord[] {-1,1,0,0}; 
          constexpr inline static int yCord[] {0,0,1,-1};
 

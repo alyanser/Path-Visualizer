@@ -9,10 +9,12 @@ class PushButton : public QPushButton{
          QColor backgroundColor;
 public:
          PushButton(const QString & text,QWidget * parent = nullptr);
+         ~PushButton() = default;
          
          void setColor(const QColor & toCol);
          QColor color() const;
 private:
+         inline static int counter;
          void addShadowEffect();
 };
 

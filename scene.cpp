@@ -39,9 +39,9 @@ namespace{
          #include "defines.hpp"
 }
 
-GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
+GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windowSize(size){
          innerScene = new QGraphicsScene(this);
-         helpDialogWidget = new StackedWidget();
+         helpDialogWidget = std::make_unique<StackedWidget>(size);
 
          populateBar();
          allocTimers();
@@ -50,31 +50,24 @@ GraphicsScene::GraphicsScene(const QSize & size) : timerDelay(defDelay){
          configureInnerScene();
          connectPaths();
          setMainSceneConnections();
-
-         helpDialogWidget->setObjectName("__helpWidget__"); // css
 }
 
-GraphicsScene::~GraphicsScene(){
-         delete bar;
-         delete helpDialogWidget;
-}
+GraphicsScene::~GraphicsScene(){}
 
 void GraphicsScene::setMainSceneConnections() const {
          {
                   constexpr int helpShowDelay = 1000;
-                  QTimer::singleShot(helpShowDelay,helpDialogWidget,&StackedWidget::show);
+                  QTimer::singleShot(helpShowDelay,helpDialogWidget.get(),&StackedWidget::show);
          }
-
          connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
          connect(this,SIGNAL(foundPath()),pathTimer,SLOT(start()));
 }
 
 void GraphicsScene::allocTimers(){
-         assert(bar);
-         bfsTimer = new QTimer(bar);
-         dfsTimer = new QTimer(bar);
-         dijkstraTimer = new QTimer(bar);
-         pathTimer = new QTimer(bar);
+         bfsTimer = new QTimer(bar.get());
+         dfsTimer = new QTimer(bar.get());
+         dijkstraTimer = new QTimer(bar.get());
+         pathTimer = new QTimer(bar.get());
 }
 
 void GraphicsScene::connectPaths() const {
@@ -84,39 +77,34 @@ void GraphicsScene::connectPaths() const {
          pathConnect();
 }
 
-void GraphicsScene::configureInnerScene() {
+void GraphicsScene::configureInnerScene(){
          populateGridScene();
          allocDataStructures();
          memsetDs();
 }
 
-// sets up top bar
 void GraphicsScene::populateBar(){
-
-         {
-                  bar = new QTabWidget();
-                  addWidget(bar);
-                  // @bargeomtry
-         }
+         bar = std::make_unique<QTabWidget>();
+         addWidget(bar.get());
+         bar->setFixedSize(windowSize.width(),windowSize.height() + yOffset);
 
          {        
-                  auto bfsWidget = new QWidget(bar);
-                  bfsWidget->setFixedSize(100,100);
-                  const QString algoName = "BFS";
-                  bar->addTab(bfsWidget,algoName);
-                  populateWidget(bfsWidget,algoName,::bfsInfo);
+                  auto bfsWidget = new QWidget(bar.get());
+                  const QString algorithmName = "BFS";
+                  bar->addTab(bfsWidget,algorithmName);
+                  populateWidget(bfsWidget,algorithmName,::bfsInfo);
          }
          {        
-                  auto dfsWidget = new QWidget(bar);
-                  const QString algoName = "DFS";
-                  bar->addTab(dfsWidget,algoName);
-                  populateWidget(dfsWidget,algoName,::dfsInfo);
+                  auto dfsWidget = new QWidget(bar.get());
+                  const QString algorithmName = "DFS";
+                  bar->addTab(dfsWidget,algorithmName);
+                  populateWidget(dfsWidget,algorithmName,::dfsInfo);
          }
          {        
-                  auto dijkstraWidget = new QWidget(bar);
-                  const QString algoName = "Dijkstra";
-                  bar->addTab(dijkstraWidget,algoName);
-                  populateWidget(dijkstraWidget,algoName,::dijkstraInfo);
+                  auto dijkstraWidget = new QWidget(bar.get());
+                  const QString algorithmName = "Dijkstra";
+                  bar->addTab(dijkstraWidget,algorithmName);
+                  populateWidget(dijkstraWidget,algorithmName,::dijkstraInfo);
          }
 }
 
@@ -220,7 +208,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                   generateRandGridPattern();
          });
          
-         connect(helpButton,&PushButton::released,helpDialogWidget,&QStackedWidget::show);
+         connect(helpButton,&PushButton::released,helpDialogWidget.get(),&QStackedWidget::show);
 
          connect(exitButton,&QPushButton::released,this,[this]{
                   auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
@@ -237,10 +225,10 @@ void GraphicsScene::resetGrid() const {
 
          for(int row = 0;row < rowCnt;row++){
                   for(int col = 0;col < colCnt;col++){
-                           auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+                           auto node = getNodeAt(row,col);
                            if(isSpecial(node)) continue;
                            node->setPathParent(nullptr);
-                           bool runAnimations = false;
+                           constexpr bool runAnimations = false;
                            node->setType(Node::Inactive,runAnimations);
                   }
          }
@@ -255,12 +243,14 @@ void GraphicsScene::generateRandGridPattern(){
 
          sourceNode->setType(Node::Inactive);
          targetNode->setType(Node::Inactive);
+
          sourceNode = getNodeAt(sourceNodeCord.first,sourceNodeCord.second);
          targetNode = getNodeAt(targetNodeCord.first,targetNodeCord.second);
+
          updateSrcTarNodes();
 
-         constexpr int maximumBlocks = 60; // / 200
-
+         constexpr int maximumBlocks = 60; // out of ~ 200
+         
          std::random_device rd;
          std::mt19937 gen(rd());
          std::uniform_int_distribution<int> binary(0,1);

@@ -10,8 +10,8 @@
 #include "node.hpp"
 
 Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}{
-         backwardTimer = new QTimeLine();
-         forwardTimer = new QTimeLine();
+         backwardTimer = std::make_unique<QTimeLine>();
+         forwardTimer = std::make_unique<QTimeLine>();
 
          setGraphicsItem(this);
          setAcceptDrops(true);
@@ -25,10 +25,7 @@ Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), cu
          setType(type,startTimer);
 }
 
-Node::~Node(){
-         delete backwardTimer;
-         delete forwardTimer;
-}
+Node::~Node(){}
 
 void Node::setRunningState(const bool newAlgorithmState){
          algorithmPaused = newAlgorithmState;
@@ -61,14 +58,14 @@ void Node::configureBackwardTimer(){
          backwardTimer->setFrameRange(70,100);
          backwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
-         connect(backwardTimer,&QTimeLine::frameChanged,[this](int delta){
+         connect(backwardTimer.get(),&QTimeLine::frameChanged,[this](int delta){
                   const qreal converted = delta / 100.0;
                   setOpacity(converted);
                   setScale(converted);
                   update();
          });
 
-         connect(backwardTimer,&QTimeLine::finished,[forwardTimer = forwardTimer]{
+         connect(backwardTimer.get(),&QTimeLine::finished,[&forwardTimer = forwardTimer]{
                   if(forwardTimer->state() == QTimeLine::NotRunning){
                            forwardTimer->start();
                   }
@@ -80,7 +77,7 @@ void Node::configureForwardTimer(){
          forwardTimer->setFrameRange(70,100);
          forwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
-         connect(forwardTimer,&QTimeLine::frameChanged,[this](int delta){
+         connect(&*forwardTimer,&QTimeLine::frameChanged,[this](int delta){
                   const qreal converted = delta / 100.0;
                   setOpacity(converted);
                   setScale(converted);
@@ -118,7 +115,7 @@ void Node::setType(const State newType,const bool startTimer){
          
          if(startTimer && backwardTimer->state() == QTimeLine::NotRunning){
                   backwardTimer->start();
-         }else{ //! check if needed
+         }else{
                   update();
          }
 }
@@ -138,7 +135,7 @@ void Node::setNodeRotation(){
                            if(selfY < parentY){ // left of parent
                                     setRotation(90);
                                     moveBy(halfDimension ,-halfDimension);
-                           }else{ // oppsite
+                           }else{ // opposite
                                     setRotation(270);
                                     moveBy(-halfDimension,halfDimension);
                            }

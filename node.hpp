@@ -33,7 +33,8 @@ protected:
          void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
          std::pair<int,int> currentLocation;
-         QTimeLine * backwardTimer,* forwardTimer;
+         std::unique_ptr<QTimeLine> backwardTimer;
+         std::unique_ptr<QTimeLine> forwardTimer;
          Node * pathParent = nullptr; 
          State type = Node::Inactive;
          QPixmap icon;

@@ -12,17 +12,20 @@ class QLabel;
 class StackedWidget : public QStackedWidget{
          Q_OBJECT
          enum PagePosition {Starting,Middle,Ending};
-         typedef int64_t ll;
 public:
-         StackedWidget(QWidget * parent = nullptr);
+         StackedWidget(const QSize windowSize,QWidget * parent = nullptr);
          ~StackedWidget() = default;
 private:
+         constexpr inline static size_t width = 800;
+         constexpr inline static size_t height = 400;
+
          QWidget * populateDefinitionPage();
          QWidget * populateBlockGifPage();
          QWidget * populateNodeDragPage();
          QWidget * populateDistancePage();
          QWidget * populateTabShiftPage();
          QWidget * populateSpeedPage();
+         QWidget * populateUpdateTab();
 
          QHBoxLayout * getBottomLayout(QWidget * parentWidget,const PagePosition position);
          PushButton * getNextButton(QWidget * parentWidget);
@@ -30,7 +33,8 @@ private:
          PushButton * getPrevButton(QWidget * parentWidget);
          QLabel * getLabel(QWidget * parentWidget) const;
 
+         void configureGeometry(const QSize windowSize);
          void connectWithWidgetClose(PushButton * button);
 };
 
-#endif // HELPDIALOG_HPP
+#endif 
