@@ -167,6 +167,7 @@ void Node::undoNodeRotation(){
 }
 
 void Node::changeAnimationDuration(const uint32_t newDuration) const {
+         // new duration comes from slider direclty range : 0 - 1000
          double factor = static_cast<double>(newDuration / 1000.0);
          assert(factor <= 1 && factor >= 0);
          factor = 1 - factor;
@@ -222,12 +223,12 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::setTimersDuration(const uint32_t newDuration) const {
-         forwardTimer->setDuration(newDuration);
-         backwardTimer->setDuration(newDuration);
+         forwardTimer->setDuration(std::max(defaultTimerDuration,newDuration));
+         backwardTimer->setDuration(std::max(defaultTimerDuration,newDuration));
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
-         if(algorithmPaused && type == Source) return; // cannot change source
+         if(algorithmPaused && type == Source) return; 
          auto dragger = new QDrag(this);
          auto mimeData = new QMimeData();
          dragger->setMimeData(mimeData);

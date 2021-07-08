@@ -170,8 +170,9 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
                   QMessageBox::information(nullptr,algorithmName,info);
          });
 
-         connect(this,&GraphicsScene::resetButtons,statusButton,[fun = &memsetDs,statusButton]{
+         connect(this,&GraphicsScene::resetButtons,statusButton,[this,statusButton]{
                   statusButton->setText("Run");
+                  memsetDs();
          });
 
          connect(statusButton,&QPushButton::released,statusButton,[this,statusButton]{
