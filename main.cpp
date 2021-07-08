@@ -3,6 +3,7 @@
 #include <QScreen>
 #include <QIcon>
 #include <QFile>
+#include <QRect>
 #include "scene.hpp"
 
 int main(int argc, char ** argv){
@@ -25,9 +26,9 @@ int main(int argc, char ** argv){
 
          view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         view.setFixedSize(windowSize);
 
-         view.show();
+         view.setFixedSize(windowSize);
          
+         view.show();
 	return app.exec();
 }

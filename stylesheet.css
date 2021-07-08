@@ -7,7 +7,7 @@ QPushButton{
          text-align:center;
          font-size: 20px;
          min-width: 80px;
-         min-height: 40px;
+         min-height: 30px;
 }
 
 QTabBar::tab {

@@ -27,9 +27,7 @@
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QTabBar>
-#include <QChar>
 #include <QIcon>
-#include <chrono>
 #include "scene.hpp"
 #include "pushButton.hpp"
 #include "node.hpp"
@@ -41,8 +39,8 @@ namespace{
 
 GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windowSize(size){
          innerScene = new QGraphicsScene(this);
-         helpDialogWidget = std::make_unique<StackedWidget>(size);
-
+         helpDialogWidget = std::make_unique<StackedWidget>(windowSize);
+         
          populateBar();
          allocTimers();
          setTimersIntervals(timerDelay);
@@ -56,7 +54,7 @@ GraphicsScene::~GraphicsScene(){}
 
 void GraphicsScene::setMainSceneConnections() const {
          {
-                  constexpr int helpShowDelay = 1000;
+                  constexpr int helpShowDelay = 1000; // ms
                   QTimer::singleShot(helpShowDelay,helpDialogWidget.get(),&StackedWidget::show);
          }
          connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
@@ -86,7 +84,7 @@ void GraphicsScene::configureInnerScene(){
 void GraphicsScene::populateBar(){
          bar = std::make_unique<QTabWidget>();
          addWidget(bar.get());
-         bar->setFixedSize(windowSize.width(),windowSize.height() + yOffset);
+         bar->setFixedSize(windowSize);
 
          {        
                   auto bfsWidget = new QWidget(bar.get());
@@ -129,11 +127,13 @@ void GraphicsScene::memsetDs() const {
 }
 
 void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,const QString & infoText){
+         widget->setFixedSize(windowSize);
          auto mainLayout = new QGridLayout(widget);
-         mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->setSpacing(10);
 
          auto view = new QGraphicsView(innerScene,widget);
+         view->setMaximumHeight(windowSize.height() - 135); // 50 top - 35 padding - 50 bottom
+         mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->addWidget(view,0,0);
 
          auto sideLayout = new QVBoxLayout(); 
@@ -166,8 +166,8 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
 
          configureMachine(parentWidget,statusButton);
 
-         connect(infoButton,&QPushButton::released,[algoName,infoText]{
-                  QMessageBox::information(nullptr,algoName,infoText);
+         connect(infoButton,&QPushButton::released,[parentWidget,algoName,infoText]{
+                  QMessageBox::information(parentWidget,algoName,infoText);
          });
 
          // emitted when an algorithm finishes
@@ -210,8 +210,8 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
          
          connect(helpButton,&PushButton::released,helpDialogWidget.get(),&QStackedWidget::show);
 
-         connect(exitButton,&QPushButton::released,this,[this]{
-                  auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
+         connect(exitButton,&QPushButton::released,this,[this,parentWidget]{
+                  auto choice = QMessageBox::critical(parentWidget,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
                   if(choice == QMessageBox::Yes){
                            emit close();
                   }
@@ -250,7 +250,7 @@ void GraphicsScene::generateRandGridPattern(){
          updateSrcTarNodes();
 
          constexpr int maximumBlocks = 60; // out of ~ 200
-         
+
          std::random_device rd;
          std::mt19937 gen(rd());
          std::uniform_int_distribution<int> binary(0,1);
@@ -344,16 +344,16 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
          slider->setValue(925);
          slider->setTracking(true);
 
-         connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
-         connect(slider,&QSlider::valueChanged,this,&GraphicsScene::animationDurationChanged);
-
          auto bottomLayout = new QHBoxLayout();
          bottomLayout->setAlignment(Qt::AlignCenter);
          bottomLayout->addWidget(infoLine);
          bottomLayout->addSpacing(40);
          bottomLayout->addWidget(new QLabel("Speed: "));
          bottomLayout->addWidget(slider);
-         mainLayout->addLayout(bottomLayout,1,0);
+         mainLayout->addLayout(bottomLayout,1,0,1,1);
+
+         connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
+         connect(slider,&QSlider::valueChanged,this,&GraphicsScene::animationDurationChanged);
 }
 
 void GraphicsScene::setRunning(const bool newState){
@@ -480,7 +480,9 @@ bool GraphicsScene::validCordinate(const int row,const int col) const {
 
 // returns the bottom lineEdit (statusBar)
 QLineEdit * GraphicsScene::getStatusBar(const int tabIndex) const {
-         assert(tabIndex < bar->count());
+         if(tabIndex > bar->count()){
+                  throw std::invalid_argument("invalid bar index");
+         }
          auto widget = bar->widget(tabIndex);
          auto abstractLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
          return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(abstractLayout)->itemAt(0)->widget());
@@ -501,8 +503,9 @@ bool GraphicsScene::isBlock(Node * currentNode) const {
 }
 
 void GraphicsScene::populateGridScene(){
-         auto holder = new QGraphicsWidget();
+         auto holder = new QGraphicsWidget(); 
          innerLayout = new QGraphicsGridLayout(holder);
+
          holder->setLayout(innerLayout);
          innerScene->addItem(holder);
          innerLayout->setSpacing(25);
@@ -516,8 +519,12 @@ void GraphicsScene::populateGridScene(){
          sourceNodeCord = getRandomCord();
          targetNodeCord = getRandomCord();
 
-         sourceNode = getNodeAt(sourceNodeCord.first,sourceNodeCord.second);
-         targetNode = getNodeAt(targetNodeCord.first,targetNodeCord.second);
+         const auto [sourceX,sourceY] = sourceNodeCord;
+         const auto [targetX,targetY] = targetNodeCord;
+
+         sourceNode = getNodeAt(sourceX,sourceY);
+         targetNode = getNodeAt(targetX,targetY);
+
          updateSrcTarNodes();
 }
 
