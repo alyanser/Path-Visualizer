@@ -8,7 +8,7 @@ https://user-images.githubusercontent.com/74452129/124946361-6869a600-e028-11eb-
 It's a cross-platform GUI application which visualizes general graph algorithms. Currently, just shortest paths but I intend to add more in the future. 
 <br><i>For educational purposes only.</i>
 
-<strong>Download:</strong> <a href="">Releases page</a><br><br>
+<strong>Download:</strong> <a href="https://github.com/alyanser/Graph-Algorithm-Visualizer/releases">Releases page</a><br><br>
 <small>Planned updates:-
 - Resizable window
 - Visual connections between nodes
