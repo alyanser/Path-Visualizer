@@ -89,22 +89,18 @@ void GraphicsScene::populateBar(){
 
          {        
                   auto bfsWidget = new QWidget(bar.get());
-                  bfsWidget->setObjectName("BFS");
-                  
                   const QString algorithmName = "BFS";
                   bar->addTab(bfsWidget,algorithmName);
                   populateWidget(bfsWidget,algorithmName,::bfsInfo);
          }
          {        
                   auto dfsWidget = new QWidget(bar.get());
-                  dfsWidget->setObjectName("DFSW");
                   const QString algorithmName = "DFS";
                   bar->addTab(dfsWidget,algorithmName);
                   populateWidget(dfsWidget,algorithmName,::dfsInfo);
          }
          {        
                   auto dijkstraWidget = new QWidget(bar.get());
-                  dijkstraWidget->setObjectName("DIJW");
                   const QString algorithmName = "Dijkstra";
                   bar->addTab(dijkstraWidget,algorithmName);
                   populateWidget(dijkstraWidget,algorithmName,::dijkstraInfo);
@@ -131,7 +127,7 @@ void GraphicsScene::memsetDs() const {
          visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
 
-void GraphicsScene::populateWidget(QWidget * holder,const QString & algoName,const QString & infoText){
+void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmName,const QString & infoText){
          auto mainLayout = new QGridLayout(holder);
          mainLayout->setSpacing(10);
 
@@ -145,13 +141,13 @@ void GraphicsScene::populateWidget(QWidget * holder,const QString & algoName,con
          mainLayout->addLayout(sideLayout,0,1);
          sideLayout->setAlignment(Qt::AlignTop);
 
-         populateSideLayout(holder,sideLayout,algoName,infoText);
+         populateSideLayout(holder,sideLayout,algorithmName,infoText);
 
          populateLegend(holder,sideLayout);
          populateBottomLayout(holder,mainLayout);
 }
 
-void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout,const QString & algoName,const QString & info){
+void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout,const QString & algorithmName,const QString & info){
          auto infoButton = new PushButton("Information",holder);
          auto statusButton = new PushButton("Run",holder);
          auto resetButton = new PushButton("Reset",holder);
@@ -169,15 +165,13 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
 
          configureMachine(holder,statusButton);
 
-         connect(infoButton,&QPushButton::released,[algoName,info]{
+         connect(infoButton,&QPushButton::released,[algorithmName,info]{
                   //? weird bug when set some widget as parent 
-                  QMessageBox::information(nullptr,algoName,info);
+                  QMessageBox::information(nullptr,algorithmName,info);
          });
 
-         // emitted when an algorithm finishes
-         connect(this,&GraphicsScene::resetButtons,statusButton,[this,statusButton]{
+         connect(this,&GraphicsScene::resetButtons,statusButton,[fun = &memsetDs,statusButton]{
                   statusButton->setText("Run");
-                  memsetDs();
          });
 
          connect(statusButton,&QPushButton::released,statusButton,[this,statusButton]{
