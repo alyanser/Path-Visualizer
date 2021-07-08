@@ -5,7 +5,6 @@
 #include <stack>
 #include <queue>
 
-QT_BEGIN_NAMESPACE
 class QTabWidget;
 class QSize;
 class QLineEdit;
@@ -18,7 +17,6 @@ class QTimer;
 class QPushButton;
 class StackedWidget;
 class QLabel;
-QT_END_NAMESPACE
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
@@ -45,19 +43,20 @@ private:
          bool running = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
-         constexpr inline static int yOffset = -25;
+         constexpr inline static int yOffset = -135; // px : 50 topbar 50 bottombar 35 padding
          constexpr inline static int rowCnt = 10;
          constexpr inline static int colCnt = 20;
          constexpr inline static uint32_t defaultDelay = 100; // ms
          constexpr inline static int xCord[] {-1,1,0,0}; 
          constexpr inline static int yCord[] {0,0,1,-1};
 
+
          void populateBar();
          void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
          void populateGridScene(); 
          void populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const;
          void populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const;
-         void populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText);
+         void populateSideLayout(QWidget * parent,QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText);
 
          void configureMachine(QWidget * parentWidget,QPushButton * statusButton);
 
@@ -71,7 +70,7 @@ private:
          bool isRunning() const; 
          void cleanup() const; 
          void resetGrid() const;
-         void updateSrcTarNodes() const; // srcTar := source Target
+         void updateSourceTargetNodes() const;
          bool validCordinate(const int row,const int col) const;
          Node * getNewNode(const int row,const int col);
          Node * getNodeAt(const int row,const int col) const;
@@ -99,7 +98,7 @@ public slots:
          void setDelay(const uint32_t newDelay);
 signals:
          void foundPath() const; 
-         void close() const; // connected with qapplication
+         void close() const;
          void resetButtons() const; 
          void runningStatusChanged(const bool newState) const; 
          void animationDurationChanged(const uint32_t newDuration) const; 

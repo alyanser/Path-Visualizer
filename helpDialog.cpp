@@ -21,9 +21,9 @@ StackedWidget::StackedWidget(const QSize windowSize,QWidget * parent) : QStacked
 }
 
 void StackedWidget::configureGeometry(const QSize windowSize){
-         const uint32_t xCord = windowSize.width() / 2;
-         const uint32_t yCord = windowSize.height() / 2;
-         setGeometry(xCord - width / 2,yCord - height / 2,width,height);
+         const int xCord = windowSize.width() / 2;
+         const int yCord = windowSize.height() / 2;
+         setGeometry(xCord - static_cast<int>(width) / 2,yCord - static_cast<int>(height) / 2,width,height);
          setFixedSize(width,height);
 }
 

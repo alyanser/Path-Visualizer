@@ -28,7 +28,7 @@ int main(int argc, char ** argv){
          view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
          view.setFixedSize(windowSize);
-         
          view.show();
+         
 	return app.exec();
 }

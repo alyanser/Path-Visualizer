@@ -40,7 +40,7 @@ namespace{
 GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windowSize(size){
          innerScene = new QGraphicsScene(this);
          helpDialogWidget = std::make_unique<StackedWidget>(windowSize);
-         
+
          populateBar();
          allocTimers();
          setTimersIntervals(timerDelay);
@@ -49,6 +49,7 @@ GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windo
          connectPaths();
          setMainSceneConnections();
 }
+
 
 GraphicsScene::~GraphicsScene(){}
 
@@ -88,18 +89,22 @@ void GraphicsScene::populateBar(){
 
          {        
                   auto bfsWidget = new QWidget(bar.get());
+                  bfsWidget->setObjectName("BFS");
+                  
                   const QString algorithmName = "BFS";
                   bar->addTab(bfsWidget,algorithmName);
                   populateWidget(bfsWidget,algorithmName,::bfsInfo);
          }
          {        
                   auto dfsWidget = new QWidget(bar.get());
+                  dfsWidget->setObjectName("DFSW");
                   const QString algorithmName = "DFS";
                   bar->addTab(dfsWidget,algorithmName);
                   populateWidget(dfsWidget,algorithmName,::dfsInfo);
          }
          {        
                   auto dijkstraWidget = new QWidget(bar.get());
+                  dijkstraWidget->setObjectName("DIJW");
                   const QString algorithmName = "Dijkstra";
                   bar->addTab(dijkstraWidget,algorithmName);
                   populateWidget(dijkstraWidget,algorithmName,::dijkstraInfo);
@@ -126,13 +131,12 @@ void GraphicsScene::memsetDs() const {
          visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
 
-void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,const QString & infoText){
-         widget->setFixedSize(windowSize);
-         auto mainLayout = new QGridLayout(widget);
+void GraphicsScene::populateWidget(QWidget * holder,const QString & algoName,const QString & infoText){
+         auto mainLayout = new QGridLayout(holder);
          mainLayout->setSpacing(10);
 
-         auto view = new QGraphicsView(innerScene,widget);
-         view->setMaximumHeight(windowSize.height() - 135); // 50 top - 35 padding - 50 bottom
+         auto view = new QGraphicsView(innerScene,holder);
+         view->setMaximumHeight(windowSize.height() + yOffset);
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->addWidget(view,0,0);
 
@@ -141,20 +145,19 @@ void GraphicsScene::populateWidget(QWidget * widget,const QString & algoName,con
          mainLayout->addLayout(sideLayout,0,1);
          sideLayout->setAlignment(Qt::AlignTop);
 
-         populateSideLayout(sideLayout,algoName,infoText);
+         populateSideLayout(holder,sideLayout,algoName,infoText);
 
-         populateLegend(widget,sideLayout);
-         populateBottomLayout(widget,mainLayout);
+         populateLegend(holder,sideLayout);
+         populateBottomLayout(holder,mainLayout);
 }
 
-void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText){
-         auto parentWidget = sideLayout->widget();
-         auto infoButton = new PushButton("Information",parentWidget);
-         auto statusButton = new PushButton("Run",parentWidget);
-         auto resetButton = new PushButton("Reset",parentWidget);
-         auto randomButton = new PushButton("Random",parentWidget);
-         auto helpButton = new PushButton("Help",parentWidget);
-         auto exitButton = new PushButton("Exit",parentWidget);
+void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout,const QString & algoName,const QString & info){
+         auto infoButton = new PushButton("Information",holder);
+         auto statusButton = new PushButton("Run",holder);
+         auto resetButton = new PushButton("Reset",holder);
+         auto randomButton = new PushButton("Random",holder);
+         auto helpButton = new PushButton("Help",holder);
+         auto exitButton = new PushButton("Exit",holder);
 
          sideLayout->addWidget(infoButton);
          sideLayout->addWidget(statusButton);
@@ -164,10 +167,11 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
          sideLayout->addWidget(exitButton);
          sideLayout->insertSpacing(4,25);
 
-         configureMachine(parentWidget,statusButton);
+         configureMachine(holder,statusButton);
 
-         connect(infoButton,&QPushButton::released,[parentWidget,algoName,infoText]{
-                  QMessageBox::information(parentWidget,algoName,infoText);
+         connect(infoButton,&QPushButton::released,[algoName,info]{
+                  //? weird bug when set some widget as parent 
+                  QMessageBox::information(nullptr,algoName,info);
          });
 
          // emitted when an algorithm finishes
@@ -190,7 +194,7 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
                                     case 0 : bfsStart(toStartNew);break;
                                     case 1 : dfsStart(toStartNew);break;
                                     case 2 : dijkstraStart(toStartNew);break;
-                                    default : assert(false);
+                                    default : Q_ASSERT(false);
                            }
                   }else{
                            stopTimers();
@@ -210,8 +214,9 @@ void GraphicsScene::populateSideLayout(QVBoxLayout * sideLayout,const QString & 
          
          connect(helpButton,&PushButton::released,helpDialogWidget.get(),&QStackedWidget::show);
 
-         connect(exitButton,&QPushButton::released,this,[this,parentWidget]{
-                  auto choice = QMessageBox::critical(parentWidget,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
+         connect(exitButton,&QPushButton::released,this,[this]{
+                  //? weird bug when set some widget as parent 
+                  auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
                   if(choice == QMessageBox::Yes){
                            emit close();
                   }
@@ -244,31 +249,32 @@ void GraphicsScene::generateRandGridPattern(){
          sourceNode->setType(Node::Inactive);
          targetNode->setType(Node::Inactive);
 
-         sourceNode = getNodeAt(sourceNodeCord.first,sourceNodeCord.second);
-         targetNode = getNodeAt(targetNodeCord.first,targetNodeCord.second);
+         const auto [sourceX,sourceY] = sourceNodeCord;
+         const auto [targetX,targetY] = targetNodeCord;
 
-         updateSrcTarNodes();
+         sourceNode = getNodeAt(sourceX,sourceY);
+         targetNode = getNodeAt(targetX,targetY);
 
-         constexpr int maximumBlocks = 60; // out of ~ 200
+         updateSourceTargetNodes();
 
-         std::random_device rd;
-         std::mt19937 gen(rd());
+         constexpr int maximumBlocks = 60; // out of 200
+
+         std::mt19937 generator;
          std::uniform_int_distribution<int> binary(0,1);
 
          for(int placed = 0;placed < maximumBlocks;){
                   auto [randX,randY] = getRandomCord();
                   auto node = getNodeAt(randX,randY);
 
-                  if(binary(gen) && !isSpecial(node)){
+                  if(binary(generator) && !isSpecial(node)){
                            placed++;
                            node->setType(Node::Block);
                   }
          }
 }
 
-// manager custom properties - currently just statusButton
-void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * statusButton){
-         auto machine = new QStateMachine(parentWidget);
+void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton){
+         auto machine = new QStateMachine(holder);
          auto stoppedState = new QState(machine);
          auto runningState = new QState(machine);
 
@@ -298,27 +304,26 @@ void GraphicsScene::configureMachine(QWidget * parentWidget,QPushButton * status
          machine->start();
 }
 
-
-void GraphicsScene::populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const {
+void GraphicsScene::populateLegend(QWidget * holder,QVBoxLayout * sideLayout) const {
          sideLayout->addSpacing(25);
 
-         auto legendLabel = new QLabel("Legend:",parentWidget);
+         auto legendLabel = new QLabel("Legend:",holder);
          sideLayout->addWidget(legendLabel);
 
          legendLabel->setObjectName("legendTitle");  // for css
          addShadowEffect(legendLabel);
 
-         sideLayout->addLayout(getLegendLayout(parentWidget,"source"));
-         sideLayout->addLayout(getLegendLayout(parentWidget,"target"));
-         sideLayout->addLayout(getLegendLayout(parentWidget,"active"));
-         sideLayout->addLayout(getLegendLayout(parentWidget,"inactive"));
-         sideLayout->addLayout(getLegendLayout(parentWidget,"visited"));
-         sideLayout->addLayout(getLegendLayout(parentWidget,"block"));
-         sideLayout->addLayout(getLegendLayout(parentWidget,"inpath"));
+         sideLayout->addLayout(getLegendLayout(holder,"source"));
+         sideLayout->addLayout(getLegendLayout(holder,"target"));
+         sideLayout->addLayout(getLegendLayout(holder,"active"));
+         sideLayout->addLayout(getLegendLayout(holder,"inactive"));
+         sideLayout->addLayout(getLegendLayout(holder,"visited"));
+         sideLayout->addLayout(getLegendLayout(holder,"block"));
+         sideLayout->addLayout(getLegendLayout(holder,"inpath"));
 }
 
-void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const {
-         auto infoLine = new QLineEdit("Click on run Button on sidebar to display algorithm status",parentWidget);
+void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayout) const {
+         auto infoLine = new QLineEdit("Click on run Button on sidebar to display algorithm status",holder);
          infoLine->setAlignment(Qt::AlignCenter); 
          infoLine->setReadOnly(true);
 
@@ -339,7 +344,7 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
                   infoLine->setGraphicsEffect(shadowEffect);
          }
 
-         auto slider = new QSlider(Qt::Horizontal,parentWidget);
+         auto slider = new QSlider(Qt::Horizontal,holder);
          slider->setRange(0,1000);
          slider->setValue(925);
          slider->setTracking(true);
@@ -350,7 +355,7 @@ void GraphicsScene::populateBottomLayout(QWidget * parentWidget,QGridLayout * ma
          bottomLayout->addSpacing(40);
          bottomLayout->addWidget(new QLabel("Speed: "));
          bottomLayout->addWidget(slider);
-         mainLayout->addLayout(bottomLayout,1,0,1,1);
+         mainLayout->addLayout(bottomLayout,1,0);
 
          connect(slider,&QSlider::valueChanged,this,&GraphicsScene::setDelay);
          connect(slider,&QSlider::valueChanged,this,&GraphicsScene::animationDurationChanged);
@@ -369,7 +374,7 @@ void GraphicsScene::setRunning(const bool newState){
 }
 
 std::pair<int,int> GraphicsScene::getRandomCord() const {
-         std::random_device rd;  
+         std::random_device rd;
          std::mt19937 gen(rd());
          std::uniform_int_distribution<int> rowRange(0,rowCnt-1);
          std::uniform_int_distribution<int> colRange(0,colCnt-1);
@@ -383,15 +388,14 @@ void GraphicsScene::addShadowEffect(QLabel * label) const {
          label->setGraphicsEffect(shadowEffect);
 }
 
-//! alternative required
-QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * parentWidget,QString token) const {
+QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) const {
          const QString pattern = R"(:/pixmaps/icons/%1.png)";
          QString labelText = token;
          labelText[0] = labelText[0].toUpper();
 
-         auto layout = new QHBoxLayout(); // parent layout deletes
-         auto label = new QLabel(labelText,parentWidget);
-         auto icon = new QLabel(parentWidget);
+         auto layout = new QHBoxLayout();
+         auto label = new QLabel(labelText,holder);
+         auto icon = new QLabel(holder);
 
          layout->addWidget(icon);
          layout->addWidget(label);
@@ -408,7 +412,7 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * parentWidget,QString toke
          
          QPixmap pixmap(pattern.arg(token));
          icon->setPixmap(pixmap);
-         assert(!icon->pixmap().isNull());
+         Q_ASSERT(!icon->pixmap().isNull());
 
          return layout;
 }
@@ -427,7 +431,6 @@ void GraphicsScene::enableAllBarTabs() const {
          }
 }
 
-// algorithm state
 bool GraphicsScene::isRunning() const {
          return running;
 }
@@ -473,16 +476,13 @@ Node * GraphicsScene::getNodeAt(const int row,const int col) const {
          return static_cast<Node*>(innerLayout->itemAt(row,col));
 }
 
-// returns true of {row,col} is a valid cordinate for grid
 bool GraphicsScene::validCordinate(const int row,const int col) const {
          return row >= 0 && row < rowCnt && col >= 0 && col < colCnt;
 }
 
-// returns the bottom lineEdit (statusBar)
 QLineEdit * GraphicsScene::getStatusBar(const int tabIndex) const {
-         if(tabIndex > bar->count()){
-                  throw std::invalid_argument("invalid bar index");
-         }
+         Q_ASSERT(tabIndex < bar->count()); 
+
          auto widget = bar->widget(tabIndex);
          auto abstractLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
          return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(abstractLayout)->itemAt(0)->widget());
@@ -492,8 +492,9 @@ bool GraphicsScene::isSpecial(Node * currentNode) const {
          return currentNode == sourceNode || currentNode == targetNode;
 }
 
-void GraphicsScene::updateSrcTarNodes() const {
-         assert(sourceNode && targetNode);
+void GraphicsScene::updateSourceTargetNodes() const {
+         Q_ASSERT(sourceNode && targetNode);
+
          sourceNode->setType(Node::Source);
          targetNode->setType(Node::Target);
 }
@@ -525,7 +526,7 @@ void GraphicsScene::populateGridScene(){
          sourceNode = getNodeAt(sourceX,sourceY);
          targetNode = getNodeAt(targetX,targetY);
 
-         updateSrcTarNodes();
+         updateSourceTargetNodes();
 }
 
 void GraphicsScene::cleanup() const {
@@ -537,7 +538,7 @@ void GraphicsScene::cleanup() const {
                            node->setType(Node::Inactive,runAnimations);
                   }
          }
-         updateSrcTarNodes();
+         updateSourceTargetNodes();
 }
 
 // follows the parent pointer of target node until it reaches source
@@ -560,8 +561,6 @@ void GraphicsScene::pathConnect() const {
 
          connect(pathTimer,&QTimer::timeout,targetNode,moveUp,Qt::UniqueConnection);
 }
-
-/// starters ///
 
 void GraphicsScene::bfsStart(const bool newStart) const {
          if(newStart){
