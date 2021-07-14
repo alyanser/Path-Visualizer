@@ -9,10 +9,9 @@
 #include <QMouseEvent>
 #include "node.hpp"
 
-Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}{
-         backwardTimer = std::make_unique<QTimeLine>();
-         forwardTimer = std::make_unique<QTimeLine>();
-
+Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}, 
+         backwardTimer(std::make_unique<QTimeLine>()), forwardTimer(std::make_unique<QTimeLine>())
+{
          setGraphicsItem(this);
          setAcceptDrops(true);
          setAcceptHoverEvents(true);
@@ -36,7 +35,7 @@ QRectF Node::boundingRect() const {
 }
 
 void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * ,QWidget * ){
-         if(type == Visited){
+         if(type == State::Visited){
                   painter->setOpacity(opacity() / 2);
          }
          painter->setRenderHint(QPainter::Antialiasing);
@@ -44,7 +43,7 @@ void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * ,QWidget * 
 }
 
 QSizeF Node::sizeHint(Qt::SizeHint , const QSizeF & ) const {
-         return QSizeF(dimension,dimension);
+         return QSizeF {dimension,dimension};
 }
 
 void Node::setGeometry(const QRectF & geometry){
@@ -88,10 +87,10 @@ void Node::configureForwardTimer(){
 void Node::setType(const State newType,const bool startTimer){
          type = newType;
          bool acceptDrag = true;
-         if(type == Source){
+         if(type == State::Source){
                   acceptDrag = false;
                   emit sourceSet(); // update source node in GraphicsScene class
-         }else if(type == Target){
+         }else if(type == State::Target){
                   acceptDrag = false;
                   emit targetSet(); // update target node in GraphicsScene class
          }
@@ -99,17 +98,17 @@ void Node::setType(const State newType,const bool startTimer){
          undoNodeRotation(); 
          
          switch(type){
-                  case Source : icon.load(":/pixmaps/icons/source.png"); break;
-                  case Target : icon.load(":/pixmaps/icons/target.png"); break;
-                  case Active : {
+                  case State::Source : icon.load(":/pixmaps/icons/source.png"); break;
+                  case State::Target : icon.load(":/pixmaps/icons/target.png"); break;
+                  case State::Active : {
                            icon.load(":/pixmaps/icons/active.png");
                            setNodeRotation();
                            break;
                   }
-                  case Inactive : icon.load(":/pixmaps/icons/inactive.png"); break;
-                  case Visited : icon.load(":/pixmaps/icons/inactive.png"); break;
-                  case Block : icon.load(":/pixmaps/icons/block.png"); break;
-                  case Inpath : icon.load(":/pixmaps/icons/inpath.png"); break;
+                  case State::Inactive : icon.load(":/pixmaps/icons/inactive.png"); break;
+                  case State::Visited : icon.load(":/pixmaps/icons/inactive.png"); break;
+                  case State::Block : icon.load(":/pixmaps/icons/block.png"); break;
+                  case State::Inpath : icon.load(":/pixmaps/icons/inpath.png"); break;
                   default : assert(false);
          }
          
@@ -144,7 +143,7 @@ void Node::setNodeRotation(){
 }
 
 void Node::undoNodeRotation(){
-         int currentRotation = rotation();
+         const int currentRotation = rotation();
          switch(currentRotation){
                   case 180 : {
                            moveBy(-halfDimension,-halfDimension);
@@ -168,10 +167,10 @@ void Node::undoNodeRotation(){
 
 void Node::changeAnimationDuration(const uint32_t newDuration) const {
          // new duration comes from slider direclty range : 0 - 1000
-         double factor = static_cast<double>(newDuration / 1000.0);
-         assert(factor <= 1 && factor >= 0);
+         double factor = static_cast<double>(newDuration) / 1000.0;
+         assert(factor <= 1.0 && factor >= 0.0);
          factor = 1 - factor;
-         uint32_t delta = static_cast<uint32_t>(factor * defaultTimerDuration);
+         auto delta = static_cast<uint32_t>(factor * static_cast<double>(defaultTimerDuration));
          setTimersDuration(delta ? delta * 2 : defaultTimerDuration);
 }
 
@@ -192,14 +191,15 @@ Node::State Node::getType() const {
 }
 
 void Node::dragEnterEvent(QGraphicsSceneDragDropEvent * event){
-         auto mimeData = event->mimeData();
+         const auto * mimeData = event->mimeData();
          if(mimeData->hasText()){
                   const QString & text = mimeData->text();
                   if(text == "inverter"){
                            switch(type){
-                                    case Source | Target : break;
-                                    case Block : setType(Inactive);event->accept(); break;
-                                    default : setType(Block);event->accept();
+                                    case State::Source : [[fallthrough]];
+                                    case State::Target : break;
+                                    case State::Block : setType(State::Inactive); event->accept(); break;
+                                    default : setType(State::Block); event->accept();
                            }
                   }
          }
@@ -207,15 +207,15 @@ void Node::dragEnterEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
-         auto mimeData = event->mimeData();
+         const auto * mimeData = event->mimeData();
          if(mimeData->hasText()){
                   const QString & indicator = mimeData->text();
 
                   if(indicator == "fromSource"){
-                           setType(Source);
+                           setType(State::Source);
                            event->accept();
                   }else if(indicator == "fromTarget"){
-                           setType(Target);
+                           setType(State::Target);
                            event->accept();
                   }
          }
@@ -228,25 +228,25 @@ void Node::setTimersDuration(const uint32_t newDuration) const {
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
-         if(algorithmPaused && type == Source) return; 
-         auto dragger = new QDrag(this);
-         auto mimeData = new QMimeData();
+         if(algorithmPaused && type == State::Source) return; 
+         auto * dragger = new QDrag(this);
+         auto * mimeData = new QMimeData(); // event deletes
          dragger->setMimeData(mimeData);
          
          switch(type){
-                  case Source : {
+                  case State::Source : {
                            dragger->setPixmap(icon);
                            mimeData->setText("fromSource");
                            if(dragger->exec()){
-                                    setType(Inactive);
+                                    setType(State::Inactive);
                            }
                            break;
                   }
-                  case Target : {
+                  case State::Target : {
                            dragger->setPixmap(icon);
                            mimeData->setText("fromTarget");
                            if(dragger->exec()){
-                                    setType(Inactive);
+                                    setType(State::Inactive);
                            }
                            break;
                   }

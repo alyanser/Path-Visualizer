@@ -2,6 +2,9 @@ QT += core gui widgets statemachine
 
 CONFIG += \
          c++17 \
+         sanitizer \
+         sanitize_address \ 
+         sanitize_undefined
 
 SOURCES += \
          main.cpp \

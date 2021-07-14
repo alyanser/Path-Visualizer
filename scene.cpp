@@ -22,8 +22,8 @@
 #include <QWidget>
 #include <QStateMachine>
 #include <QState>
-#include <queue>
 #include <stack>
+#include <queue>
 #include <QTimer>
 #include <QGraphicsOpacityEffect>
 #include <QTabBar>
@@ -37,10 +37,9 @@ namespace{
          #include "defines.hpp"
 }
 
-GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windowSize(size){
-         innerScene = new QGraphicsScene(this);
-         helpDialogWidget = std::make_unique<StackedWidget>(windowSize);
-
+GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windowSize(size), innerScene(new QGraphicsScene(this)),
+         helpDialogWidget(std::make_unique<StackedWidget>(windowSize))
+{
          populateBar();
          allocTimers();
          setTimersIntervals(timerDelay);
@@ -49,7 +48,6 @@ GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windo
          connectPaths();
          setMainSceneConnections();
 }
-
 
 GraphicsScene::~GraphicsScene(){}
 
@@ -110,7 +108,6 @@ void GraphicsScene::populateBar(){
 void GraphicsScene::allocDataStructures(){
          using std::make_unique;
          using std::vector;
-         typedef std::pair<int,Node*> pIntNode;
 
          queue = make_unique<std::queue<std::pair<Node*,int>>>(); // {:distance}
          stack = make_unique<std::stack<std::pair<Node*,int>>>(); // {:distance}
@@ -128,15 +125,15 @@ void GraphicsScene::memsetDs() const {
 }
 
 void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmName,const QString & infoText){
-         auto mainLayout = new QGridLayout(holder);
+         auto * mainLayout = new QGridLayout(holder);
          mainLayout->setSpacing(10);
 
-         auto view = new QGraphicsView(innerScene,holder);
+         auto * view = new QGraphicsView(innerScene,holder);
          view->setMaximumHeight(windowSize.height() + yOffset);
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->addWidget(view,0,0);
 
-         auto sideLayout = new QVBoxLayout(); 
+         auto * sideLayout = new QVBoxLayout(); 
          sideLayout->setSpacing(5);
          mainLayout->addLayout(sideLayout,0,1);
          sideLayout->setAlignment(Qt::AlignTop);
@@ -148,12 +145,12 @@ void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmNam
 }
 
 void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout,const QString & algorithmName,const QString & info){
-         auto infoButton = new PushButton("Information",holder);
-         auto statusButton = new PushButton("Run",holder);
-         auto resetButton = new PushButton("Reset",holder);
-         auto randomButton = new PushButton("Random",holder);
-         auto helpButton = new PushButton("Help",holder);
-         auto exitButton = new PushButton("Exit",holder);
+         auto * infoButton = new PushButton("Information",holder);
+         auto * statusButton = new PushButton("Run",holder);
+         auto * resetButton = new PushButton("Reset",holder);
+         auto * randomButton = new PushButton("Random",holder);
+         auto * helpButton = new PushButton("Help",holder);
+         auto * exitButton = new PushButton("Exit",holder);
 
          sideLayout->addWidget(infoButton);
          sideLayout->addWidget(statusButton);
@@ -223,13 +220,13 @@ void GraphicsScene::resetGrid() const {
          emit resetButtons();
          memsetDs();
 
-         for(int row = 0;row < rowCnt;row++){
-                  for(int col = 0;col < colCnt;col++){
-                           auto node = getNodeAt(row,col);
+         for(size_t row = 0;row < rowCnt;row++){
+                  for(size_t col = 0;col < colCnt;col++){
+                           auto * node = getNodeAt(row,col);
                            if(isSpecial(node)) continue;
                            node->setPathParent(nullptr);
                            constexpr bool runAnimations = false;
-                           node->setType(Node::Inactive,runAnimations);
+                           node->setType(Node::State::Inactive,runAnimations);
                   }
          }
          auto curTabIndex = bar->currentIndex();
@@ -241,8 +238,8 @@ void GraphicsScene::generateRandGridPattern(){
          sourceNodeCord = getRandomCord();
          while((targetNodeCord = getRandomCord()) == sourceNodeCord);
 
-         sourceNode->setType(Node::Inactive);
-         targetNode->setType(Node::Inactive);
+         sourceNode->setType(Node::State::Inactive);
+         targetNode->setType(Node::State::Inactive);
 
          const auto [sourceX,sourceY] = sourceNodeCord;
          const auto [targetX,targetY] = targetNodeCord;
@@ -254,7 +251,7 @@ void GraphicsScene::generateRandGridPattern(){
 
          constexpr int maximumBlocks = 60; // out of 200
 
-         std::mt19937 generator;
+         std::mt19937 generator {};
          std::uniform_int_distribution<int> binary(0,1);
 
          for(int placed = 0;placed < maximumBlocks;){
@@ -263,7 +260,7 @@ void GraphicsScene::generateRandGridPattern(){
 
                   if(binary(generator) && !isSpecial(node)){
                            placed++;
-                           node->setType(Node::Block);
+                           node->setType(Node::State::Block);
                   }
          }
 }
@@ -302,7 +299,7 @@ void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton
 void GraphicsScene::populateLegend(QWidget * holder,QVBoxLayout * sideLayout) const {
          sideLayout->addSpacing(25);
 
-         auto legendLabel = new QLabel("Legend:",holder);
+         auto * legendLabel = new QLabel("Legend:",holder);
          sideLayout->addWidget(legendLabel);
 
          legendLabel->setObjectName("legendTitle");  // for css
@@ -318,7 +315,7 @@ void GraphicsScene::populateLegend(QWidget * holder,QVBoxLayout * sideLayout) co
 }
 
 void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayout) const {
-         auto infoLine = new QLineEdit("Click on run Button on sidebar to display algorithm status",holder);
+         auto * infoLine = new QLineEdit("Click on run Button on sidebar to display algorithm status",holder);
          infoLine->setAlignment(Qt::AlignCenter); 
          infoLine->setReadOnly(true);
 
@@ -339,12 +336,12 @@ void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayo
                   infoLine->setGraphicsEffect(shadowEffect);
          }
 
-         auto slider = new QSlider(Qt::Horizontal,holder);
+         auto * slider = new QSlider(Qt::Horizontal,holder);
          slider->setRange(0,1000);
          slider->setValue(925);
          slider->setTracking(true);
 
-         auto bottomLayout = new QHBoxLayout();
+         auto * bottomLayout = new QHBoxLayout();
          bottomLayout->setAlignment(Qt::AlignCenter);
          bottomLayout->addWidget(infoLine);
          bottomLayout->addSpacing(40);
@@ -368,15 +365,15 @@ void GraphicsScene::setRunning(const bool newState){
          emit runningStatusChanged(running); // connected with node class
 }
 
-std::pair<int,int> GraphicsScene::getRandomCord() const {
-         std::random_device rd;
+std::pair<int,int> GraphicsScene::getRandomCord(){
+         std::random_device rd {};
          std::mt19937 gen(rd());
          std::uniform_int_distribution<int> rowRange(0,rowCnt-1);
          std::uniform_int_distribution<int> colRange(0,colCnt-1);
          return std::make_pair(rowRange(gen),colRange(gen));
 }
 
-void GraphicsScene::addShadowEffect(QLabel * label) const {
+void GraphicsScene::addShadowEffect(QLabel * label){
          auto shadowEffect = new QGraphicsDropShadowEffect(label);
          shadowEffect->setBlurRadius(4);// px
          shadowEffect->setOffset(0.5,0.5); // x,y px
@@ -388,9 +385,9 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) con
          QString labelText = token;
          labelText[0] = labelText[0].toUpper();
 
-         auto layout = new QHBoxLayout();
-         auto label = new QLabel(labelText,holder);
-         auto icon = new QLabel(holder);
+         auto * layout = new QHBoxLayout();
+         auto * label = new QLabel(labelText,holder);
+         auto * icon = new QLabel(holder);
 
          layout->addWidget(icon);
          layout->addWidget(label);
@@ -431,7 +428,7 @@ bool GraphicsScene::isRunning() const {
 }
 
 void GraphicsScene::setDelay(const uint32_t newDelay){
-         timerDelay = std::abs((int64_t)1000 - newDelay);
+         timerDelay = std::abs(static_cast<int64_t>(1000) - newDelay);
          setTimersIntervals(timerDelay);
 }
 
@@ -449,8 +446,8 @@ void GraphicsScene::stopTimers() const {
          pathTimer->stop();
 }
 
-Node * GraphicsScene::getNewNode(const int row,const int col){
-         auto node = new Node(row,col);
+Node * GraphicsScene::getNewNode(const size_t row,const size_t col){
+         auto * node = new Node(row,col);
 
          connect(this,&GraphicsScene::animationDurationChanged,node,&Node::changeAnimationDuration);
 
@@ -467,16 +464,19 @@ Node * GraphicsScene::getNewNode(const int row,const int col){
          return node;
 }
 
-Node * GraphicsScene::getNodeAt(const int row,const int col) const {
-         return static_cast<Node*>(innerLayout->itemAt(row,col));
+Node * GraphicsScene::getNodeAt(const size_t row,const size_t col) const {
+         if(auto * node = dynamic_cast<Node*>(innerLayout->itemAt(row,col))){
+                  return node;
+         }
+         assert(!static_cast<const char*>("Downcast failed"));
 }
 
-bool GraphicsScene::validCordinate(const int row,const int col) const {
+bool GraphicsScene::validCordinate(const int row,const int col){
          return row >= 0 && row < rowCnt && col >= 0 && col < colCnt;
 }
 
-QLineEdit * GraphicsScene::getStatusBar(const int tabIndex) const {
-         Q_ASSERT(tabIndex < bar->count()); 
+QLineEdit * GraphicsScene::getStatusBar(const size_t tabIndex) const {
+         assert(tabIndex < static_cast<size_t>(bar->count())); 
 
          auto widget = bar->widget(tabIndex);
          auto abstractLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
@@ -488,18 +488,18 @@ bool GraphicsScene::isSpecial(Node * currentNode) const {
 }
 
 void GraphicsScene::updateSourceTargetNodes() const {
-         Q_ASSERT(sourceNode && targetNode);
+         assert(sourceNode && targetNode);
 
-         sourceNode->setType(Node::Source);
-         targetNode->setType(Node::Target);
+         sourceNode->setType(Node::State::Source);
+         targetNode->setType(Node::State::Target);
 }
 
 bool GraphicsScene::isBlock(Node * currentNode) const {
-         return currentNode->getType() == Node::Block;
+         return currentNode->getType() == Node::State::Block;
 }
 
 void GraphicsScene::populateGridScene(){
-         auto holder = new QGraphicsWidget(); 
+         auto * holder = new QGraphicsWidget(); 
          innerLayout = new QGraphicsGridLayout(holder);
 
          holder->setLayout(innerLayout);
@@ -525,12 +525,12 @@ void GraphicsScene::populateGridScene(){
 }
 
 void GraphicsScene::cleanup() const {
-         for(int row = 0;row < rowCnt;row++){
-                  for(int col = 0;col < colCnt;col++){
-                           auto node = static_cast<Node*>(innerLayout->itemAt(row,col));
+         for(size_t row = 0;row < rowCnt;row++){
+                  for(size_t col = 0;col < colCnt;col++){
+                           auto * node = getNodeAt(row,col);
                            if(isBlock(node)) continue;
                            bool runAnimations = false;
-                           node->setType(Node::Inactive,runAnimations);
+                           node->setType(Node::State::Inactive,runAnimations);
                   }
          }
          updateSourceTargetNodes();
@@ -549,7 +549,7 @@ void GraphicsScene::pathConnect() const {
                            pathTimer->stop();
                            return;
                   }else if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::Inpath);
+                           currentNode->setType(Node::State::Inpath);
                   }
                   currentNode = currentNode->getPathParent();
          };
@@ -586,7 +586,7 @@ void GraphicsScene::dijkstraStart(const bool newStart) const {
 
 // tab index : 0
 void GraphicsScene::bfsConnect() const {
-         auto infoLine = getStatusBar(0);
+         auto * infoLine = getStatusBar(0);
 
          auto implementation = [this,infoLine = infoLine]{
                   if(queue->empty()){
@@ -600,12 +600,12 @@ void GraphicsScene::bfsConnect() const {
                   auto [currentRow,currentCol] = currentNode->getCord();
 
                   if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::Active);
+                           currentNode->setType(Node::State::Active);
                   }
                   auto nodeParent = currentNode->getPathParent();
 
                   if(nodeParent && !isSpecial(nodeParent)){
-                           nodeParent->setType(Node::Visited);
+                           nodeParent->setType(Node::State::Visited);
                   }
                   infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
@@ -621,7 +621,7 @@ void GraphicsScene::bfsConnect() const {
                            int toCol = currentCol + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    auto togoNode = getNodeAt(toRow,toCol);
+                                    auto * togoNode = getNodeAt(toRow,toCol);
 
                                     if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
 
@@ -637,7 +637,7 @@ void GraphicsScene::bfsConnect() const {
 
 // tab index : 1
 void GraphicsScene::dfsConnect() const {
-         auto infoLine = getStatusBar(1);
+         auto * infoLine = getStatusBar(1);
 
          auto implementation = [this,infoLine = infoLine]{
                   if(stack->empty()){
@@ -651,7 +651,7 @@ void GraphicsScene::dfsConnect() const {
                   infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
                   if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::Active);
+                           currentNode->setType(Node::State::Active);
                   }
 
                   if(currentNode == targetNode){
@@ -664,7 +664,7 @@ void GraphicsScene::dfsConnect() const {
                   auto nodeParent = currentNode->getPathParent();
 
                   if(nodeParent && !isSpecial(nodeParent)){
-                           nodeParent->setType(Node::Visited);
+                           nodeParent->setType(Node::State::Visited);
                   }
 
                   for(int direction = 0;direction < 4;direction++){
@@ -672,7 +672,7 @@ void GraphicsScene::dfsConnect() const {
                            int toCol = currentCol + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    auto togoNode = getNodeAt(toRow,toCol);
+                                    auto * togoNode = getNodeAt(toRow,toCol);
 
                                     if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
 
@@ -688,7 +688,7 @@ void GraphicsScene::dfsConnect() const {
 
 // tab index : 2
 void GraphicsScene::dijkstraConnect() const {
-         auto infoLine = getStatusBar(2);
+         auto * infoLine = getStatusBar(2);
 
          auto implementation = [this,infoLine = infoLine]{
                   if(pq->empty()){
@@ -704,12 +704,12 @@ void GraphicsScene::dijkstraConnect() const {
                   if((*distance)[curX][curY] != currentDistance) return;
 
                   if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::Active);
+                           currentNode->setType(Node::State::Active);
                   }
                   auto nodeParent = currentNode->getPathParent();
 
                   if(nodeParent && !isSpecial(nodeParent)){
-                           nodeParent->setType(Node::Visited);
+                           nodeParent->setType(Node::State::Visited);
                   }
                   infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
@@ -725,7 +725,7 @@ void GraphicsScene::dijkstraConnect() const {
                            int toCol = curY + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    auto togoNode = getNodeAt(toRow,toCol);
+                                    auto * togoNode = getNodeAt(toRow,toCol);
 
                                     if(isBlock(togoNode)) continue;
 
