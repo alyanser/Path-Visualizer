@@ -13,8 +13,12 @@ class StackedWidget : public QStackedWidget{
          Q_OBJECT
          enum PagePosition {Starting,Middle,Ending};
 public:
-         StackedWidget(const QSize windowSize,QWidget * parent = nullptr);
+         explicit StackedWidget(const QSize windowSize,QWidget * parent = nullptr);
          ~StackedWidget() = default;
+         StackedWidget(const StackedWidget & other) = delete;
+         StackedWidget(StackedWidget && other) = delete;
+         StackedWidget & operator = (const StackedWidget & other) = delete;
+         StackedWidget & operator = (StackedWidget && other) = delete;
 private:
          constexpr inline static size_t width = 800;
          constexpr inline static size_t height = 400;
