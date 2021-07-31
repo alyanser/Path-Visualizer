@@ -223,8 +223,8 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::setTimersDuration(const uint32_t newDuration) const {
-         forwardTimer->setDuration(std::max<int32_t>(defaultTimerDuration,newDuration));
-         backwardTimer->setDuration(std::max<int32_t>(defaultTimerDuration,newDuration));
+         forwardTimer->setDuration(static_cast<int32_t>(std::max(defaultTimerDuration,newDuration)));
+         backwardTimer->setDuration(static_cast<int32_t>(std::max(defaultTimerDuration,newDuration)));
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){

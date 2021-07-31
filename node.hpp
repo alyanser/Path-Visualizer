@@ -13,7 +13,7 @@ public:
          enum class State{Source,Target,Active,Inactive,Visited,Block,Inpath};
          
          Node(uint32_t row,uint32_t col,QGraphicsItem * parent = nullptr);
-         ~Node() override;
+         ~Node();
          Node(const Node & other) = delete;
          Node(Node && other) = delete;
          Node & operator = (const Node & other) = delete;
