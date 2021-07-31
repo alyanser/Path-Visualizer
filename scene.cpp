@@ -86,19 +86,19 @@ void GraphicsScene::populateBar() noexcept {
          bar->setFixedSize(windowSize);
 
          {        
-                  auto bfsWidget = new QWidget(bar.get());
+                  auto * bfsWidget = new QWidget(bar.get());
                   const QString algorithmName = "BFS";
                   bar->addTab(bfsWidget,algorithmName);
                   populateWidget(bfsWidget,algorithmName,::bfsInfo);
          }
          {        
-                  auto dfsWidget = new QWidget(bar.get());
+                  auto * dfsWidget = new QWidget(bar.get());
                   const QString algorithmName = "DFS";
                   bar->addTab(dfsWidget,algorithmName);
                   populateWidget(dfsWidget,algorithmName,::dfsInfo);
          }
          {        
-                  auto dijkstraWidget = new QWidget(bar.get());
+                  auto * dijkstraWidget = new QWidget(bar.get());
                   const QString algorithmName = "Dijkstra";
                   bar->addTab(dijkstraWidget,algorithmName);
                   populateWidget(dijkstraWidget,algorithmName,::dijkstraInfo);
@@ -266,9 +266,9 @@ void GraphicsScene::generateRandGridPattern() noexcept {
 }
 
 void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton) noexcept {
-         auto machine = new QStateMachine(holder);
-         auto stoppedState = new QState(machine);
-         auto runningState = new QState(machine);
+         auto * machine = new QStateMachine(holder);
+         auto * stoppedState = new QState(machine);
+         auto * runningState = new QState(machine);
 
          stoppedState->assignProperty(this,"running",false);
          runningState->assignProperty(this,"running",true);
@@ -276,10 +276,10 @@ void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton
          stoppedState->assignProperty(statusButton,"backgroundColor",QColor(Qt::green));
          runningState->assignProperty(statusButton,"backgroundColor",QColor(Qt::red));
 
-         auto stopToRun = new QEventTransition(statusButton,QEvent::MouseButtonRelease,stoppedState);
-         auto runToStop = new QEventTransition(statusButton,QEvent::MouseButtonRelease,runningState);
-         auto resetTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,runningState);
-         auto colorAnimation = new QPropertyAnimation(statusButton,"backgroundColor",stoppedState);
+         auto * stopToRun = new QEventTransition(statusButton,QEvent::MouseButtonRelease,stoppedState);
+         auto * runToStop = new QEventTransition(statusButton,QEvent::MouseButtonRelease,runningState);
+         auto * resetTransition = new QSignalTransition(this,&GraphicsScene::resetButtons,runningState);
+         auto * colorAnimation = new QPropertyAnimation(statusButton,"backgroundColor",stoppedState);
 
          colorAnimation->setDuration(1000);
          stopToRun->addAnimation(colorAnimation);
@@ -330,7 +330,7 @@ void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayo
                   });
          }
          {
-                  auto shadowEffect = new QGraphicsDropShadowEffect(infoLine);
+                  auto * shadowEffect = new QGraphicsDropShadowEffect(infoLine);
                   shadowEffect->setBlurRadius(10);
                   shadowEffect->setOffset(2,2);
                   infoLine->setGraphicsEffect(shadowEffect);
