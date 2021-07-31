@@ -12,7 +12,7 @@ class Node : public QGraphicsObject,public QGraphicsLayoutItem{
 public:
          enum class State{Source,Target,Active,Inactive,Visited,Block,Inpath};
          
-         Node(int row,int col,QGraphicsItem * parent = nullptr);
+         Node(uint32_t row,uint32_t col,QGraphicsItem * parent = nullptr);
          ~Node() override;
          Node(const Node & other) = delete;
          Node(Node && other) = delete;
@@ -23,7 +23,7 @@ public:
          void setType(State newType,bool newStart = true);
          Node * getPathParent() const;
          void setPathParent(Node * newParent); 
-         std::pair<int,int> getCord() const;
+         std::pair<uint32_t,uint32_t> getCord() const;
 protected:
          // overrides qgraphicslayout methods
          void setGeometry(const QRectF & geometry) override;
@@ -36,15 +36,15 @@ protected:
          void dragEnterEvent(QGraphicsSceneDragDropEvent * event) override;
          void dropEvent(QGraphicsSceneDragDropEvent * event) override;
 private:
-         std::pair<int,int> currentLocation;
+         std::pair<uint32_t,uint32_t> currentLocation;
          std::unique_ptr<QTimeLine> backwardTimer;
          std::unique_ptr<QTimeLine> forwardTimer;
          Node * pathParent = nullptr; 
          State type = Node::State::Inactive;
          QPixmap icon {};
          inline static bool algorithmPaused = false;
-         inline constexpr static int dimension = 32; // px
-         inline constexpr static int halfDimension = dimension / 2; // px
+         inline constexpr static int32_t dimension = 32; // px
+         inline constexpr static int32_t halfDimension = dimension / 2; // px
          inline constexpr static uint32_t defaultTimerDuration = 175;  // ms
 
          void setTimersDuration(uint32_t newDuration) const;

@@ -20,8 +20,9 @@ class QLabel;
 
 class GraphicsScene : public QGraphicsScene{
          Q_OBJECT
-         Q_PROPERTY(bool running WRITE setRunning READ isRunning);
-         using pIntNode = std::pair<int,Node*>;
+         Q_PROPERTY(bool running WRITE setRunning READ isRunning)
+         enum { bfsIndex, dfsIndex, dijkstraIndex };
+         using pIntNode = std::pair<uint32_t,Node*>;
 public:
          explicit GraphicsScene(QSize size);
          ~GraphicsScene();
@@ -39,66 +40,65 @@ private:
          std::pair<size_t,size_t> sourceNodeCord;
          std::pair<size_t,size_t> targetNodeCord;
          QGraphicsGridLayout * innerLayout; 
-         std::unique_ptr<std::queue<std::pair<Node*,int>>> queue; 
-         std::unique_ptr<std::stack<std::pair<Node*,int>>> stack;
+         std::unique_ptr<std::queue<std::pair<Node*,uint32_t>>> queue; 
+         std::unique_ptr<std::stack<std::pair<Node*,uint32_t>>> stack;
          std::unique_ptr<std::vector<std::vector<bool>>> visited; 
-         std::unique_ptr<std::vector<std::vector<int>>> distance;
+         std::unique_ptr<std::vector<std::vector<uint32_t>>> distance;
          std::unique_ptr<std::priority_queue<pIntNode,std::vector<pIntNode>,std::greater<>>> pq;
          bool running = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
-         constexpr inline static int yOffset = -135; // px : 50 topbar 50 bottombar 35 padding
-         constexpr inline static int rowCnt = 10;
-         constexpr inline static int colCnt = 20;
+         constexpr inline static int32_t yOffset = -135; // px : 50 topbar 50 bottombar 35 padding
+         constexpr inline static size_t rowCnt = 10;
+         constexpr inline static size_t colCnt = 20;
          constexpr inline static uint32_t defaultDelay = 100; // ms
-         constexpr inline static std::array<int,4> xCord {-1,1,0,0};
-         constexpr inline static std::array<int,4> yCord {0,0,1,-1};
+         constexpr inline static std::array<int32_t,4> xCord {-1,1,0,0};
+         constexpr inline static std::array<int32_t,4> yCord {0,0,1,-1};
 
-         void populateBar();
-         void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText);
-         void populateGridScene(); 
-         void populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const;
-         void populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const;
-         void populateSideLayout(QWidget * parent,QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText);
+         void populateBar() noexcept;
+         void populateWidget(QWidget * widget,const QString & algoName,const QString & infoText) noexcept;
+         void populateGridScene() noexcept;  
+         void populateLegend(QWidget * parentWidget,QVBoxLayout * sideLayout) const noexcept;
+         void populateBottomLayout(QWidget * parentWidget,QGridLayout * mainLayout) const noexcept;
+         void populateSideLayout(QWidget * parent,QVBoxLayout * sideLayout,const QString & algoName,const QString & infoText) noexcept;
+         void configureMachine(QWidget * parentWidget,QPushButton * statusButton) noexcept;
 
-         void configureMachine(QWidget * parentWidget,QPushButton * statusButton);
-
-         void allocTimers();
-         void setMainSceneConnections() const;
-         void connectPaths() const;
-         void configureInnerScene();
-         void generateRandGridPattern();
-         void allocDataStructures();
-         void setRunning(bool newState); 
-         bool isRunning() const; 
-         void cleanup() const; 
-         void resetGrid() const;
-         void updateSourceTargetNodes() const;
-         static bool validCordinate(int row,int col);
-         Node * getNewNode(size_t row,size_t col);
-         Node * getNodeAt(size_t row,size_t col) const;
-         QLineEdit * getStatusBar(size_t tabIndex) const;
-         bool isBlock(Node * currentNode) const;
-         bool isSpecial(Node * currentNode) const;
-         void setTimersIntervals(uint32_t newSpeed) const;
-         void memsetDs() const;
-         void stopTimers() const;
-         void pathConnect() const; 
-         static std::pair<int,int> getRandomCord();
-         static void addShadowEffect(QLabel * label);
-         QHBoxLayout * getLegendLayout(QWidget * parentWidget,QString token) const;
-         void disableBarTabs(int exception) const;
-         void enableAllBarTabs() const;
+         void allocTimers() noexcept;
+         void setMainSceneConnections() const noexcept;
+         void connectPaths() const noexcept;
+         void configureInnerScene() noexcept;
+         void generateRandGridPattern() noexcept;
+         void allocDataStructures() noexcept;
+         void setRunning(bool newState) noexcept;  
+         bool isRunning() const noexcept; 
+         void cleanup() const noexcept; 
+         void resetGrid() const noexcept;
+         void updateSourceTargetNodes() const noexcept;
+         static bool validCordinate(ptrdiff_t row,ptrdiff_t col) noexcept;
+         Node * getNewNode(size_t row,size_t col) noexcept;
+         Node * getNodeAt(size_t row,size_t col) const noexcept;
+         QLineEdit * getStatusBar(uint32_t tabIndex) const noexcept;
+         bool isBlock(Node * currentNode) const noexcept;
+         bool isSpecial(Node * currentNode) const noexcept;
+         void setTimersIntervals(std::chrono::milliseconds newSpeed) const noexcept;
+         void memsetDs() const noexcept;
+         void stopTimers() const noexcept;
+         void pathConnect() const noexcept;  
+         static std::pair<size_t,size_t> getRandomCord() noexcept;
+         static void addShadowEffect(QLabel * label) noexcept;
+         QHBoxLayout * getLegendLayout(QWidget * parentWidget,QString token) const noexcept;
+         void disableBarTabs(int32_t exception) const noexcept;
+         void enableAllBarTabs() const noexcept;  
          
-         void bfsConnect() const;
-         void dfsConnect() const;
-         void dijkstraConnect() const;
+         void bfsConnect() const noexcept;
+         void dfsConnect() const noexcept;
+         void dijkstraConnect() const noexcept;
          
-         void bfsStart(bool newStart) const;
-         void dfsStart(bool newStart) const;
-         void dijkstraStart(bool newStart) const;
+         void bfsStart(bool newStart) const noexcept;
+         void dfsStart(bool newStart) const noexcept;
+         void dijkstraStart(bool newStart) const noexcept;
 public slots:
-         void setDelay(uint32_t newDelay);
+         void setDelay(uint32_t newDelay) noexcept;
 signals:
          void foundPath() const; 
          void close() const;

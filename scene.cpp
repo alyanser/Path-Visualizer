@@ -42,7 +42,7 @@ GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windo
 {
          populateBar();
          allocTimers();
-         setTimersIntervals(timerDelay);
+         setTimersIntervals(static_cast<std::chrono::milliseconds>(timerDelay));
         
          configureInnerScene();
          connectPaths();
@@ -51,36 +51,36 @@ GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windo
 
 GraphicsScene::~GraphicsScene(){}
 
-void GraphicsScene::setMainSceneConnections() const {
+void GraphicsScene::setMainSceneConnections() const noexcept {
          {
-                  constexpr int helpShowDelay = 1000; // ms
+                  constexpr int32_t helpShowDelay = 1000; // ms
                   QTimer::singleShot(helpShowDelay,helpDialogWidget.get(),&StackedWidget::show);
          }
          connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
          connect(this,SIGNAL(foundPath()),pathTimer,SLOT(start()));
 }
 
-void GraphicsScene::allocTimers(){
+void GraphicsScene::allocTimers() noexcept {
          bfsTimer = new QTimer(bar.get());
          dfsTimer = new QTimer(bar.get());
          dijkstraTimer = new QTimer(bar.get());
          pathTimer = new QTimer(bar.get());
 }
 
-void GraphicsScene::connectPaths() const {
+void GraphicsScene::connectPaths() const noexcept {
          bfsConnect();
          dfsConnect();
          dijkstraConnect();
          pathConnect();
 }
 
-void GraphicsScene::configureInnerScene(){
+void GraphicsScene::configureInnerScene() noexcept {
          populateGridScene();
          allocDataStructures();
          memsetDs();
 }
 
-void GraphicsScene::populateBar(){
+void GraphicsScene::populateBar() noexcept {
          bar = std::make_unique<QTabWidget>();
          addWidget(bar.get());
          bar->setFixedSize(windowSize);
@@ -105,26 +105,26 @@ void GraphicsScene::populateBar(){
          }
 }
 
-void GraphicsScene::allocDataStructures(){
+void GraphicsScene::allocDataStructures() noexcept {
          using std::make_unique;
          using std::vector;
 
-         queue = make_unique<std::queue<std::pair<Node*,int>>>(); // {:distance}
-         stack = make_unique<std::stack<std::pair<Node*,int>>>(); // {:distance}
+         queue = make_unique<std::queue<std::pair<Node*,uint32_t>>>(); // {:distance}
+         stack = make_unique<std::stack<std::pair<Node*,uint32_t>>>(); // {:distance}
          visited = make_unique<vector<vector<bool>>>();
-         distance = make_unique<vector<vector<int>>>();
+         distance = make_unique<vector<vector<uint32_t>>>();
          pq = make_unique<std::priority_queue<pIntNode,vector<pIntNode>,std::greater<>>>(); // {distance:}
 }
 
-void GraphicsScene::memsetDs() const {
+void GraphicsScene::memsetDs() const noexcept {
          while(!queue->empty()) queue->pop();
          while(!stack->empty()) stack->pop();
          while(!pq->empty()) pq->pop();
-         distance->assign(rowCnt,std::vector<int>(colCnt,INT_MAX));
+         distance->assign(rowCnt,std::vector<uint32_t>(colCnt,std::numeric_limits<uint32_t>::max()));
          visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
 
-void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmName,const QString & infoText){
+void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmName,const QString & infoText) noexcept {
          auto * mainLayout = new QGridLayout(holder);
          mainLayout->setSpacing(10);
 
@@ -144,7 +144,7 @@ void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmNam
          populateBottomLayout(holder,mainLayout);
 }
 
-void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout,const QString & algorithmName,const QString & info){
+void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout,const QString & algorithmName,const QString & info) noexcept {
          auto * infoButton = new PushButton("Information",holder);
          auto * statusButton = new PushButton("Run",holder);
          auto * resetButton = new PushButton("Reset",holder);
@@ -215,7 +215,7 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
          });
 }
 
-void GraphicsScene::resetGrid() const {
+void GraphicsScene::resetGrid() const noexcept {
          stopTimers();
          emit resetButtons();
          memsetDs();
@@ -229,12 +229,12 @@ void GraphicsScene::resetGrid() const {
                            node->setType(Node::State::Inactive,runAnimations);
                   }
          }
-         auto curTabIndex = bar->currentIndex();
-         auto lineInfo = getStatusBar(curTabIndex);
+         const auto curTabIndex = static_cast<uint32_t>(bar->currentIndex());
+         auto * lineInfo = getStatusBar(curTabIndex);
          lineInfo->setText("Click on run Button on sidebar to display algorithm status");
 }
 
-void GraphicsScene::generateRandGridPattern(){
+void GraphicsScene::generateRandGridPattern() noexcept {
          sourceNodeCord = getRandomCord();
          while((targetNodeCord = getRandomCord()) == sourceNodeCord);
 
@@ -249,12 +249,12 @@ void GraphicsScene::generateRandGridPattern(){
 
          updateSourceTargetNodes();
 
-         constexpr int maximumBlocks = 60; // out of 200
+         constexpr int32_t maximumBlocks = 60; // out of 200
 
          std::mt19937 generator {};
-         std::uniform_int_distribution<int> binary(0,1);
+         std::uniform_int_distribution<int32_t> binary(0,1);
 
-         for(int placed = 0;placed < maximumBlocks;){
+         for(int32_t placed = 0;placed < maximumBlocks;){
                   auto [randX,randY] = getRandomCord();
                   auto node = getNodeAt(randX,randY);
 
@@ -265,7 +265,7 @@ void GraphicsScene::generateRandGridPattern(){
          }
 }
 
-void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton){
+void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton) noexcept {
          auto machine = new QStateMachine(holder);
          auto stoppedState = new QState(machine);
          auto runningState = new QState(machine);
@@ -296,7 +296,7 @@ void GraphicsScene::configureMachine(QWidget * holder,QPushButton * statusButton
          machine->start();
 }
 
-void GraphicsScene::populateLegend(QWidget * holder,QVBoxLayout * sideLayout) const {
+void GraphicsScene::populateLegend(QWidget * holder,QVBoxLayout * sideLayout) const noexcept {
          sideLayout->addSpacing(25);
 
          auto * legendLabel = new QLabel("Legend:",holder);
@@ -314,7 +314,7 @@ void GraphicsScene::populateLegend(QWidget * holder,QVBoxLayout * sideLayout) co
          sideLayout->addLayout(getLegendLayout(holder,"inpath"));
 }
 
-void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayout) const {
+void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayout) const noexcept {
          auto * infoLine = new QLineEdit("Click on run Button on sidebar to display algorithm status",holder);
          infoLine->setAlignment(Qt::AlignCenter); 
          infoLine->setReadOnly(true);
@@ -353,11 +353,11 @@ void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayo
          connect(slider,&QSlider::valueChanged,this,&GraphicsScene::animationDurationChanged);
 }
 
-void GraphicsScene::setRunning(const bool newState){
+void GraphicsScene::setRunning(const bool newState) noexcept {
          running = newState;
 
          if(running){ 
-                  const int exception = bar->currentIndex();
+                  const int32_t exception = bar->currentIndex();
                   disableBarTabs(exception);
          }else{
                   enableAllBarTabs();
@@ -365,22 +365,22 @@ void GraphicsScene::setRunning(const bool newState){
          emit runningStatusChanged(running); // connected with node class
 }
 
-std::pair<int,int> GraphicsScene::getRandomCord(){
-         std::random_device rd {};
+std::pair<size_t,size_t> GraphicsScene::getRandomCord() noexcept {
+         std::random_device rd;
          std::mt19937 gen(rd());
-         std::uniform_int_distribution<int> rowRange(0,rowCnt-1);
-         std::uniform_int_distribution<int> colRange(0,colCnt-1);
+         std::uniform_int_distribution<size_t> rowRange(0,rowCnt-1);
+         std::uniform_int_distribution<size_t> colRange(0,colCnt-1);
          return std::make_pair(rowRange(gen),colRange(gen));
 }
 
-void GraphicsScene::addShadowEffect(QLabel * label){
+void GraphicsScene::addShadowEffect(QLabel * label) noexcept {
          auto shadowEffect = new QGraphicsDropShadowEffect(label);
          shadowEffect->setBlurRadius(4);// px
          shadowEffect->setOffset(0.5,0.5); // x,y px
          label->setGraphicsEffect(shadowEffect);
 }
 
-QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) const {
+QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) const noexcept {
          const QString pattern = R"(:/pixmaps/icons/%1.png)";
          QString labelText = token;
          labelText[0] = labelText[0].toUpper();
@@ -409,45 +409,45 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) con
          return layout;
 }
 
-void GraphicsScene::disableBarTabs(const int exception) const {
-         for(int index = 0;index < bar->count();index++){
+void GraphicsScene::disableBarTabs(const int32_t exception) const noexcept {
+         for(int32_t index = 0;index < bar->count();index++){
                   if(index != exception){
                            bar->setTabEnabled(index,false);
                   }
          }
 }
 
-void GraphicsScene::enableAllBarTabs() const {
-         for(int index = 0;index < bar->count();index++){
+void GraphicsScene::enableAllBarTabs() const noexcept {
+         for(int32_t index = 0;index < bar->count();index++){
                   bar->setTabEnabled(index,true);
          }
 }
 
-bool GraphicsScene::isRunning() const {
+bool GraphicsScene::isRunning() const noexcept {
          return running;
 }
 
-void GraphicsScene::setDelay(const uint32_t newDelay){
-         timerDelay = std::abs(static_cast<int64_t>(1000) - newDelay);
-         setTimersIntervals(timerDelay);
+void GraphicsScene::setDelay(const uint32_t newDelay) noexcept {
+         timerDelay = static_cast<uint32_t>(std::abs(static_cast<int64_t>(1000) - newDelay));
+         setTimersIntervals(static_cast<std::chrono::milliseconds>(timerDelay));
 }
 
-void GraphicsScene::setTimersIntervals(const uint32_t newDelay) const {
+void GraphicsScene::setTimersIntervals(const std::chrono::milliseconds newDelay) const noexcept {
          dfsTimer->setInterval(newDelay);
          bfsTimer->setInterval(newDelay);
          dijkstraTimer->setInterval(newDelay);
          pathTimer->setInterval(newDelay);
 }
 
-void GraphicsScene::stopTimers() const {
+void GraphicsScene::stopTimers() const noexcept {
          dfsTimer->stop();
          bfsTimer->stop();
          dijkstraTimer->stop();
          pathTimer->stop();
 }
 
-Node * GraphicsScene::getNewNode(const size_t row,const size_t col){
-         auto * node = new Node(row,col);
+Node * GraphicsScene::getNewNode(const size_t row,const size_t col) noexcept {
+         auto * node = new Node(static_cast<uint32_t>(row),static_cast<uint32_t>(col));
 
          connect(this,&GraphicsScene::animationDurationChanged,node,&Node::changeAnimationDuration);
 
@@ -464,41 +464,42 @@ Node * GraphicsScene::getNewNode(const size_t row,const size_t col){
          return node;
 }
 
-Node * GraphicsScene::getNodeAt(const size_t row,const size_t col) const {
-         if(auto * node = dynamic_cast<Node*>(innerLayout->itemAt(row,col))){
+Node * GraphicsScene::getNodeAt(const size_t row,const size_t col) const noexcept {
+         if(auto * node = dynamic_cast<Node*>(innerLayout->itemAt(static_cast<int>(row),static_cast<int>(col)))){
                   return node;
          }
-         assert(!static_cast<const char*>("Downcast failed"));
+         assert(!static_cast<bool>("Downcast failed"));
+         return nullptr;
 }
 
-bool GraphicsScene::validCordinate(const int row,const int col){
-         return row >= 0 && row < rowCnt && col >= 0 && col < colCnt;
+bool GraphicsScene::validCordinate(const ptrdiff_t row,const ptrdiff_t col) noexcept {
+         return row >= 0 && static_cast<size_t>(row) < rowCnt && col >= 0 && static_cast<size_t>(col) < colCnt;
 }
 
-QLineEdit * GraphicsScene::getStatusBar(const size_t tabIndex) const {
+QLineEdit * GraphicsScene::getStatusBar(const uint32_t tabIndex) const noexcept {
          assert(tabIndex < static_cast<size_t>(bar->count())); 
 
-         auto widget = bar->widget(tabIndex);
+         auto widget = bar->widget(static_cast<int32_t>(tabIndex));
          auto abstractLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
          return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(abstractLayout)->itemAt(0)->widget());
 }
 
-bool GraphicsScene::isSpecial(Node * currentNode) const {
+bool GraphicsScene::isSpecial(Node * currentNode) const noexcept {
          return currentNode == sourceNode || currentNode == targetNode;
 }
 
-void GraphicsScene::updateSourceTargetNodes() const {
+void GraphicsScene::updateSourceTargetNodes() const noexcept {
          assert(sourceNode && targetNode);
 
          sourceNode->setType(Node::State::Source);
          targetNode->setType(Node::State::Target);
 }
 
-bool GraphicsScene::isBlock(Node * currentNode) const {
+bool GraphicsScene::isBlock(Node * currentNode) const noexcept {
          return currentNode->getType() == Node::State::Block;
 }
 
-void GraphicsScene::populateGridScene(){
+void GraphicsScene::populateGridScene() noexcept {
          auto * holder = new QGraphicsWidget(); 
          innerLayout = new QGraphicsGridLayout(holder);
 
@@ -506,10 +507,10 @@ void GraphicsScene::populateGridScene(){
          innerScene->addItem(holder);
          innerLayout->setSpacing(25);
 
-         for(int row = 0;row < rowCnt;row++){
-                  for(int col = 0;col < colCnt;col++){
-                           auto node = getNewNode(row,col);
-                           innerLayout->addItem(node,row,col);
+         for(size_t row = 0;row < rowCnt;row++){
+                  for(size_t col = 0;col < colCnt;col++){
+                           auto * node = getNewNode(row,col);
+                           innerLayout->addItem(node,static_cast<int32_t>(row),static_cast<int32_t>(col));
                   }
          }
          sourceNodeCord = getRandomCord();
@@ -524,7 +525,7 @@ void GraphicsScene::populateGridScene(){
          updateSourceTargetNodes();
 }
 
-void GraphicsScene::cleanup() const {
+void GraphicsScene::cleanup() const noexcept {
          for(size_t row = 0;row < rowCnt;row++){
                   for(size_t col = 0;col < colCnt;col++){
                            auto * node = getNodeAt(row,col);
@@ -537,7 +538,7 @@ void GraphicsScene::cleanup() const {
 }
 
 // follows the parent pointer of target node until it reaches source
-void GraphicsScene::pathConnect() const {
+void GraphicsScene::pathConnect() const noexcept {
          auto moveUp = [this,currentNode = targetNode,newStart = true]() mutable {
                   if(newStart){
                            currentNode = targetNode;
@@ -557,7 +558,7 @@ void GraphicsScene::pathConnect() const {
          connect(pathTimer,&QTimer::timeout,targetNode,moveUp,Qt::UniqueConnection);
 }
 
-void GraphicsScene::bfsStart(const bool newStart) const {
+void GraphicsScene::bfsStart(const bool newStart) const noexcept {
          if(newStart){
                   queue->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
@@ -566,7 +567,7 @@ void GraphicsScene::bfsStart(const bool newStart) const {
          bfsTimer->start();
 }
 
-void GraphicsScene::dfsStart(const bool newStart) const {
+void GraphicsScene::dfsStart(const bool newStart) const noexcept {
          if(newStart){
                   stack->push({sourceNode,0});
                   auto [startX,startY] = sourceNode->getCord();
@@ -575,7 +576,7 @@ void GraphicsScene::dfsStart(const bool newStart) const {
          dfsTimer->start();
 }
 
-void GraphicsScene::dijkstraStart(const bool newStart) const {
+void GraphicsScene::dijkstraStart(const bool newStart) const noexcept {
          if(newStart){
                   pq->push({0,sourceNode});
                   auto [startX,startY] = sourceNode->getCord();
@@ -585,8 +586,8 @@ void GraphicsScene::dijkstraStart(const bool newStart) const {
 }
 
 // tab index : 0
-void GraphicsScene::bfsConnect() const {
-         auto * infoLine = getStatusBar(0);
+void GraphicsScene::bfsConnect() const noexcept {
+         auto * infoLine = getStatusBar(bfsIndex);
 
          auto implementation = [this,infoLine = infoLine]{
                   if(queue->empty()){
@@ -597,7 +598,7 @@ void GraphicsScene::bfsConnect() const {
                   }
                   auto [currentNode,currentDistance] = queue->front();
                   queue->pop();
-                  auto [currentRow,currentCol] = currentNode->getCord();
+                  auto [curX,curY] = currentNode->getCord();
 
                   if(!isSpecial(currentNode)){
                            currentNode->setType(Node::State::Active);
@@ -616,16 +617,19 @@ void GraphicsScene::bfsConnect() const {
                            return;
                   }
 
-                  for(int direction = 0;direction < 4;direction++){
-                           int toRow = currentRow + xCord[direction];
-                           int toCol = currentCol + yCord[direction];
+                  for(uint32_t direction = 0;direction < 4;direction++){
+                           const auto toRow = static_cast<ptrdiff_t>(curX) + xCord[direction];
+                           const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    auto * togoNode = getNodeAt(toRow,toCol);
+                                    const auto validRow = static_cast<size_t>(toRow); // safe cast
+                                    const auto validCol = static_cast<size_t>(toCol); 
 
-                                    if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
+                                    auto * togoNode = getNodeAt(validRow,validCol);
 
-                                    (*visited)[toRow][toCol] = true;
+                                    if(isBlock(togoNode) || (*visited)[validRow][validCol]) continue;
+
+                                    (*visited)[validRow][validCol] = true;
                                     togoNode->setPathParent(currentNode);
                                     queue->push({togoNode,currentDistance+1});
                            }
@@ -636,8 +640,8 @@ void GraphicsScene::bfsConnect() const {
 }
 
 // tab index : 1
-void GraphicsScene::dfsConnect() const {
-         auto * infoLine = getStatusBar(1);
+void GraphicsScene::dfsConnect() const noexcept {
+         auto * infoLine = getStatusBar(dfsIndex);
 
          auto implementation = [this,infoLine = infoLine]{
                   if(stack->empty()){
@@ -660,23 +664,25 @@ void GraphicsScene::dfsConnect() const {
                            emit resetButtons();
                            return;
                   }
-                  auto [currentRow,currentCol] = currentNode->getCord();
-                  auto nodeParent = currentNode->getPathParent();
+                  auto [curX,curY] = currentNode->getCord();
+                  auto * nodeParent = currentNode->getPathParent();
 
                   if(nodeParent && !isSpecial(nodeParent)){
                            nodeParent->setType(Node::State::Visited);
                   }
 
-                  for(int direction = 0;direction < 4;direction++){
-                           int toRow = currentRow + xCord[direction];
-                           int toCol = currentCol + yCord[direction];
+                  for(uint32_t direction = 0;direction < 4;direction++){
+                           const auto toRow = static_cast<ptrdiff_t>(curX) + xCord[direction];
+                           const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    auto * togoNode = getNodeAt(toRow,toCol);
+                                    const auto validRow = static_cast<size_t>(toRow); // safe cast
+                                    const auto validCol = static_cast<size_t>(toCol); 
+                                    auto * togoNode = getNodeAt(validRow,validCol);
 
-                                    if(isBlock(togoNode) || (*visited)[toRow][toCol]) continue;
+                                    if(isBlock(togoNode) || (*visited)[validRow][validCol]) continue;
 
-                                    (*visited)[toRow][toCol] = true;
+                                    (*visited)[validRow][validCol] = true;
                                     togoNode->setPathParent(currentNode);
                                     stack->push({togoNode,currentDistance+1});
                            }
@@ -687,8 +693,8 @@ void GraphicsScene::dfsConnect() const {
 }
 
 // tab index : 2
-void GraphicsScene::dijkstraConnect() const {
-         auto * infoLine = getStatusBar(2);
+void GraphicsScene::dijkstraConnect() const noexcept {
+         auto * infoLine = getStatusBar(dijkstraIndex);
 
          auto implementation = [this,infoLine = infoLine]{
                   if(pq->empty()){
@@ -720,17 +726,19 @@ void GraphicsScene::dijkstraConnect() const {
                            return;
                   }
 
-                  for(int direction = 0;direction < 4;direction++){
-                           int toRow = curX + xCord[direction];
-                           int toCol = curY + yCord[direction];
+                  for(uint32_t direction = 0;direction < 4;direction++){
+                           const auto toRow = static_cast<ptrdiff_t>(curX) + xCord[direction];
+                           const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    auto * togoNode = getNodeAt(toRow,toCol);
+                                    const auto validRow = static_cast<size_t>(toRow); // safe cast
+                                    const auto validCol = static_cast<size_t>(toCol); 
+                                    auto * togoNode = getNodeAt(validRow,validCol);
 
                                     if(isBlock(togoNode)) continue;
 
-                                    int & destDistance = (*distance)[toRow][toCol];
-                                    const int newDistance = currentDistance + 1;
+                                    uint32_t & destDistance = (*distance)[validRow][validCol];
+                                    const auto newDistance = currentDistance + 1;
 
                                     if(newDistance < destDistance){
                                              destDistance = newDistance;

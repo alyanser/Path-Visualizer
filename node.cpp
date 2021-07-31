@@ -9,7 +9,7 @@
 #include <QMouseEvent>
 #include "node.hpp"
 
-Node::Node(int row,int col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation{row,col}, 
+Node::Node(const uint32_t row,const uint32_t col,QGraphicsItem * parent) : QGraphicsObject(parent), currentLocation(std::make_pair(row,col)), 
          backwardTimer(std::make_unique<QTimeLine>()), forwardTimer(std::make_unique<QTimeLine>())
 {
          setGraphicsItem(this);
@@ -57,7 +57,7 @@ void Node::configureBackwardTimer(){
          backwardTimer->setFrameRange(70,100);
          backwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
-         connect(backwardTimer.get(),&QTimeLine::frameChanged,[this](int delta){
+         connect(backwardTimer.get(),&QTimeLine::frameChanged,[this](int32_t delta){
                   const qreal converted = delta / 100.0;
                   setOpacity(converted);
                   setScale(converted);
@@ -76,7 +76,7 @@ void Node::configureForwardTimer(){
          forwardTimer->setFrameRange(70,100);
          forwardTimer->setEasingCurve(QEasingCurve(QEasingCurve::InQuad));
 
-         connect(&*forwardTimer,&QTimeLine::frameChanged,[this](int delta){
+         connect(&*forwardTimer,&QTimeLine::frameChanged,[this](int32_t delta){
                   const qreal converted = delta / 100.0;
                   setOpacity(converted);
                   setScale(converted);
@@ -143,7 +143,7 @@ void Node::setNodeRotation(){
 }
 
 void Node::undoNodeRotation(){
-         const int currentRotation = rotation();
+         const auto currentRotation = static_cast<int32_t>(rotation());
          switch(currentRotation){
                   case 180 : {
                            moveBy(-halfDimension,-halfDimension);
@@ -178,7 +178,7 @@ void Node::setPathParent(Node * newParent){
          pathParent = newParent;
 }
 
-std::pair<int,int> Node::getCord() const {
+std::pair<uint32_t,uint32_t> Node::getCord() const {
          return currentLocation;
 }
 
@@ -223,8 +223,8 @@ void Node::dropEvent(QGraphicsSceneDragDropEvent * event){
 }
 
 void Node::setTimersDuration(const uint32_t newDuration) const {
-         forwardTimer->setDuration(std::max(defaultTimerDuration,newDuration));
-         backwardTimer->setDuration(std::max(defaultTimerDuration,newDuration));
+         forwardTimer->setDuration(std::max<int32_t>(defaultTimerDuration,newDuration));
+         backwardTimer->setDuration(std::max<int32_t>(defaultTimerDuration,newDuration));
 }
 
 void Node::mousePressEvent(QGraphicsSceneMouseEvent * event){
