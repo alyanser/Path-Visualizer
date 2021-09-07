@@ -22,7 +22,6 @@ set(SOURCES
 )
 
 set(MOC_INCLUDES
-         include/defines.hpp
          include/helpDialog.hpp
          include/node.hpp
          include/pushButton.hpp
