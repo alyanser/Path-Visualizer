@@ -8,19 +8,20 @@
 
 int main(int argc, char ** argv){
 	QApplication app(argc, argv);
+
          {       
                   QFile file(":/styles/stylesheet.css");
                   file.open(QFile::ReadOnly);
                   app.setStyleSheet(file.readAll());
-                  file.close();
          }
+
          auto windowSize = QApplication::primaryScreen()->availableSize();
 
          GraphicsScene scene(windowSize);
          QGraphicsView view(&scene);
 
          view.setWindowIcon(QIcon(":/pixmaps/icons/windowIcon.png"));
-         view.setWindowTitle("Graph Algorithm Visualizer");
+         view.setWindowTitle("Path Visualizer");
          
          QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);
 

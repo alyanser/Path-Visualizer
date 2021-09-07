@@ -7,6 +7,7 @@
 #include <random>
 #include <QTimer>
 #include <QTabWidget>
+#include <QGraphicsScene>
 #include "helpDialog.hpp"
 
 class QTabWidget;
@@ -17,13 +18,11 @@ class Node;
 class QHBoxLayout;
 class QVBoxLayout;
 class QGridLayout;
-class QTimer;
 class QPushButton;
 class QLabel;
 
 class GraphicsScene : public QGraphicsScene {
          Q_OBJECT
-
          Q_PROPERTY(bool running WRITE setRunning READ isRunning)
 
          enum indexes { bfsIndex, dfsIndex, dijkstraIndex };
@@ -32,6 +31,7 @@ class GraphicsScene : public QGraphicsScene {
          using pIntNode = std::pair<uint32_t,Node*>;
 public:
          explicit GraphicsScene(QSize size);
+         ~GraphicsScene() = default;
          GraphicsScene(const GraphicsScene & other) = delete;
          GraphicsScene(GraphicsScene && other) = delete;
          GraphicsScene & operator = (const GraphicsScene & other) = delete;
@@ -72,7 +72,6 @@ private:
          void bfsStart(bool newStart) const noexcept;
          void dfsStart(bool newStart) const noexcept;
          void dijkstraStart(bool newStart) const noexcept;
-
          static void addShadowEffect(QLabel * label) noexcept;
          [[nodiscard]] static bool validCordinate(ptrdiff_t row,ptrdiff_t col) noexcept;
          [[nodiscard]] static std::pair<size_t,size_t> getRandomCord() noexcept;
@@ -84,21 +83,18 @@ private:
          inline static std::uniform_int_distribution rowRange = std::uniform_int_distribution<size_t>(0,rowCnt - 1);
          inline static std::uniform_int_distribution colRange = std::uniform_int_distribution<size_t>(0,colCnt - 1);
          inline static std::uniform_int_distribution binary = std::uniform_int_distribution<uint8_t>(0,1);
-
          bool running = false; 
          Node * sourceNode = nullptr; 
          Node * targetNode = nullptr; 
          uint32_t timerDelay = defaultDelay; 
          QGraphicsScene * innerScene = new QGraphicsScene(this);
-
          std::unique_ptr<QTimer> bfsTimer = std::make_unique<QTimer>();
          std::unique_ptr<QTimer> dfsTimer = std::make_unique<QTimer>();
          std::unique_ptr<QTimer> dijkstraTimer = std::make_unique<QTimer>();
          std::unique_ptr<QTimer> pathTimer = std::make_unique<QTimer>();
-
          std::pair<size_t,size_t> sourceNodeCord;
          std::pair<size_t,size_t> targetNodeCord;
-         QGraphicsGridLayout * innerLayout; 
+         QGraphicsGridLayout * innerLayout;
          std::unique_ptr<QTabWidget> bar;
          std::unique_ptr<std::queue<std::pair<Node*,uint32_t>>> queue; 
          std::unique_ptr<std::stack<std::pair<Node*,uint32_t>>> stack;
@@ -106,7 +102,7 @@ private:
          std::unique_ptr<std::vector<std::vector<uint32_t>>> distance;
          std::unique_ptr<std::priority_queue<pIntNode,std::vector<pIntNode>,std::greater<>>> priority_queue;
          // ctor init
-         const QSize windowSize;
+         QSize windowSize;
          std::unique_ptr<StackedWidget> helpDialogWidget;
 
 public slots:

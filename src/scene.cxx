@@ -1,5 +1,4 @@
 #include <QTabWidget>
-#include <random>
 #include <QSlider>
 #include <QSignalTransition>
 #include <QGraphicsLineItem>

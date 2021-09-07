@@ -1,0 +1,23 @@
+<RCC>
+    <qresource prefix="/styles">
+        <file>../icons/stylesheet.css</file>
+    </qresource>
+    <qresource prefix="/pixmaps">
+         <file>../icons/block.png</file>
+         <file>../icons/active.png</file>
+         <file>../icons/inactive.png</file>
+         <file>../icons/inpath.png</file>
+         <file>../icons/source.png</file>
+         <file>../icons/target.png</file>
+         <file>../icons/speed.png</file>
+         <file>../icons/tabs.png</file>
+         <file>../icons/distance.png</file>
+         <file>../icons/windowIcon.png</file>
+         <file>../icons/background.png</file>
+         <file>../icons/helpBackground.png</file>
+    </qresource>
+    <qresource prefix="/anims">
+         <file>../gifs/place.gif</file>
+         <file>../gifs/nodeDrag.gif</file>
+    </qresource>
+</RCC>

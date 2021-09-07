@@ -56,3 +56,5 @@ qtGraphAlgos
 .vscode
 *.gch
 build
+compile_commands.json
+.cache
