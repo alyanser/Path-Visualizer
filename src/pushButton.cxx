@@ -15,10 +15,10 @@ void PushButton::addShadowEffect() noexcept {
 }
 
 void PushButton::setColor(const QColor & newColor) noexcept {
-         backgroundColor = newColor;
-         setStyleSheet(QString("background-color:%1").arg(backgroundColor.name()));
+         m_backgroundColor = newColor;
+         setStyleSheet(QString("background-color:%1").arg(m_backgroundColor.name()));
 }
 
 QColor PushButton::color() const noexcept {
-         return backgroundColor;
+         return m_backgroundColor;
 }

@@ -18,7 +18,7 @@ set(SOURCES
          src/pushButton.cxx
          src/scene.cxx
          src/helpDialog.cxx
-         src/resources.qrc
+         resources.qrc
 )
 
 set(MOC_INCLUDES
