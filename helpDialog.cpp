@@ -20,14 +20,14 @@ StackedWidget::StackedWidget(const QSize windowSize,QWidget * parent) : QStacked
          addWidget(populateDistancePage());
 }
 
-void StackedWidget::configureGeometry(const QSize windowSize){
+void StackedWidget::configureGeometry(const QSize windowSize) noexcept {
          const int xCord = windowSize.width() / 2;
          const int yCord = windowSize.height() / 2;
-         setGeometry(xCord - static_cast<int>(width) / 2,yCord - static_cast<int>(height) / 2,width,height);
-         setFixedSize(width,height);
+         setGeometry(xCord - static_cast<int>(Width) / 2,yCord - static_cast<int>(Height) / 2,Width,Height);
+         setFixedSize(Width,Height);
 }
 
-QWidget * StackedWidget::populateDefinitionPage(){
+QWidget * StackedWidget::populateDefinitionPage() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget); 
 
@@ -55,7 +55,7 @@ QWidget * StackedWidget::populateDefinitionPage(){
          return parentWidget;
 }
 
-QWidget * StackedWidget::populateBlockGifPage(){
+QWidget * StackedWidget::populateBlockGifPage() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget); 
 
@@ -82,7 +82,7 @@ QWidget * StackedWidget::populateBlockGifPage(){
          return parentWidget;
 }
 
-QWidget * StackedWidget::populateNodeDragPage(){
+QWidget * StackedWidget::populateNodeDragPage() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
@@ -108,8 +108,8 @@ QWidget * StackedWidget::populateNodeDragPage(){
          return parentWidget;
 }
 
-QWidget * StackedWidget::populateTabShiftPage(){
-         auto * parentWidget = new QWidget(this);
+QWidget * StackedWidget::populateTabShiftPage() noexcept {
+         auto * parentWidget = new QWidget(this); 
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
          {
@@ -132,7 +132,7 @@ QWidget * StackedWidget::populateTabShiftPage(){
          return parentWidget;
 }
 
-QWidget * StackedWidget::populateSpeedPage(){
+QWidget * StackedWidget::populateSpeedPage() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
@@ -156,7 +156,7 @@ QWidget * StackedWidget::populateSpeedPage(){
          return parentWidget;
 }
 
-QWidget * StackedWidget::populateUpdateTab(){
+QWidget * StackedWidget::populateUpdateTab() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
@@ -174,7 +174,7 @@ QWidget * StackedWidget::populateUpdateTab(){
          return parentWidget;
 }
 
-QWidget * StackedWidget::populateDistancePage(){
+QWidget * StackedWidget::populateDistancePage() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
@@ -198,7 +198,7 @@ QWidget * StackedWidget::populateDistancePage(){
          return parentWidget;
 }
 
-QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePosition position){
+QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePosition position) noexcept {
          auto * bottomLayout = new QHBoxLayout();
 
          auto * skipButton = getCloseButton(parentWidget);
@@ -210,23 +210,25 @@ QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePo
          bottomLayout->addWidget(nextButton);
 
          switch(position){
-                  case Starting : {
+                  case PagePosition::Starting : {
                            prevButton->setEnabled(false);
                            prevButton->setToolTip("No previous page");
                            break;
                   }
-                  case Middle : break;
-                  case Ending : {
+
+                  case PagePosition::Ending : {
                            nextButton->setEnabled(false);
                            nextButton->setToolTip("No next page");
                            break;
                   }
+
+                  case PagePosition::Middle : break; // switch warning
          }
 
          return bottomLayout;
 }
 
-PushButton * StackedWidget::getPrevButton(QWidget * parentWidget){
+PushButton * StackedWidget::getPrevButton(QWidget * parentWidget) noexcept {
          auto * button = new PushButton("Prev",parentWidget);
          button->setToolTip("Go to previous page");
 
@@ -237,14 +239,14 @@ PushButton * StackedWidget::getPrevButton(QWidget * parentWidget){
          return button;
 }
 
-QLabel * StackedWidget::getLabel(QWidget * parentWidget) const {
+QLabel * StackedWidget::getLabel(QWidget * parentWidget) const noexcept {
          auto * label = new QLabel(parentWidget);
          label->setWordWrap(true);
          label->setAlignment(Qt::AlignCenter);
          return label;
 }
 
-PushButton * StackedWidget::getNextButton(QWidget * parentWidget){
+PushButton * StackedWidget::getNextButton(QWidget * parentWidget) noexcept {
          auto * button = new PushButton("Next",parentWidget);
          button->setToolTip("Go to next page");
 
@@ -255,14 +257,14 @@ PushButton * StackedWidget::getNextButton(QWidget * parentWidget){
          return button;
 }
 
-PushButton * StackedWidget::getCloseButton(QWidget * parentWidget){
+PushButton * StackedWidget::getCloseButton(QWidget * parentWidget) noexcept {
          auto * button = new PushButton("Close",parentWidget);
          button->setToolTip("Close this help menu");
          connectWithWidgetClose(button);
          return button;
 }
 
-void StackedWidget::connectWithWidgetClose(PushButton * button){
+void StackedWidget::connectWithWidgetClose(PushButton * button) noexcept {
          connect(button,&QPushButton::clicked,[this]{
                   setCurrentIndex(0);
                   close();

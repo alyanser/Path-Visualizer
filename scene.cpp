@@ -32,39 +32,20 @@
 #include "pushButton.hpp"
 #include "node.hpp"
 #include "helpDialog.hpp"
+#include "defines.hpp"
 
-namespace{
-         #include "defines.hpp"
-}
-
-GraphicsScene::GraphicsScene(const QSize size) : timerDelay(defaultDelay), windowSize(size), innerScene(new QGraphicsScene(this)),
-         helpDialogWidget(std::make_unique<StackedWidget>(windowSize))
-{
+GraphicsScene::GraphicsScene(const QSize size) : windowSize(size), helpDialogWidget(std::make_unique<StackedWidget>(windowSize)){
          populateBar();
-         allocTimers();
          setTimersIntervals(static_cast<std::chrono::milliseconds>(timerDelay));
-        
          configureInnerScene();
          connectPaths();
          setMainSceneConnections();
 }
 
-GraphicsScene::~GraphicsScene(){}
-
 void GraphicsScene::setMainSceneConnections() const noexcept {
-         {
-                  constexpr int32_t helpShowDelay = 1000; // ms
-                  QTimer::singleShot(helpShowDelay,helpDialogWidget.get(),&StackedWidget::show);
-         }
+         QTimer::singleShot(1009,helpDialogWidget.get(),&StackedWidget::show);
          connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
-         connect(this,SIGNAL(foundPath()),pathTimer,SLOT(start()));
-}
-
-void GraphicsScene::allocTimers() noexcept {
-         bfsTimer = new QTimer(bar.get());
-         dfsTimer = new QTimer(bar.get());
-         dijkstraTimer = new QTimer(bar.get());
-         pathTimer = new QTimer(bar.get());
+         connect(this,SIGNAL(foundPath()),pathTimer.get(),SLOT(start()));
 }
 
 void GraphicsScene::connectPaths() const noexcept {
@@ -113,13 +94,14 @@ void GraphicsScene::allocDataStructures() noexcept {
          stack = make_unique<std::stack<std::pair<Node*,uint32_t>>>(); // {:distance}
          visited = make_unique<vector<vector<bool>>>();
          distance = make_unique<vector<vector<uint32_t>>>();
-         pq = make_unique<std::priority_queue<pIntNode,vector<pIntNode>,std::greater<>>>(); // {distance:}
+         priority_queue = make_unique<std::priority_queue<pIntNode,vector<pIntNode>,std::greater<>>>(); // {distance:}
 }
 
 void GraphicsScene::memsetDs() const noexcept {
          while(!queue->empty()) queue->pop();
          while(!stack->empty()) stack->pop();
-         while(!pq->empty()) pq->pop();
+         while(!priority_queue->empty()) priority_queue->pop();
+
          distance->assign(rowCnt,std::vector<uint32_t>(colCnt,std::numeric_limits<uint32_t>::max()));
          visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
@@ -163,7 +145,6 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
          configureMachine(holder,statusButton);
 
          connect(infoButton,&QPushButton::released,[algorithmName,info]{
-                  //? weird bug when set some widget as parent 
                   QMessageBox::information(nullptr,algorithmName,info);
          });
 
@@ -183,10 +164,10 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
                                     memsetDs();
                            }
                            switch(bar->currentIndex()){
-                                    case 0 : bfsStart(toStartNew);break;
-                                    case 1 : dfsStart(toStartNew);break;
-                                    case 2 : dijkstraStart(toStartNew);break;
-                                    default : Q_ASSERT(false);
+                                    case bfsIndex : bfsStart(toStartNew); break;
+                                    case dfsIndex : dfsStart(toStartNew); break;
+                                    case dijkstraIndex : dijkstraStart(toStartNew); break;
+                                    default : __builtin_unreachable();
                            }
                   }else{
                            stopTimers();
@@ -249,18 +230,13 @@ void GraphicsScene::generateRandGridPattern() noexcept {
 
          updateSourceTargetNodes();
 
-         constexpr int32_t maximumBlocks = 60; // out of 200
-
-         std::mt19937 generator {};
-         std::uniform_int_distribution<int32_t> binary(0,1);
-
          for(int32_t placed = 0;placed < maximumBlocks;){
                   auto [randX,randY] = getRandomCord();
                   auto node = getNodeAt(randX,randY);
 
-                  if(binary(generator) && !isSpecial(node)){
-                           placed++;
+                  if(!isSpecial(node) && binary(generator)){
                            node->setType(Node::State::Block);
+                           placed++;
                   }
          }
 }
@@ -366,11 +342,7 @@ void GraphicsScene::setRunning(const bool newState) noexcept {
 }
 
 std::pair<size_t,size_t> GraphicsScene::getRandomCord() noexcept {
-         std::random_device rd;
-         std::mt19937 gen(rd());
-         std::uniform_int_distribution<size_t> rowRange(0,rowCnt-1);
-         std::uniform_int_distribution<size_t> colRange(0,colCnt-1);
-         return std::make_pair(rowRange(gen),colRange(gen));
+         return std::make_pair(rowRange(generator),colRange(generator));
 }
 
 void GraphicsScene::addShadowEffect(QLabel * label) noexcept {
@@ -404,7 +376,7 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) con
          
          QPixmap pixmap(pattern.arg(token));
          icon->setPixmap(pixmap);
-         Q_ASSERT(!icon->pixmap().isNull());
+         assert(!icon->pixmap().isNull());
 
          return layout;
 }
@@ -555,7 +527,7 @@ void GraphicsScene::pathConnect() const noexcept {
                   currentNode = currentNode->getPathParent();
          };
 
-         connect(pathTimer,&QTimer::timeout,targetNode,moveUp,Qt::UniqueConnection);
+         connect(pathTimer.get(),&QTimer::timeout,targetNode,moveUp,Qt::UniqueConnection);
 }
 
 void GraphicsScene::bfsStart(const bool newStart) const noexcept {
@@ -578,18 +550,16 @@ void GraphicsScene::dfsStart(const bool newStart) const noexcept {
 
 void GraphicsScene::dijkstraStart(const bool newStart) const noexcept {
          if(newStart){
-                  pq->push({0,sourceNode});
+                  priority_queue->push({0,sourceNode});
                   auto [startX,startY] = sourceNode->getCord();
                   (*distance)[startX][startY] = 0;
          }
          dijkstraTimer->start();
 }
 
-// tab index : 0
 void GraphicsScene::bfsConnect() const noexcept {
-         auto * infoLine = getStatusBar(bfsIndex);
 
-         auto implementation = [this,infoLine = infoLine]{
+         auto implementation = [this,infoLine = getStatusBar(bfsIndex)]{
                   if(queue->empty()){
                            bfsTimer->stop();
                            infoLine->setText("Could not reach destination.");
@@ -622,7 +592,7 @@ void GraphicsScene::bfsConnect() const noexcept {
                            const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    const auto validRow = static_cast<size_t>(toRow); // safe cast
+                                    const auto validRow = static_cast<size_t>(toRow);
                                     const auto validCol = static_cast<size_t>(toCol); 
 
                                     auto * togoNode = getNodeAt(validRow,validCol);
@@ -636,14 +606,12 @@ void GraphicsScene::bfsConnect() const noexcept {
                   }
          };
 
-         connect(bfsTimer,&QTimer::timeout,implementation);
+         connect(bfsTimer.get(),&QTimer::timeout,implementation);
 }
 
-// tab index : 1
 void GraphicsScene::dfsConnect() const noexcept {
-         auto * infoLine = getStatusBar(dfsIndex);
 
-         auto implementation = [this,infoLine = infoLine]{
+         auto implementation = [this,infoLine = getStatusBar(dfsIndex)]{
                   if(stack->empty()){
                            dfsTimer->stop();
                            infoLine->setText("Could not reach destination.");
@@ -676,7 +644,7 @@ void GraphicsScene::dfsConnect() const noexcept {
                            const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    const auto validRow = static_cast<size_t>(toRow); // safe cast
+                                    const auto validRow = static_cast<size_t>(toRow);
                                     const auto validCol = static_cast<size_t>(toCol); 
                                     auto * togoNode = getNodeAt(validRow,validCol);
 
@@ -689,22 +657,20 @@ void GraphicsScene::dfsConnect() const noexcept {
                   }
          };
 
-         connect(dfsTimer,&QTimer::timeout,implementation);
+         connect(dfsTimer.get(),&QTimer::timeout,implementation);
 }
 
-// tab index : 2
 void GraphicsScene::dijkstraConnect() const noexcept {
-         auto * infoLine = getStatusBar(dijkstraIndex);
 
-         auto implementation = [this,infoLine = infoLine]{
-                  if(pq->empty()){
+         auto implementation = [this,infoLine = getStatusBar(dijkstraIndex)]{
+                  if(priority_queue->empty()){
                            dijkstraTimer->stop();
                            infoLine->setText("Could not reach destination.");
                            emit resetButtons();
                            return;
                   }
-                  auto [currentDistance,currentNode] = pq->top();
-                  pq->pop();
+                  auto [currentDistance,currentNode] = priority_queue->top();
+                  priority_queue->pop();
                   auto [curX,curY] = currentNode->getCord();
 
                   if((*distance)[curX][curY] != currentDistance) return;
@@ -731,7 +697,7 @@ void GraphicsScene::dijkstraConnect() const noexcept {
                            const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                            if(validCordinate(toRow,toCol)){
-                                    const auto validRow = static_cast<size_t>(toRow); // safe cast
+                                    const auto validRow = static_cast<size_t>(toRow);
                                     const auto validCol = static_cast<size_t>(toCol); 
                                     auto * togoNode = getNodeAt(validRow,validCol);
 
@@ -743,11 +709,11 @@ void GraphicsScene::dijkstraConnect() const noexcept {
                                     if(newDistance < destDistance){
                                              destDistance = newDistance;
                                              togoNode->setPathParent(currentNode);
-                                             pq->push({newDistance,togoNode});
+                                             priority_queue->push({newDistance,togoNode});
                                     }
                            }
                   }
          };
 
-         connect(dijkstraTimer,&QTimer::timeout,implementation);
+         connect(dijkstraTimer.get(),&QTimer::timeout,implementation);
 }
