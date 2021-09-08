@@ -1,7 +1,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QDebug>
 #include <QEvent>
-#include "pushButton.hpp"
+#include <pushButton.hxx>
 
 PushButton::PushButton(const QString & text,QWidget * parent) : QPushButton(text,parent){
          addShadowEffect();

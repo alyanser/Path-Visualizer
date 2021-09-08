@@ -8,7 +8,7 @@
 #include <QTimer>
 #include <QTabWidget>
 #include <QGraphicsScene>
-#include "helpDialog.hpp"
+#include <helpDialog.hxx>
 
 class QTabWidget;
 class QSize;

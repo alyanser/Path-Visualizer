@@ -4,8 +4,8 @@
 #include <QStackedLayout>
 #include <QLabel>
 #include <QMovie>
-#include "helpDialog.hpp"
-#include "pushButton.hpp"
+#include <helpDialog.hxx>
+#include <pushButton.hxx>
 
 StackedWidget::StackedWidget(const QSize windowSize,QWidget * parent) : QStackedWidget(parent){
          setWindowTitle("Help Dialog - Visualizer");

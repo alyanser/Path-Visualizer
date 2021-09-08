@@ -27,11 +27,11 @@
 #include <QGraphicsOpacityEffect>
 #include <QTabBar>
 #include <QIcon>
-#include "scene.hpp"
-#include "pushButton.hpp"
-#include "node.hpp"
-#include "helpDialog.hpp"
-#include "defines.hpp"
+#include <scene.hxx>
+#include <pushButton.hxx>
+#include <node.hxx>
+#include <helpDialog.hxx>
+#include <defines.hxx>
 
 GraphicsScene::GraphicsScene(const QSize size) : windowSize(size), helpDialogWidget(std::make_unique<StackedWidget>(windowSize)){
          populateBar();

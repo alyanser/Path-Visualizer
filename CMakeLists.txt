@@ -22,10 +22,10 @@ set(SOURCES
 )
 
 set(MOC_INCLUDES
-         include/helpDialog.hpp
-         include/node.hpp
-         include/pushButton.hpp
-         include/scene.hpp
+         include/helpDialog.hxx
+         include/node.hxx
+         include/pushButton.hxx
+         include/scene.hxx
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${MOC_INCLUDES})
