@@ -21,33 +21,6 @@ Node::Node(const uint32_t row,const uint32_t col,QGraphicsItem * parent) : QGrap
          setType(m_type,true);
 }
 
-void Node::setRunningState(const bool newAlgorithmState) noexcept {
-         m_algorithmPaused = newAlgorithmState;
-}
-
-QRectF Node::boundingRect() const noexcept {
-         return QRectF(0,0,dimension,dimension);
-}
-
-void Node::paint(QPainter * painter,const QStyleOptionGraphicsItem * ,QWidget * ) noexcept{
-         if(m_type == State::Visited){
-                  painter->setOpacity(opacity() / 2);
-         }
-
-         painter->setRenderHint(QPainter::Antialiasing);
-         painter->drawPixmap(0,0,dimension,dimension,m_icon);
-}
-
-QSizeF Node::sizeHint(Qt::SizeHint , const QSizeF & ) const noexcept {
-         return QSizeF {dimension,dimension};
-}
-
-void Node::setGeometry(const QRectF & geometry) noexcept{
-         prepareGeometryChange();
-         QGraphicsLayoutItem::setGeometry(geometry);
-         setPos(geometry.topLeft());
-}
-
 void Node::configureBackwardTimer() noexcept {
          m_backwardTimer->setDirection(QTimeLine::Backward);
          m_backwardTimer->setFrameRange(70,100);
@@ -166,31 +139,6 @@ void Node::undoNodeRotation() noexcept {
                            break;
                   }
          }
-}
-
-void Node::changeAnimationDuration(const uint32_t newDuration) const noexcept {
-         // new duration comes from slider direclty range : 0 - 1000
-         double factor = static_cast<double>(newDuration) / 1000.0;
-         assert(factor <= 1.0 && factor >= 0.0);
-         factor = 1 - factor;
-         const auto delta = static_cast<uint32_t>(factor * static_cast<double>(defaultTimerDuration));
-         setTimersDuration(delta ? delta * 2 : defaultTimerDuration);
-}
-
-void Node::setPathParent(Node * newParent) noexcept {
-         m_pathParent = newParent;
-}
-
-std::pair<uint32_t,uint32_t> Node::getCord() const noexcept {
-         return m_currentLocation;
-}
-
-Node * Node::getPathParent() const noexcept {
-         return m_pathParent;
-}
-
-Node::State Node::getType() const noexcept {
-         return m_type;
 }
 
 void Node::dragEnterEvent(QGraphicsSceneDragDropEvent * event) noexcept {

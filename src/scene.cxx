@@ -33,33 +33,6 @@
 #include <helpDialog.hxx>
 #include <defines.hxx>
 
-GraphicsScene::GraphicsScene(const QSize size) : windowSize(size), helpDialogWidget(std::make_unique<StackedWidget>(windowSize)){
-         populateBar();
-         setTimersIntervals(static_cast<std::chrono::milliseconds>(m_timerDelay));
-         configureInnerScene();
-         connectPaths();
-         setMainSceneConnections();
-}
-
-void GraphicsScene::setMainSceneConnections() const noexcept {
-         QTimer::singleShot(1009,helpDialogWidget.get(),&StackedWidget::show);
-         connect(this,&GraphicsScene::runningStatusChanged,&Node::setRunningState);
-         connect(this,SIGNAL(foundPath()),pathTimer.get(),SLOT(start()));
-}
-
-void GraphicsScene::connectPaths() const noexcept {
-         bfsConnect();
-         dfsConnect();
-         dijkstraConnect();
-         pathConnect();
-}
-
-void GraphicsScene::configureInnerScene() noexcept {
-         populateGridScene();
-         allocDataStructures();
-         memsetDs();
-}
-
 void GraphicsScene::populateBar() noexcept {
          m_bar = std::make_unique<QTabWidget>();
          addWidget(m_bar.get());
@@ -152,7 +125,7 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
          connect(statusButton,&QPushButton::released,statusButton,[this,statusButton]{
                   // statemachine would have already changed the state - @configureMachine
                   if(m_running){
-                           bool toStartNew = statusButton->text() == "Run";  // else continue
+                           bool toStartNew = statusButton->text() == "Run";
                            statusButton->setText("Stop");
 
                            if(toStartNew){
@@ -184,8 +157,8 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
          connect(helpButton,&PushButton::released,helpDialogWidget.get(),&QStackedWidget::show);
 
          connect(exitButton,&QPushButton::released,this,[this]{
-                  //? weird bug when set some widget as parent 
                   auto choice = QMessageBox::critical(nullptr,"Close","Quit",QMessageBox::No,QMessageBox::Yes);
+
                   if(choice == QMessageBox::Yes){
                            emit close();
                   }
@@ -292,16 +265,17 @@ void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayo
          infoLine->setAlignment(Qt::AlignCenter); 
          infoLine->setReadOnly(true);
 
-         {        // hefty -  improve later
-                  connect(this,&GraphicsScene::foundPath,[infoLine]{
-                           auto currentText = infoLine->text();
-                           QString digits;
-                           for(auto character : currentText){
-                                    if(character.isNumber()) digits += character;
-                           }
-                           infoLine->setText(QString("Final Distance : %1").arg(digits));
-                  });
-         }
+         connect(this,&GraphicsScene::foundPath,[infoLine]{
+                  auto currentText = infoLine->text();
+                  QString digits;
+
+                  for(auto character : currentText){
+                           if(character.isNumber()) digits += character;
+                  }
+
+                  infoLine->setText(QString("Final Distance : %1").arg(digits));
+         });
+
          {
                   auto * shadowEffect = new QGraphicsDropShadowEffect(infoLine);
                   shadowEffect->setBlurRadius(10);
@@ -310,11 +284,13 @@ void GraphicsScene::populateBottomLayout(QWidget * holder,QGridLayout * mainLayo
          }
 
          auto * slider = new QSlider(Qt::Horizontal,holder);
+
          slider->setRange(0,1000);
          slider->setValue(925);
          slider->setTracking(true);
 
          auto * bottomLayout = new QHBoxLayout();
+
          bottomLayout->setAlignment(Qt::AlignCenter);
          bottomLayout->addWidget(infoLine);
          bottomLayout->addSpacing(40);
@@ -337,17 +313,6 @@ void GraphicsScene::setRunning(const bool newState) noexcept {
          }
 
          emit runningStatusChanged(m_running); // connected with node class
-}
-
-std::pair<size_t,size_t> GraphicsScene::getRandomCord() noexcept {
-         return std::make_pair(m_rowRange(m_generator),m_colRange(m_generator));
-}
-
-void GraphicsScene::addShadowEffect(QLabel * label) noexcept {
-         auto shadowEffect = new QGraphicsDropShadowEffect(label);
-         shadowEffect->setBlurRadius(4);// px
-         shadowEffect->setOffset(0.5,0.5); // x,y px
-         label->setGraphicsEffect(shadowEffect);
 }
 
 QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) const noexcept {
@@ -378,43 +343,6 @@ QHBoxLayout * GraphicsScene::getLegendLayout(QWidget * holder,QString token) con
          return layout;
 }
 
-void GraphicsScene::disableBarTabs(const int32_t exception) const noexcept {
-         for(int32_t index = 0;index < m_bar->count();index++){
-                  if(index != exception){
-                           m_bar->setTabEnabled(index,false);
-                  }
-         }
-}
-
-void GraphicsScene::enableAllBarTabs() const noexcept {
-         for(int32_t index = 0;index < m_bar->count();index++){
-                  m_bar->setTabEnabled(index,true);
-         }
-}
-
-bool GraphicsScene::isRunning() const noexcept {
-         return m_running;
-}
-
-void GraphicsScene::setDelay(const uint32_t newDelay) noexcept {
-         m_timerDelay = static_cast<uint32_t>(std::abs(static_cast<int64_t>(1000) - newDelay));
-         setTimersIntervals(static_cast<std::chrono::milliseconds>(m_timerDelay));
-}
-
-void GraphicsScene::setTimersIntervals(const std::chrono::milliseconds newDelay) const noexcept {
-         dfsTimer->setInterval(newDelay);
-         bfsTimer->setInterval(newDelay);
-         dijkstraTimer->setInterval(newDelay);
-         pathTimer->setInterval(newDelay);
-}
-
-void GraphicsScene::stopTimers() const noexcept {
-         dfsTimer->stop();
-         bfsTimer->stop();
-         dijkstraTimer->stop();
-         pathTimer->stop();
-}
-
 Node * GraphicsScene::getNewNode(const size_t row,const size_t col) noexcept {
          auto * node = new Node(static_cast<uint32_t>(row),static_cast<uint32_t>(col));
 
@@ -431,42 +359,6 @@ Node * GraphicsScene::getNewNode(const size_t row,const size_t col) noexcept {
          });
 
          return node;
-}
-
-Node * GraphicsScene::getNodeAt(const size_t row,const size_t col) const noexcept {
-         if(auto * node = dynamic_cast<Node*>(m_innerLayout->itemAt(static_cast<int>(row),static_cast<int>(col)))){
-                  return node;
-         }
-
-         assert(!static_cast<bool>("Downcast failed"));
-         return nullptr;
-}
-
-bool GraphicsScene::validCordinate(const ptrdiff_t row,const ptrdiff_t col) noexcept {
-         return row >= 0 && static_cast<size_t>(row) < RowCnt && col >= 0 && static_cast<size_t>(col) < ColCnt;
-}
-
-QLineEdit * GraphicsScene::getStatusBar(const uint32_t tabIndex) const noexcept {
-         assert(tabIndex < static_cast<size_t>(m_bar->count())); 
-
-         auto widget = m_bar->widget(static_cast<int32_t>(tabIndex));
-         auto abstractLayout = static_cast<QGridLayout*>(widget->layout())->itemAtPosition(1,0);
-         return static_cast<QLineEdit*>(static_cast<QHBoxLayout*>(abstractLayout)->itemAt(0)->widget());
-}
-
-bool GraphicsScene::isSpecial(Node * currentNode) const noexcept {
-         return currentNode == m_sourceNode || currentNode == m_targetNode;
-}
-
-void GraphicsScene::updateSourceTargetNodes() const noexcept {
-         assert(m_sourceNode && m_targetNode);
-
-         m_sourceNode->setType(Node::State::Source);
-         m_targetNode->setType(Node::State::Target);
-}
-
-bool GraphicsScene::isBlock(Node * currentNode) const noexcept {
-         return currentNode->getType() == Node::State::Block;
 }
 
 void GraphicsScene::populateGridScene() noexcept {
@@ -531,200 +423,161 @@ void GraphicsScene::pathConnect() const noexcept {
          connect(pathTimer.get(),&QTimer::timeout,m_targetNode,moveUp,Qt::UniqueConnection);
 }
 
-void GraphicsScene::bfsStart(const bool newStart) const noexcept {
-         if(newStart){
-                  m_queue->push({m_sourceNode,0});
-                  auto [startX,startY] = m_sourceNode->getCord();
-                  (*m_visited)[startX][startY] = true;
+void GraphicsScene::dfsImplementation() noexcept {
+         auto * infoLine = getStatusBar(DfsIndex);
+
+         if(m_stack->empty()){
+                  dfsTimer->stop();
+                  infoLine->setText("Could not reach destination.");
+                  emit resetButtons();
+                  return;
          }
 
-         bfsTimer->start();
-}
+         auto [currentNode,currentDistance] = m_stack->top();
+         m_stack->pop();
+         infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
 
-void GraphicsScene::dfsStart(const bool newStart) const noexcept {
-         if(newStart){
-                  m_stack->push({m_sourceNode,0});
-                  auto [startX,startY] = m_sourceNode->getCord();
-                  (*m_visited)[startX][startY] = true;
+         if(!isSpecial(currentNode)){
+                  currentNode->setType(Node::State::Active);
          }
 
-         dfsTimer->start();
-}
-
-void GraphicsScene::dijkstraStart(const bool newStart) const noexcept {
-         if(newStart){
-                  m_priorityQueue->push({0,m_sourceNode});
-                  auto [startX,startY] = m_sourceNode->getCord();
-                  (*m_distance)[startX][startY] = 0;
+         if(currentNode == m_targetNode){
+                  dfsTimer->stop();
+                  emit foundPath();
+                  emit resetButtons();
+                  return;
          }
 
-         dijkstraTimer->start();
+         auto [curX,curY] = currentNode->getCord();
+         auto * nodeParent = currentNode->getPathParent();
+
+         if(nodeParent && !isSpecial(nodeParent)){
+                  nodeParent->setType(Node::State::Visited);
+         }
+
+         for(uint32_t direction = 0;direction < 4;direction++){
+                  const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
+                  const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
+
+                  if(validCordinate(toRow,toCol)){
+                           const auto validRow = static_cast<size_t>(toRow);
+                           const auto validCol = static_cast<size_t>(toCol); 
+                           auto * togoNode = getNodeAt(validRow,validCol);
+
+                           if(isBlock(togoNode) || (*m_visited)[validRow][validCol]) continue;
+
+                           (*m_visited)[validRow][validCol] = true;
+                           togoNode->setPathParent(currentNode);
+                           m_stack->push({togoNode,currentDistance+1});
+                  }
+         }
 }
 
-void GraphicsScene::bfsConnect() const noexcept {
+void GraphicsScene::bfsImplementation() noexcept {
+         auto * infoLine = getStatusBar(BfsIndex);
 
-         auto implementation = [this,infoLine = getStatusBar(BfsIndex)]{
-                  if(m_queue->empty()){
-                           bfsTimer->stop();
-                           infoLine->setText("Could not reach destination.");
-                           emit resetButtons();
-                           return;
+         if(m_queue->empty()){
+                  bfsTimer->stop();
+                  infoLine->setText("Could not reach destination.");
+                  emit resetButtons();
+                  return;
+         }
+
+         auto [currentNode,currentDistance] = m_queue->front();
+         m_queue->pop();
+         auto [curX,curY] = currentNode->getCord();
+
+         if(!isSpecial(currentNode)){
+                  currentNode->setType(Node::State::Active);
+         }
+
+         auto nodeParent = currentNode->getPathParent();
+
+         if(nodeParent && !isSpecial(nodeParent)){
+                  nodeParent->setType(Node::State::Visited);
+         }
+
+         infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
+
+         if(currentNode == m_targetNode){
+                  bfsTimer->stop();
+                  emit foundPath();
+                  emit resetButtons();
+                  return;
+         }
+
+         for(uint32_t direction = 0;direction < 4;direction++){
+                  const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
+                  const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
+
+                  if(validCordinate(toRow,toCol)){
+                           const auto validRow = static_cast<size_t>(toRow);
+                           const auto validCol = static_cast<size_t>(toCol); 
+
+                           auto * togoNode = getNodeAt(validRow,validCol);
+
+                           if(isBlock(togoNode) || (*m_visited)[validRow][validCol]) continue;
+
+                           (*m_visited)[validRow][validCol] = true;
+                           togoNode->setPathParent(currentNode);
+                           m_queue->push({togoNode,currentDistance+1});
                   }
+         }
+}
 
-                  auto [currentNode,currentDistance] = m_queue->front();
-                  m_queue->pop();
-                  auto [curX,curY] = currentNode->getCord();
+void GraphicsScene::dijkstraImplementation() noexcept {
+         auto * infoLine = getStatusBar(DijkstraIndex);
+         
+         if(m_priorityQueue->empty()){
+                  dijkstraTimer->stop();
+                  infoLine->setText("Could not reach destination.");
+                  emit resetButtons();
+                  return;
+         }
 
-                  if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::State::Active);
-                  }
+         auto [currentDistance,currentNode] = m_priorityQueue->top();
+         m_priorityQueue->pop();
+         auto [curX,curY] = currentNode->getCord();
 
-                  auto nodeParent = currentNode->getPathParent();
+         if((*m_distance)[curX][curY] != currentDistance) return;
 
-                  if(nodeParent && !isSpecial(nodeParent)){
-                           nodeParent->setType(Node::State::Visited);
-                  }
+         if(!isSpecial(currentNode)){
+                  currentNode->setType(Node::State::Active);
+         }
+         auto nodeParent = currentNode->getPathParent();
 
-                  infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
+         if(nodeParent && !isSpecial(nodeParent)){
+                  nodeParent->setType(Node::State::Visited);
+         }
 
-                  if(currentNode == m_targetNode){
-                           bfsTimer->stop();
-                           emit foundPath();
-                           emit resetButtons();
-                           return;
-                  }
+         infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
 
-                  for(uint32_t direction = 0;direction < 4;direction++){
-                           const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
-                           const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
+         if(currentNode == m_targetNode){
+                  dijkstraTimer->stop();
+                  emit foundPath();
+                  emit resetButtons();
+                  return;
+         }
 
-                           if(validCordinate(toRow,toCol)){
-                                    const auto validRow = static_cast<size_t>(toRow);
-                                    const auto validCol = static_cast<size_t>(toCol); 
+         for(uint32_t direction = 0;direction < 4;direction++){
+                  const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
+                  const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
 
-                                    auto * togoNode = getNodeAt(validRow,validCol);
+                  if(validCordinate(toRow,toCol)){
+                           const auto validRow = static_cast<size_t>(toRow);
+                           const auto validCol = static_cast<size_t>(toCol); 
+                           auto * togoNode = getNodeAt(validRow,validCol);
 
-                                    if(isBlock(togoNode) || (*m_visited)[validRow][validCol]) continue;
+                           if(isBlock(togoNode)) continue;
 
-                                    (*m_visited)[validRow][validCol] = true;
+                           uint32_t & destDistance = (*m_distance)[validRow][validCol];
+                           const auto newDistance = currentDistance + 1;
+
+                           if(newDistance < destDistance){
+                                    destDistance = newDistance;
                                     togoNode->setPathParent(currentNode);
-                                    m_queue->push({togoNode,currentDistance+1});
+                                    m_priorityQueue->push({newDistance,togoNode});
                            }
                   }
-         };
-
-         connect(bfsTimer.get(),&QTimer::timeout,implementation);
-}
-
-void GraphicsScene::dfsConnect() const noexcept {
-
-         auto implementation = [this,infoLine = getStatusBar(DfsIndex)]{
-                  if(m_stack->empty()){
-                           dfsTimer->stop();
-                           infoLine->setText("Could not reach destination.");
-                           emit resetButtons();
-                           return;
-                  }
-
-                  auto [currentNode,currentDistance] = m_stack->top();
-                  m_stack->pop();
-                  infoLine->setText(QString("Current Distance : %1").arg(currentDistance));
-
-                  if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::State::Active);
-                  }
-
-                  if(currentNode == m_targetNode){
-                           dfsTimer->stop();
-                           emit foundPath();
-                           emit resetButtons();
-                           return;
-                  }
-
-                  auto [curX,curY] = currentNode->getCord();
-                  auto * nodeParent = currentNode->getPathParent();
-
-                  if(nodeParent && !isSpecial(nodeParent)){
-                           nodeParent->setType(Node::State::Visited);
-                  }
-
-                  for(uint32_t direction = 0;direction < 4;direction++){
-                           const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
-                           const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
-
-                           if(validCordinate(toRow,toCol)){
-                                    const auto validRow = static_cast<size_t>(toRow);
-                                    const auto validCol = static_cast<size_t>(toCol); 
-                                    auto * togoNode = getNodeAt(validRow,validCol);
-
-                                    if(isBlock(togoNode) || (*m_visited)[validRow][validCol]) continue;
-
-                                    (*m_visited)[validRow][validCol] = true;
-                                    togoNode->setPathParent(currentNode);
-                                    m_stack->push({togoNode,currentDistance+1});
-                           }
-                  }
-         };
-
-         connect(dfsTimer.get(),&QTimer::timeout,implementation);
-}
-
-void GraphicsScene::dijkstraConnect() const noexcept {
-
-         auto implementation = [this,infoLine = getStatusBar(DijkstraIndex)]{
-                  if(m_priorityQueue->empty()){
-                           dijkstraTimer->stop();
-                           infoLine->setText("Could not reach destination.");
-                           emit resetButtons();
-                           return;
-                  }
-
-                  auto [currentDistance,currentNode] = m_priorityQueue->top();
-                  m_priorityQueue->pop();
-                  auto [curX,curY] = currentNode->getCord();
-
-                  if((*m_distance)[curX][curY] != currentDistance) return;
-
-                  if(!isSpecial(currentNode)){
-                           currentNode->setType(Node::State::Active);
-                  }
-                  auto nodeParent = currentNode->getPathParent();
-
-                  if(nodeParent && !isSpecial(nodeParent)){
-                           nodeParent->setType(Node::State::Visited);
-                  }
-
-                  infoLine->setText(QString("Current Distance: %1").arg(currentDistance));
-
-                  if(currentNode == m_targetNode){
-                           dijkstraTimer->stop();
-                           emit foundPath();
-                           emit resetButtons();
-                           return;
-                  }
-
-                  for(uint32_t direction = 0;direction < 4;direction++){
-                           const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
-                           const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
-
-                           if(validCordinate(toRow,toCol)){
-                                    const auto validRow = static_cast<size_t>(toRow);
-                                    const auto validCol = static_cast<size_t>(toCol); 
-                                    auto * togoNode = getNodeAt(validRow,validCol);
-
-                                    if(isBlock(togoNode)) continue;
-
-                                    uint32_t & destDistance = (*m_distance)[validRow][validCol];
-                                    const auto newDistance = currentDistance + 1;
-
-                                    if(newDistance < destDistance){
-                                             destDistance = newDistance;
-                                             togoNode->setPathParent(currentNode);
-                                             m_priorityQueue->push({newDistance,togoNode});
-                                    }
-                           }
-                  }
-         };
-
-         connect(dijkstraTimer.get(),&QTimer::timeout,implementation);
+         }
 }

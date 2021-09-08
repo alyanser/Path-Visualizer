@@ -20,19 +20,12 @@ StackedWidget::StackedWidget(const QSize windowSize,QWidget * parent) : QStacked
          addWidget(populateDistancePage());
 }
 
-void StackedWidget::configureGeometry(const QSize windowSize) noexcept {
-         const int32_t xCord = windowSize.width() / 2;
-         const int32_t yCord = windowSize.height() / 2;
-         setGeometry(xCord - static_cast<int>(Width) / 2,yCord - static_cast<int>(Height) / 2,Width,Height);
-         setFixedSize(Width,Height);
-}
-
 QWidget * StackedWidget::populateDefinitionPage() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget); 
 
-         auto * topLabel = getLabel(parentWidget);
-         auto * bottomLabel = getLabel(parentWidget);
+         auto * topLabel = getNewLabel(parentWidget);
+         auto * bottomLabel = getNewLabel(parentWidget);
 
          topLabel->setText(R"(<strong>Welcome to the visualizer</srong>.<br><br><i>You may click on <strong>Next
          /Prev</strong> button to navigate or click on <strong>Skip</strong> button to close the help menu 
@@ -69,7 +62,7 @@ QWidget * StackedWidget::populateBlockGifPage() noexcept {
                   mainGridLayout->addWidget(holder,0,0);
          }
 
-         auto * label = getLabel(parentWidget);
+         auto * label = getNewLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
          
          label->setText(R"(<br>You can click on any icon <small>with the exception of source and target nodes</small>
@@ -96,7 +89,7 @@ QWidget * StackedWidget::populateNodeDragPage() noexcept {
                   mainGridLayout->addWidget(holder,0,0);
          }
 
-         auto * label = getLabel(parentWidget);
+         auto * label = getNewLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
          
          label->setText(R"(The position of <strong>Source <small>and</small> Target Nodes</strong> can be
@@ -113,14 +106,14 @@ QWidget * StackedWidget::populateTabShiftPage() noexcept {
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
          {
-                  auto * tabShiftLabel = getLabel(parentWidget);
+                  auto * tabShiftLabel = getNewLabel(parentWidget);
                   QPixmap pix(":/pixmaps/icons/tabs.png");
                   tabShiftLabel->setPixmap(pix);
                   assert(!tabShiftLabel->pixmap().isNull());
                   mainGridLayout->addWidget(tabShiftLabel,mainGridLayout->rowCount(),0);
          }
 
-         auto * label = getLabel(parentWidget);
+         auto * label = getNewLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
          label->setText(R"(Current selected tab determines which algorithm to run. You may switch
@@ -137,14 +130,14 @@ QWidget * StackedWidget::populateSpeedPage() noexcept {
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
          {
-                  auto * speedLabel = getLabel(parentWidget);
+                  auto * speedLabel = getNewLabel(parentWidget);
                   QPixmap pix(":/pixmaps/icons/speed.png");
                   speedLabel->setPixmap(pix);
                   assert(!speedLabel->pixmap().isNull());
                   mainGridLayout->addWidget(speedLabel,mainGridLayout->rowCount(),0);
          }
 
-         auto * label = getLabel(parentWidget);
+         auto * label = getNewLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
          label->setText(R"(You can change the speed at which an algorithm operates by the <strong>slider</strong> 
@@ -160,7 +153,7 @@ QWidget * StackedWidget::populateUpdateTab() noexcept {
          auto * parentWidget = new QWidget(this);
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
-         auto * label = getLabel(parentWidget);
+         auto * label = getNewLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
          label->setText(R"(<strong>Following are the planned updates/additions:-</strong><br><br> 
@@ -179,14 +172,14 @@ QWidget * StackedWidget::populateDistancePage() noexcept {
          auto * mainGridLayout = new QGridLayout(parentWidget);
 
          {
-                  auto * distanceLabel = getLabel(parentWidget);
+                  auto * distanceLabel = getNewLabel(parentWidget);
                   QPixmap pix(":/pixmaps/icons/distance.png");
                   distanceLabel->setPixmap(pix);
                   assert(!distanceLabel->pixmap().isNull());
                   mainGridLayout->addWidget(distanceLabel,mainGridLayout->rowCount(),0);
          }
 
-         auto * label = getLabel(parentWidget);
+         auto * label = getNewLabel(parentWidget);
          mainGridLayout->addWidget(label,mainGridLayout->rowCount(),0);
 
          label->setText(R"(The status bar <small>placed at the bottom</small> will display the current distance
@@ -201,9 +194,9 @@ QWidget * StackedWidget::populateDistancePage() noexcept {
 QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePosition position) noexcept {
          auto * bottomLayout = new QHBoxLayout();
 
-         auto * skipButton = getCloseButton(parentWidget);
-         auto * prevButton = getPrevButton(parentWidget);
-         auto * nextButton = getNextButton(parentWidget);
+         auto * skipButton = getNewCloseButton(parentWidget);
+         auto * prevButton = getNewPrevButton(parentWidget);
+         auto * nextButton = getNewNextButton(parentWidget);
 
          bottomLayout->addWidget(skipButton);
          bottomLayout->addWidget(prevButton);
@@ -226,47 +219,4 @@ QHBoxLayout * StackedWidget::getBottomLayout(QWidget * parentWidget,const PagePo
          }
 
          return bottomLayout;
-}
-
-PushButton * StackedWidget::getPrevButton(QWidget * parentWidget) noexcept {
-         auto * button = new PushButton("Prev",parentWidget);
-         button->setToolTip("Go to previous page");
-
-         connect(button,&PushButton::clicked,[this]{
-                  setCurrentIndex(currentIndex() - 1);
-         });
-
-         return button;
-}
-
-QLabel * StackedWidget::getLabel(QWidget * parentWidget) const noexcept {
-         auto * label = new QLabel(parentWidget);
-         label->setWordWrap(true);
-         label->setAlignment(Qt::AlignCenter);
-         return label;
-}
-
-PushButton * StackedWidget::getNextButton(QWidget * parentWidget) noexcept {
-         auto * button = new PushButton("Next",parentWidget);
-         button->setToolTip("Go to next page");
-
-         connect(button,&PushButton::clicked,[this]{
-                  setCurrentIndex(currentIndex() + 1);
-         });
-         
-         return button;
-}
-
-PushButton * StackedWidget::getCloseButton(QWidget * parentWidget) noexcept {
-         auto * button = new PushButton("Close",parentWidget);
-         button->setToolTip("Close this help menu");
-         connectWithWidgetClose(button);
-         return button;
-}
-
-void StackedWidget::connectWithWidgetClose(PushButton * button) noexcept {
-         connect(button,&QPushButton::clicked,[this]{
-                  setCurrentIndex(0);
-                  close();
-         });
 }

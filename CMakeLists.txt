@@ -15,7 +15,6 @@ set(CMAKE_AUTOUIC on)
 set(SOURCES 
          src/main.cxx
          src/node.cxx
-         src/pushButton.cxx
          src/scene.cxx
          src/helpDialog.cxx
          resources.qrc
