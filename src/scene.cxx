@@ -71,8 +71,8 @@ void GraphicsScene::memsetDs() const noexcept {
          while(!m_stack->empty()) m_stack->pop();
          while(!m_priorityQueue->empty()) m_priorityQueue->pop();
 
-         m_distance->assign(RowCnt,std::vector<uint32_t>(ColCnt,std::numeric_limits<uint32_t>::max()));
-         m_visited->assign(RowCnt,std::vector<bool>(ColCnt,false));
+         m_distance->assign(rowCnt,std::vector<uint32_t>(colCnt,std::numeric_limits<uint32_t>::max()));
+         m_visited->assign(rowCnt,std::vector<bool>(colCnt,false));
 }
 
 void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmName,const QString & infoText) noexcept {
@@ -80,7 +80,7 @@ void GraphicsScene::populateWidget(QWidget * holder,const QString & algorithmNam
          mainLayout->setSpacing(10);
 
          auto * view = new QGraphicsView(innerScene,holder);
-         view->setMaximumHeight(windowSize.height() + Yoffset);
+         view->setMaximumHeight(windowSize.height() + yOffset);
          mainLayout->setAlignment(Qt::AlignTop);
          mainLayout->addWidget(view,0,0);
 
@@ -133,9 +133,9 @@ void GraphicsScene::populateSideLayout(QWidget * holder,QVBoxLayout * sideLayout
                                     memsetDs();
                            }
                            switch(m_bar->currentIndex()){
-                                    case BfsIndex : bfsStart(toStartNew); break;
-                                    case DfsIndex : dfsStart(toStartNew); break;
-                                    case DijkstraIndex : dijkstraStart(toStartNew); break;
+                                    case static_cast<uint32_t>(TabIndex::Bfs) : bfsStart(toStartNew); break;
+                                    case static_cast<uint32_t>(TabIndex::Dfs) : dfsStart(toStartNew); break;
+                                    case static_cast<uint32_t>(TabIndex::Dijkstra) : dijkstraStart(toStartNew); break;
                                     default : __builtin_unreachable();
                            }
                   }else{
@@ -170,8 +170,8 @@ void GraphicsScene::resetGrid() const noexcept {
          emit resetButtons();
          memsetDs();
 
-         for(size_t row = 0;row < RowCnt;row++){
-                  for(size_t col = 0;col < ColCnt;col++){
+         for(size_t row = 0;row < rowCnt;row++){
+                  for(size_t col = 0;col < colCnt;col++){
                            auto * node = getNodeAt(row,col);
                            if(isSpecial(node)) continue;
                            node->setPathParent(nullptr);
@@ -200,11 +200,11 @@ void GraphicsScene::generateRandGridPattern() noexcept {
 
          updateSourceTargetNodes();
 
-         for(int32_t placed = 0;placed < MaximumBlocks;){
+         for(uint32_t placed = 0;placed < maximumBlocks;){
                   auto [randX,randY] = getRandomCord();
                   auto node = getNodeAt(randX,randY);
 
-                  if(!isSpecial(node) && m_binaryDist(m_generator)){
+                  if(!isSpecial(node) && binaryDist(generator)){
                            node->setType(Node::State::Block);
                            placed++;
                   }
@@ -369,8 +369,8 @@ void GraphicsScene::populateGridScene() noexcept {
          innerScene->addItem(holder);
          m_innerLayout->setSpacing(25);
 
-         for(size_t row = 0;row < RowCnt;row++){
-                  for(size_t col = 0;col < ColCnt;col++){
+         for(size_t row = 0;row < rowCnt;row++){
+                  for(size_t col = 0;col < colCnt;col++){
                            auto * node = getNewNode(row,col);
                            m_innerLayout->addItem(node,static_cast<int32_t>(row),static_cast<int32_t>(col));
                   }
@@ -389,8 +389,8 @@ void GraphicsScene::populateGridScene() noexcept {
 }
 
 void GraphicsScene::cleanup() const noexcept {
-         for(size_t row = 0;row < RowCnt;row++){
-                  for(size_t col = 0;col < ColCnt;col++){
+         for(size_t row = 0;row < rowCnt;row++){
+                  for(size_t col = 0;col < colCnt;col++){
                            auto * node = getNodeAt(row,col);
                            if(isBlock(node)) continue;
                            bool runAnimations = false;
@@ -424,7 +424,7 @@ void GraphicsScene::pathConnect() const noexcept {
 }
 
 void GraphicsScene::dfsImplementation() noexcept {
-         auto * infoLine = getStatusBar(DfsIndex);
+         auto * infoLine = getStatusBar(static_cast<uint32_t>(TabIndex::Dfs));
 
          if(m_stack->empty()){
                   dfsTimer->stop();
@@ -456,8 +456,8 @@ void GraphicsScene::dfsImplementation() noexcept {
          }
 
          for(uint32_t direction = 0;direction < 4;direction++){
-                  const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
-                  const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
+                  const auto toRow = static_cast<ptrdiff_t>(curX) + xCord[direction];
+                  const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                   if(validCordinate(toRow,toCol)){
                            const auto validRow = static_cast<size_t>(toRow);
@@ -474,7 +474,7 @@ void GraphicsScene::dfsImplementation() noexcept {
 }
 
 void GraphicsScene::bfsImplementation() noexcept {
-         auto * infoLine = getStatusBar(BfsIndex);
+         auto * infoLine = getStatusBar(static_cast<uint32_t>(TabIndex::Bfs));
 
          if(m_queue->empty()){
                   bfsTimer->stop();
@@ -507,8 +507,8 @@ void GraphicsScene::bfsImplementation() noexcept {
          }
 
          for(uint32_t direction = 0;direction < 4;direction++){
-                  const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
-                  const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
+                  const auto toRow = static_cast<ptrdiff_t>(curX) + xCord[direction];
+                  const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                   if(validCordinate(toRow,toCol)){
                            const auto validRow = static_cast<size_t>(toRow);
@@ -526,7 +526,7 @@ void GraphicsScene::bfsImplementation() noexcept {
 }
 
 void GraphicsScene::dijkstraImplementation() noexcept {
-         auto * infoLine = getStatusBar(DijkstraIndex);
+         auto * infoLine = getStatusBar(static_cast<uint32_t>(TabIndex::Dijkstra));
          
          if(m_priorityQueue->empty()){
                   dijkstraTimer->stop();
@@ -560,8 +560,8 @@ void GraphicsScene::dijkstraImplementation() noexcept {
          }
 
          for(uint32_t direction = 0;direction < 4;direction++){
-                  const auto toRow = static_cast<ptrdiff_t>(curX) + m_xCord[direction];
-                  const auto toCol = static_cast<ptrdiff_t>(curY) + m_yCord[direction];
+                  const auto toRow = static_cast<ptrdiff_t>(curX) + xCord[direction];
+                  const auto toCol = static_cast<ptrdiff_t>(curY) + yCord[direction];
 
                   if(validCordinate(toRow,toCol)){
                            const auto validRow = static_cast<size_t>(toRow);

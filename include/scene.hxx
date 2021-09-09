@@ -27,12 +27,12 @@ class GraphicsScene : public QGraphicsScene {
          Q_OBJECT
          Q_PROPERTY(bool running WRITE setRunning READ isRunning)
 
-         enum indexes { BfsIndex, DfsIndex, DijkstraIndex };
-         enum { Yoffset = -135, RowCnt = 10, ColCnt = 20, DefaultDelay = 100, MaximumBlocks = 60 };
+         enum class TabIndex { Bfs, Dfs, Dijkstra };
 
          using pIntNode = std::pair<uint32_t,Node*>;
 public:
          explicit GraphicsScene(QSize size);
+         GraphicsScene() = default;
          GraphicsScene(const GraphicsScene & other) = delete;
          GraphicsScene(GraphicsScene && other) = delete;
          GraphicsScene & operator = (const GraphicsScene & other) = delete;
@@ -78,17 +78,22 @@ private:
          [[nodiscard]] static std::pair<size_t,size_t> getRandomCord() noexcept;
 
 ///
-         constexpr static std::array<int32_t,4> m_xCord {-1,1,0,0};
-         constexpr static std::array<int32_t,4> m_yCord {0,0,1,-1};
-         inline static std::mt19937 m_generator = std::mt19937(std::random_device()());
-         inline static std::uniform_int_distribution m_rowRange = std::uniform_int_distribution<size_t>(0,RowCnt - 1);
-         inline static std::uniform_int_distribution m_colRange = std::uniform_int_distribution<size_t>(0,ColCnt - 1);
-         inline static std::uniform_int_distribution m_binaryDist = std::uniform_int_distribution<uint8_t>(0,1);
+         constexpr static int32_t yOffset = -135;
+         constexpr static uint32_t rowCnt = 10;
+         constexpr static uint32_t colCnt = 20;
+         constexpr static uint32_t defaultDelay = 100;
+         constexpr static uint32_t maximumBlocks = 60;
+         constexpr static std::array<int32_t,4> xCord {-1,1,0,0};
+         constexpr static std::array<int32_t,4> yCord {0,0,1,-1};
+         inline static std::mt19937 generator = std::mt19937(std::random_device()());
+         inline static std::uniform_int_distribution rowRange = std::uniform_int_distribution<size_t>(0,rowCnt - 1);
+         inline static std::uniform_int_distribution colRange = std::uniform_int_distribution<size_t>(0,colCnt - 1);
+         inline static std::uniform_int_distribution binaryDist = std::uniform_int_distribution<uint8_t>(0,1);
 
          bool m_running = false; 
          Node * m_sourceNode = nullptr;
          Node * m_targetNode = nullptr; 
-         uint32_t m_timerDelay = DefaultDelay; 
+         uint32_t m_timerDelay = defaultDelay; 
          std::unique_ptr<QTimer> bfsTimer = std::make_unique<QTimer>();
          std::unique_ptr<QTimer> dfsTimer = std::make_unique<QTimer>();
          std::unique_ptr<QTimer> dijkstraTimer = std::make_unique<QTimer>();
@@ -144,7 +149,7 @@ inline void GraphicsScene::setMainSceneConnections() const noexcept {
 }
 
 inline std::pair<size_t,size_t> GraphicsScene::getRandomCord() noexcept {
-         return std::make_pair(m_rowRange(m_generator),m_colRange(m_generator));
+         return std::make_pair(rowRange(generator),colRange(generator));
 }
 
 inline void GraphicsScene::addShadowEffect(QLabel * label) noexcept {
@@ -153,7 +158,6 @@ inline void GraphicsScene::addShadowEffect(QLabel * label) noexcept {
          shadowEffect->setOffset(0.5,0.5); // x,y px
          label->setGraphicsEffect(shadowEffect);
 }
-
 
 inline void GraphicsScene::disableBarTabs(const int32_t exception) const noexcept {
          for(int32_t index = 0;index < m_bar->count();index++){
@@ -201,7 +205,7 @@ inline Node * GraphicsScene::getNodeAt(const size_t row,const size_t col) const 
 }
 
 inline bool GraphicsScene::validCordinate(const ptrdiff_t row,const ptrdiff_t col) noexcept {
-         return row >= 0 && static_cast<size_t>(row) < RowCnt && col >= 0 && static_cast<size_t>(col) < ColCnt;
+         return row >= 0 && static_cast<size_t>(row) < rowCnt && col >= 0 && static_cast<size_t>(col) < colCnt;
 }
 
 inline QLineEdit * GraphicsScene::getStatusBar(const uint32_t tabIndex) const noexcept {

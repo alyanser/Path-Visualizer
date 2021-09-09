@@ -10,7 +10,7 @@ class QHBoxLayout;
 class StackedWidget : public QStackedWidget{
          Q_OBJECT
          enum class PagePosition { Starting, Middle, Ending };
-         enum dimensions : size_t { Width = 800, Height = 400 };
+         enum Dims { Width = 800, Height = 400 };
 public:
          explicit StackedWidget(QSize windowSize,QWidget * parent = nullptr);
          StackedWidget(const StackedWidget & other) = delete;

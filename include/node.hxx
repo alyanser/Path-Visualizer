@@ -11,9 +11,6 @@ class QTimeLine;
 class Node : public QGraphicsObject,public QGraphicsLayoutItem{
          Q_OBJECT
          Q_PROPERTY(State type WRITE setType READ getType)
-
-         enum dimensions { dimension = 32, halfDimension = 16 }; // px
-         enum { defaultTimerDuration = 175 /* ms */ };
 public:
          enum class State{Source,Target,Active,Inactive,Visited,Block,Inpath};
          
@@ -41,14 +38,17 @@ private:
          void undoNodeRotation() noexcept;
 
 ///
+         constexpr static int32_t defaultTimerDuration = 175; // ms
+         constexpr static int32_t dimension = 32;
+         constexpr static int32_t halfDimension = 16;
          std::unique_ptr<QTimeLine> m_backwardTimer = std::make_unique<QTimeLine>();
          std::unique_ptr<QTimeLine> m_forwardTimer = std::make_unique<QTimeLine>();
          QPixmap m_icon;
          Node * m_pathParent = nullptr; 
          State m_type = Node::State::Inactive;
          inline static bool m_algorithmPaused = false;
-
          std::pair<uint32_t,uint32_t> m_currentLocation;
+         
 public slots:
          static void setRunningState(bool newAlgorithmState) noexcept;
          void changeAnimationDuration(uint32_t newDuration) const noexcept;
