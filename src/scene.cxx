@@ -27,11 +27,9 @@
 #include <QGraphicsOpacityEffect>
 #include <QTabBar>
 #include <QIcon>
-#include <scene.hxx>
-#include <pushButton.hxx>
-#include <node.hxx>
-#include <helpDialog.hxx>
-#include <defines.hxx>
+#include "scene.hxx"
+#include "pushButton.hxx"
+#include "defines.hxx"
 
 void GraphicsScene::populateBar() noexcept {
          m_bar = std::make_unique<QTabWidget>();

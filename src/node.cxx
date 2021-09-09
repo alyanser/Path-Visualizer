@@ -7,7 +7,7 @@
 #include <QPainter>
 #include <QTimeLine>
 #include <QMouseEvent>
-#include <node.hxx>
+#include "node.hxx"
 
 Node::Node(const uint32_t row,const uint32_t col,QGraphicsItem * parent) : QGraphicsObject(parent), m_currentLocation(std::make_pair(row,col)){
          setGraphicsItem(this);

@@ -1,5 +1,5 @@
-#ifndef SCENE_HPP
-#define SCENE_HPP
+#ifndef SCENE_HXX
+#define SCENE_HXX
 
 #include <QGraphicsScene>
 #include <queue>
@@ -13,8 +13,8 @@
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QLabel>
-#include <node.hxx>
-#include <helpDialog.hxx>
+#include "node.hxx"
+#include "helpDialog.hxx"
 
 class QTabWidget;
 class QSize;
@@ -259,4 +259,4 @@ inline void GraphicsScene::dijkstraStart(const bool newStart) const noexcept {
          dijkstraTimer->start();
 }
 
-#endif
+#endif 

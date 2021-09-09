@@ -3,7 +3,7 @@
 
 #include <QStackedWidget>
 #include <QLabel>
-#include <pushButton.hxx>
+#include "pushButton.hxx"
 
 class QHBoxLayout;
 

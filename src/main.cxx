@@ -4,7 +4,7 @@
 #include <QIcon>
 #include <QFile>
 #include <QRect>
-#include <scene.hxx>
+#include "scene.hxx"
 
 int main(int argc, char ** argv){
 	QApplication app(argc, argv);
