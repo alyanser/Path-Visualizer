@@ -1,5 +1,4 @@
-# Graph Algorithm Visualizer
-Made with Qt
+# Path Visualizer
 
 <strong>Preview:</strong><br>
 <i>Click on the image to watch video (redirects to youtube)</i><br><br>
