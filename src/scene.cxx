@@ -418,7 +418,7 @@ void GraphicsScene::pathConnect() const noexcept {
                   currentNode = currentNode->getPathParent();
          };
 
-         connect(pathTimer.get(),&QTimer::timeout,m_targetNode,moveUp,Qt::UniqueConnection);
+         connect(pathTimer.get(),&QTimer::timeout,m_targetNode,moveUp);
 }
 
 void GraphicsScene::dfsImplementation() noexcept {
