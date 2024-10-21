@@ -1,5 +1,4 @@
-#ifndef NODE_HPP
-#define NODE_HPP
+#pragma once
 
 #include <QGraphicsLayoutItem>
 #include <QGraphicsObject>
@@ -107,5 +106,3 @@ inline void Node::setGeometry(const QRectF & geometry) noexcept{
          QGraphicsLayoutItem::setGeometry(geometry);
          setPos(geometry.topLeft());
 }
-
-#endif

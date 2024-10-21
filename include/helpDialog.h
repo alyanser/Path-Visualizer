@@ -1,9 +1,8 @@
-#ifndef HELPDIALOG_HPP
-#define HELPDIALOG_HPP
+#pragma once
 
 #include <QStackedWidget>
 #include <QLabel>
-#include "pushButton.hxx"
+#include "pushButton.h"
 
 class QHBoxLayout;
 
@@ -86,5 +85,3 @@ inline void StackedWidget::configureGeometry(const QSize windowSize) noexcept {
          setGeometry(xCord - static_cast<int>(Width) / 2,yCord - static_cast<int>(Height) / 2,Width,Height);
          setFixedSize(Width,Height);
 }
-
-#endif

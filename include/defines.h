@@ -1,5 +1,4 @@
-#ifndef DEFINES_HPP
-#define DEFINES_HPP
+#pragma once
 
 #include <QString>
 
@@ -8,5 +7,3 @@ inline const QString bfsInfo = "<strong>Breadth-first search (BFS)</strong> is a
 inline const QString dfsInfo = "<strong>Depth-first search (DFS)</strong> is an algorithm for traversing or searching tree or graph data structures. The algorithm starts at the root node (selecting some arbitrary node as the root node in the case of a graph) and explores as far as possible along each branch before backtracking. Read more on <a href='https://en.wikipedia.org/wiki/Depth-first_search'>wikipedia.</a>";
 
 inline const QString dijkstraInfo = "<strong>Dijkstra's algorithm</strong> is an algorithm for finding the shortest paths between nodes in a graph, which may represent, for example, road networks. It follows a greedy approach. Read more on <a href ='https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm'>wikipedia.</a>";
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef PUSHBUTTON_HPP
-#define PUSHBUTTON_HPP
+#pragma once
 
 #include <QPushButton>
 #include <QGraphicsDropShadowEffect>
@@ -39,5 +38,3 @@ inline void PushButton::setColor(const QColor & newColor) noexcept {
 inline QColor PushButton::color() const noexcept {
          return m_backgroundColor;
 }
-
-#endif

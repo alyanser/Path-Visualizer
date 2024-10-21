@@ -10,18 +10,18 @@ set(CMAKE_AUTORCC on)
 set(CMAKE_AUTOUIC on)
 
 set(SOURCES 
-         src/main.cxx
-         src/node.cxx
-         src/scene.cxx
-         src/helpDialog.cxx
+         src/main.cc
+         src/node.cc
+         src/scene.cc
+         src/helpDialog.cc
          resources.qrc
 )
 
 set(MOC_INCLUDES
-         include/helpDialog.hxx
-         include/node.hxx
-         include/pushButton.hxx
-         include/scene.hxx
+         include/helpDialog.h
+         include/node.h
+         include/pushButton.h
+         include/scene.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${MOC_INCLUDES})
