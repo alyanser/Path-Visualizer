@@ -6,30 +6,30 @@
 #include <QRect>
 #include "scene.h"
 
-int main(int argc, char ** argv){
+int main(int argc, char ** argv) {
 	QApplication app(argc, argv);
 
-         {       
-                  QFile file(":/styles/stylesheet.css");
-                  file.open(QFile::ReadOnly);
-                  app.setStyleSheet(file.readAll());
-         }
+	{
+		QFile file(":/styles/stylesheet.css");
+		file.open(QFile::ReadOnly);
+		app.setStyleSheet(file.readAll());
+	}
 
-         auto windowSize = QApplication::primaryScreen()->availableSize();
+	auto windowSize = QApplication::primaryScreen()->availableSize();
 
-         GraphicsScene scene(windowSize);
-         QGraphicsView view(&scene);
+	GraphicsScene scene(windowSize);
+	QGraphicsView view(&scene);
 
-         view.setWindowIcon(QIcon(":/pixmaps/icons/windowIcon.png"));
-         view.setWindowTitle("Path Visualizer");
-         
-         QObject::connect(&scene,&GraphicsScene::close,&app,&QApplication::quit);
+	view.setWindowIcon(QIcon(":/pixmaps/icons/windowIcon.png"));
+	view.setWindowTitle("Path Visualizer");
 
-         view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	QObject::connect(&scene, &GraphicsScene::close, &app, &QApplication::quit);
 
-         view.setFixedSize(windowSize);
-         view.show();
-         
+	view.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	view.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+	view.setFixedSize(windowSize);
+	view.show();
+
 	return QApplication::exec();
 }
