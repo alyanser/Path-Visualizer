@@ -10,6 +10,7 @@ class QTimeLine;
 class Node : public QGraphicsObject, public QGraphicsLayoutItem {
 	Q_OBJECT
 	Q_PROPERTY(State type WRITE setType READ getType)
+	Q_INTERFACES(QGraphicsLayoutItem)
 public:
 	enum class State {
 		Source,
